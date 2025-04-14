@@ -14,8 +14,8 @@ export default function AliceRedirect() {
   return (
     <div className="flex-1 p-8 overflow-auto">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">重定向中...</h1>
-        <p>正在重定向到 Alice Demo 页面，请稍候...</p>
+        <h1 className="text-3xl font-bold mb-8">Redirecting...</h1>
+        <p>Redirecting to Alice Demo page, please wait...</p>
       </div>
     </div>
   );

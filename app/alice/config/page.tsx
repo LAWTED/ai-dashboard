@@ -43,14 +43,14 @@ export default function AliceConfigPage() {
   return (
     <div className="flex-1 p-8 overflow-auto">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Alice 配置</h1>
+        <h1 className="text-3xl font-bold mb-8">Alice Configuration</h1>
 
         <div className="bg-card p-6 rounded-lg shadow-sm border">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
                 <label htmlFor="queueWaitingTime" className="block text-sm font-medium mb-1">
-                  消息等待时间 (毫秒)
+                  Message Queue Wait Time (ms)
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -63,16 +63,16 @@ export default function AliceConfigPage() {
                     onChange={(e) => setQueueWaitingTime(e.target.value)}
                     className="flex-1"
                   />
-                  <span className="text-sm text-muted-foreground">毫秒</span>
+                  <span className="text-sm text-muted-foreground">ms</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  用户停止输入后，等待多长时间才开始处理消息队列 (默认: 7000)
+                  Time to wait after user stops typing before processing the message queue (default: 7000)
                 </p>
               </div>
 
               <div>
                 <label htmlFor="typingSpeed" className="block text-sm font-medium mb-1">
-                  打字速度 (毫秒/字符)
+                  Typing Speed (ms/character)
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -85,33 +85,33 @@ export default function AliceConfigPage() {
                     onChange={(e) => setTypingSpeed(e.target.value)}
                     className="flex-1"
                   />
-                  <span className="text-sm text-muted-foreground">毫秒/字符</span>
+                  <span className="text-sm text-muted-foreground">ms/char</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  每个字符显示的延迟时间，值越小显示越快 (默认: 200)
+                  Delay time per character display, lower values show text faster (default: 200)
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4 pt-2">
-              <Button type="submit">保存设置</Button>
+              <Button type="submit">Save Settings</Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleReset}
               >
-                重置默认
+                Reset to Default
               </Button>
               {isSaved && (
                 <span className="text-sm text-green-500 animate-in fade-in">
-                  设置已保存
+                  Settings saved
                 </span>
               )}
             </div>
           </form>
 
           <div className="mt-8 pt-4 border-t">
-            <h2 className="text-lg font-medium mb-2">当前配置预览</h2>
+            <h2 className="text-lg font-medium mb-2">Current Configuration</h2>
             <div className="bg-muted p-4 rounded text-sm font-mono overflow-auto">
               <pre>{JSON.stringify(config, null, 2)}</pre>
             </div>

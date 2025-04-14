@@ -76,7 +76,7 @@ export default function AlicePage() {
     },
     error: (message: string) => {
       const logEntry = {
-        message: `${COLORS.RED}错误：${message}${COLORS.RESET}`,
+        message: `${COLORS.RED}Error: ${message}${COLORS.RESET}`,
         timestamp: Date.now(),
         level: "error" as const,
         color: "red",
@@ -86,7 +86,7 @@ export default function AlicePage() {
     },
     warning: (message: string) => {
       const logEntry = {
-        message: `${COLORS.YELLOW}警告：${message}${COLORS.RESET}`,
+        message: `${COLORS.YELLOW}Warning: ${message}${COLORS.RESET}`,
         timestamp: Date.now(),
         level: "warning" as const,
         color: "yellow",
@@ -96,7 +96,7 @@ export default function AlicePage() {
     },
     debug: (message: string) => {
       const logEntry = {
-        message: `${COLORS.BLUE}调试：${message}${COLORS.RESET}`,
+        message: `${COLORS.BLUE}Debug: ${message}${COLORS.RESET}`,
         timestamp: Date.now(),
         level: "debug" as const,
         color: "blue",
@@ -144,8 +144,8 @@ export default function AlicePage() {
     const timer = setTimeout(() => {
       if (Date.now() - userQueue.lastMessageTime > QUEUE_WAITING_TIME) {
         logger.info(
-          `队列等待时间已超过 ${QUEUE_WAITING_TIME}ms，开始处理消息队列${
-            typing ? " (正在输入中)" : ""
+          `Queue waiting time has exceeded ${QUEUE_WAITING_TIME}ms, processing message queue${
+            typing ? " (Typing)" : ""
           }`
         );
         processUserQueue();
@@ -163,7 +163,7 @@ export default function AlicePage() {
     setMessage("");
 
     const timestamp = Date.now();
-    logger.info(`【用户】：${userMessage}`);
+    logger.info(`【User】: ${userMessage}`);
 
     // Add message to UI
     setMessages((prev) => [
@@ -182,7 +182,7 @@ export default function AlicePage() {
         lastMessageTime: timestamp,
       };
       logger.info(
-        `消息已添加到队列，当前队列消息数: ${newQueue.messages.length}`
+        `Message added to queue, current queue message count: ${newQueue.messages.length}`
       );
       return newQueue;
     });
@@ -202,7 +202,7 @@ export default function AlicePage() {
 
       // Merge messages
       const mergedMessage = userMessages.join(" ");
-      logger.info(`处理消息队列: ${userMessages.length} 条消息合并为一条`);
+      logger.info(`Processing message queue: ${userMessages.length} messages merged into one`);
 
       // Get conversation history (excluding latest user messages already in queue)
       const conversationHistory = messages.map((msg) => ({
@@ -210,7 +210,7 @@ export default function AlicePage() {
         content: msg.content,
       }));
 
-      logger.info(`调用 API: 发送合并后的消息 (${mergedMessage.length} 字符)`);
+      logger.info(`Calling API: Sending merged message (${mergedMessage.length} characters)`);
       const startTime = Date.now();
 
       const res = await fetch("/api/alice", {
@@ -226,13 +226,13 @@ export default function AlicePage() {
 
       const data = await res.json();
       const apiTime = Date.now() - startTime;
-      logger.success(`API 响应时间: ${apiTime}ms`);
+      logger.success(`API response time: ${apiTime}ms`);
 
       if (data.success) {
-        logger.info(`收到 AI 回复: ${data.response.length} 字符`);
+        logger.info(`Received AI reply: ${data.response.length} characters`);
         if (data.response.includes("\\")) {
           const parts = data.response.split("\\").filter(Boolean);
-          logger.info(`回复将分为 ${parts.length} 个部分逐步显示`);
+          logger.info(`Reply will be displayed in ${parts.length} parts`);
         }
 
         // Process response - if contains \ splits, show each part with typing animation
@@ -243,7 +243,7 @@ export default function AlicePage() {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      logger.error(`处理消息队列出错: ${errorMessage}`);
+      logger.error(`Error processing message queue: ${errorMessage}`);
       console.error("Error:", error);
       setMessages((prev) => [
         ...prev,
@@ -262,7 +262,7 @@ export default function AlicePage() {
   // Display assistant response with typing animation
   const displayAssistantResponse = async (response: string) => {
     setTyping(true);
-    logger.info("AI 开始输入回复...");
+    logger.info("AI starting to type reply...");
 
     if (response.includes("\\")) {
       // Split by backslash and remove empty parts
@@ -274,13 +274,13 @@ export default function AlicePage() {
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
 
-        // 计算打字时间直接使用字符长度 * 速度
+        // Calculate typing time directly using character length * speed
         const typingDelay = part.length * TYPING_SPEED;
 
         logger.info(
-          `显示回复部分 ${i + 1}/${parts.length} (${
+          `Displaying reply part ${i + 1}/${parts.length} (${
             part.length
-          } 字符, 延迟 ${typingDelay}ms)`
+          } characters, delay ${typingDelay}ms)`
         );
 
         // Show typing indicator
@@ -296,7 +296,7 @@ export default function AlicePage() {
           },
         ]);
 
-        // 记录AI回复到日志
+        // Record AI reply to logs
         logger.info(`【Alice】: ${part}`);
 
         // Small pause between message parts
@@ -305,11 +305,11 @@ export default function AlicePage() {
         }
       }
     } else {
-      // 计算打字时间直接使用字符长度 * 速度
+      // Calculate typing time directly using character length * speed
       const typingDelay = response.length * TYPING_SPEED;
 
       logger.info(
-        `显示完整回复 (${response.length} 字符, 延迟 ${typingDelay}ms)`
+        `Displaying full reply (${response.length} characters, delay ${typingDelay}ms)`
       );
       await new Promise((resolve) => setTimeout(resolve, typingDelay));
 
@@ -323,26 +323,26 @@ export default function AlicePage() {
         },
       ]);
 
-      // 记录AI回复到日志
+      // Record AI reply to logs
       logger.info(`【Alice】: ${response}`);
     }
 
-    logger.info("回复已完全显示，AI 停止输入");
+    logger.info("Reply fully displayed, AI stopped typing");
     setTyping(false);
   };
 
-  // 切换日志显示
+  // Toggle log display
   const toggleLogs = () => {
     setShowLogs(!showLogs);
-    logger.debug(`日志显示状态: ${!showLogs}`);
+    logger.debug(`Log display status: ${!showLogs}`);
   };
 
   // 注意: 聊天消息不再显示时间戳，相关的 formatTime 函数已移除
 
-  // 格式化完整日期时间，类似bot.py格式
+  // Format full date and time, similar to bot.py format
   const formatDateTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleString("zh-CN", {
+    return date.toLocaleString("en-US", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -353,12 +353,12 @@ export default function AlicePage() {
     });
   };
 
-  // 在组件挂载时记录启动日志
+  // Record startup log when component mounts
   useEffect(() => {
-    logger.success("\u001b[32m开始运行聊天界面...\u001b[0m");
+    logger.success("\u001b[32mChat interface started...!\u001b[0m");
 
     return () => {
-      logger.info("聊天界面已关闭");
+      logger.info("Chat interface closed");
     };
   }, []);
 
@@ -372,15 +372,15 @@ export default function AlicePage() {
             variant={showLogs ? "default" : "outline"}
             size="sm"
           >
-            {showLogs ? "隐藏日志" : "显示日志"}
+            {showLogs ? "Hide Logs" : "Show Logs"}
           </Button>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-10rem)]">
-          {/* 聊天区域 - 固定宽度 */}
+        <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-12rem)]">
+          {/* Chat area - fixed width */}
           <div className="flex flex-col w-full md:w-[600px] md:flex-shrink-0 h-full">
             <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-muted/50 mb-4">
-              {/* 容器内消息滚动区 */}
+              {/* Container message scroll area */}
               <div className="flex flex-col w-full">
                 {messages.map((msg, index) => (
                   <div
@@ -402,7 +402,7 @@ export default function AlicePage() {
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="输入消息..."
+                placeholder="Type a message..."
                 disabled={false}
                 className="flex-1"
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -417,23 +417,23 @@ export default function AlicePage() {
                 }}
               />
               <Button onClick={handleSendMessage} disabled={!message.trim()}>
-                发送
+                Send
               </Button>
             </div>
           </div>
 
-          {/* 日志区域 - 完全占满剩余宽度 */}
+          {/* Log area - completely fill remaining width */}
           <div
             className={`flex-1 h-full overflow-hidden border rounded-lg bg-black/90 text-gray-200 font-mono text-xs ${
               showLogs ? "md:block" : "hidden"
             }`}
           >
             <h3 className="font-bold text-white p-2 sticky top-0 bg-black z-10">
-              系统日志
+              System Logs
             </h3>
             <div className="h-[calc(100%-2rem)] overflow-y-auto p-3">
               {logs.map((log, index) => {
-                // 解析ANSI颜色代码
+                // Parse ANSI color codes
                 let content = log.message;
                 let textColor = "";
 
@@ -447,7 +447,7 @@ export default function AlicePage() {
                   textColor = "blue";
                 }
 
-                // 清除ANSI颜色代码
+                // Remove ANSI color codes
                 content = content.replace(/\u001b\[\d+m/g, "");
 
                 return (

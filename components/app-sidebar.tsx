@@ -21,6 +21,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { usePathname } from "next/navigation";
 
 // Menu items.
 const items = [
@@ -55,6 +56,20 @@ const aliceGroup = {
 };
 
 export function AppSidebar() {
+  const pathname = usePathname();
+
+  // 检查路径是否与给定的URL匹配
+  const isActive = (url: string) => {
+    // 对于readme路径特殊处理，因为主页也会重定向到这里
+    if (url === '/readme' && (pathname === '/' || pathname === '/readme')) {
+      return true;
+    }
+    return pathname === url;
+  };
+
+  // 检查当前路径是否是Alice的子路径
+  const isAliceActive = pathname?.startsWith('/alice');
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -65,7 +80,7 @@ export function AppSidebar() {
               {/* 常规菜单项 */}
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <a href={item.url}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -76,7 +91,7 @@ export function AppSidebar() {
 
               {/* Alice 分组 */}
               <SidebarMenuItem>
-                <SidebarMenuButton>
+                <SidebarMenuButton isActive={isAliceActive}>
                   <aliceGroup.icon className="h-4 w-4" />
                   <span>{aliceGroup.title}</span>
                   <ChevronRight className="ml-auto h-4 w-4" />
@@ -84,7 +99,10 @@ export function AppSidebar() {
                 <SidebarMenuSub>
                   {aliceGroup.subItems.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={isActive(subItem.url)}
+                      >
                         <a href={subItem.url}>
                           {subItem.icon && (
                             <subItem.icon className="h-4 w-4 mr-2" />

@@ -78,12 +78,12 @@ export default function AlicePromptPage() {
     <div className="flex-1 p-8 overflow-auto">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Alice 系统提示词</h1>
+          <h1 className="text-3xl font-bold">Alice System Prompt</h1>
           <Button
             onClick={handleToggleEdit}
             variant={isEditable ? "destructive" : "outline"}
           >
-            {isEditable ? "重置" : "编辑 (暂不可用)"}
+            {isEditable ? "Reset" : "Edit (Not Available)"}
           </Button>
         </div>
 
@@ -102,7 +102,7 @@ export default function AlicePromptPage() {
           />
 
           <div className="text-sm text-gray-500 mt-2">
-            <p>注意：此界面目前仅用于查看。要更改提示词，需要修改 app/api/alice/route.ts 文件。</p>
+            <p>Note: This interface is currently for viewing only. To change the prompt, you need to modify the app/api/alice/route.ts file.</p>
           </div>
         </div>
       </div>
