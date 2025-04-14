@@ -12,7 +12,7 @@ export default function ReadmePage() {
 
           <h2>Features</h2>
           <ul>
-            <li>Alice API - Test Alice service</li>
+            <li><a href="/alice/demo">Alice Demo</a> - Test Alice service</li>
             <li>More APIs coming soon...</li>
           </ul>
 

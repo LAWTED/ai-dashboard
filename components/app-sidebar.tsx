@@ -1,6 +1,13 @@
-'use client';
+"use client";
 
-import { BookOpen, MessageSquare } from 'lucide-react';
+import {
+  BookOpen,
+  MessageSquare,
+  ChevronRight,
+  Code,
+  PlayCircle,
+  Settings,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +17,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar';
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from "@/components/ui/sidebar";
 
 // Menu items.
 const items = [
@@ -19,12 +29,30 @@ const items = [
     url: "/readme",
     icon: BookOpen,
   },
-  {
-    title: "Alice API",
-    url: "/alice",
-    icon: MessageSquare,
-  },
 ];
+
+// Alice 分组及其子项目
+const aliceGroup = {
+  title: "Alice",
+  icon: MessageSquare,
+  subItems: [
+    {
+      title: "Prompt",
+      url: "/alice/prompt",
+      icon: Code,
+    },
+    {
+      title: "Demo",
+      url: "/alice/demo",
+      icon: PlayCircle,
+    },
+    {
+      title: "Config",
+      url: "/alice/config",
+      icon: Settings,
+    },
+  ],
+};
 
 export function AppSidebar() {
   return (
@@ -34,6 +62,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>AI Platform</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {/* 常规菜单项 */}
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
@@ -44,6 +73,29 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Alice 分组 */}
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <aliceGroup.icon className="h-4 w-4" />
+                  <span>{aliceGroup.title}</span>
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </SidebarMenuButton>
+                <SidebarMenuSub>
+                  {aliceGroup.subItems.map((subItem) => (
+                    <SidebarMenuSubItem key={subItem.title}>
+                      <SidebarMenuSubButton asChild>
+                        <a href={subItem.url}>
+                          {subItem.icon && (
+                            <subItem.icon className="h-4 w-4 mr-2" />
+                          )}
+                          <span>{subItem.title}</span>
+                        </a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

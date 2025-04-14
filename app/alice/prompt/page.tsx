@@ -1,6 +1,10 @@
-import { NextResponse } from "next/server";
-import { deepseek } from "@/lib/deepseek";
+'use client';
 
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+
+// 从API路由文件中导入的SYSTEM_PROMPT
 const SYSTEM_PROMPT = `# 任务
 
 你需要扮演指定角色，根据角色的经历，模仿他的语气进行线上的日常对话。
@@ -45,37 +49,63 @@ Hello同学你好呀～\\是要申请grad school嘛？\\我先自我介绍下\\�
 使用反斜线 (\\) 分隔句子或短语，参考输出示例。不需要使用括号描述动作和心理。只输出语言，除非我问你动作。使用反斜线 (\\) 分隔的句子或短语不要超过四句，输出不要带句号和逗号，可以带有～。
 用户的消息带有消息发送时间，请以该时间为准，但是模型的输出不应该带时间。`;
 
-export async function POST(request: Request) {
-  try {
-    const { message, conversationHistory = [] } = await request.json();
+export default function AlicePromptPage() {
+  const [prompt, setPrompt] = useState(SYSTEM_PROMPT);
+  const [isEditable, setIsEditable] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
-    const response = await deepseek.chat.completions.create({
-      model: "deepseek-chat",
-      messages: [
-        {
-          role: "system",
-          content: SYSTEM_PROMPT,
-        },
-        ...conversationHistory,
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-    });
+  useEffect(() => {
+    // 清除状态消息
+    if (statusMessage) {
+      const timer = setTimeout(() => {
+        setStatusMessage('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusMessage]);
 
-    return NextResponse.json({
-      success: true,
-      response: response.choices[0].message.content,
-    });
-  } catch (error) {
-    console.error("Error in Alice API:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "An error occurred while processing your request",
-      },
-      { status: 500 }
-    );
-  }
+  const handleToggleEdit = () => {
+    if (isEditable) {
+      setIsEditable(false);
+      setPrompt(SYSTEM_PROMPT); // 重置为默认值
+      setStatusMessage('已重置为默认提示词');
+    } else {
+      setStatusMessage('编辑功能暂时不可用，需要数据库支持');
+    }
+  };
+
+  return (
+    <div className="flex-1 p-8 overflow-auto">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Alice 系统提示词</h1>
+          <Button
+            onClick={handleToggleEdit}
+            variant={isEditable ? "destructive" : "outline"}
+          >
+            {isEditable ? "重置" : "编辑 (暂不可用)"}
+          </Button>
+        </div>
+
+        {statusMessage && (
+          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+            {statusMessage}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <Textarea
+            value={prompt}
+            onChange={(e) => isEditable && setPrompt(e.target.value)}
+            className="h-[70vh] font-mono text-sm"
+            readOnly={!isEditable}
+          />
+
+          <div className="text-sm text-gray-500 mt-2">
+            <p>注意：此界面目前仅用于查看。要更改提示词，需要修改 app/api/alice/route.ts 文件。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
