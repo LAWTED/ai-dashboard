@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://pabxfssvnndtubeyejhp.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhYnhmc3N2bm5kdHViZXllamhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3NzI4NDksImV4cCI6MjA2MDM0ODg0OX0.n4BOtBcGVTy-Jpl3CZq0XKgpy1QoYheOkKhiD_VZOPM';
+// 使用环境变量
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+// 验证环境变量存在
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables. Please check your .env.local file.');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
