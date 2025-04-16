@@ -4,6 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAliceConfigStore } from "@/app/store/alice-config";
+import { Download } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type Message = {
   role: "user" | "assistant";
@@ -40,6 +49,8 @@ export default function AlicePage() {
   // 添加日志状态
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [showLogs, setShowLogs] = useState(false);
+  // 确认对话框状态
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // 从配置 store 中获取配置
   const { config } = useAliceConfigStore();
@@ -51,6 +62,7 @@ export default function AlicePage() {
   const QUEUE_WAITING_TIME = config.queueWaitingTime; // 从 store 中获取
   const TYPING_SPEED = config.typingSpeed;           // 从 store 中获取
   const MAX_LOGS = 100; // 最大日志数量
+  const STORAGE_KEY = "alice_chat_history"; // localStorage 存储键
 
   // ANSI 颜色代码常量
   const COLORS = {
@@ -362,19 +374,161 @@ export default function AlicePage() {
     };
   }, []);
 
+  // Load chat history from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedMessages = localStorage.getItem(STORAGE_KEY);
+      if (savedMessages) {
+        const parsedMessages = JSON.parse(savedMessages);
+        setMessages(parsedMessages);
+        logger.info(`Loaded ${parsedMessages.length} messages from localStorage`);
+      }
+    } catch (error) {
+      logger.error(`Failed to load chat history from localStorage: ${error}`);
+    }
+  }, []);
+
+  // Save messages to localStorage whenever messages change
+  useEffect(() => {
+    try {
+      if (messages.length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+        logger.debug(`Saved ${messages.length} messages to localStorage`);
+      }
+    } catch (error) {
+      logger.error(`Failed to save chat history to localStorage: ${error}`);
+    }
+  }, [messages]);
+
+  // 显示清除历史确认对话框
+  const handleClearHistoryClick = () => {
+    setShowClearConfirm(true);
+  };
+
+  // 确认清除历史
+  const confirmClearHistory = () => {
+    clearChatHistory();
+    setShowClearConfirm(false);
+  };
+
+  // Clear chat history
+  const clearChatHistory = () => {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
+    logger.info("Chat history cleared");
+  };
+
+  // Export chat history as CSV
+  const exportChatHistory = () => {
+    try {
+      if (messages.length === 0) {
+        logger.warning("No messages to export");
+        return;
+      }
+
+      // Add UTF-8 BOM to ensure Excel recognizes the encoding
+      const BOM = "\uFEFF";
+
+      // Create rows with proper escaping for CSV format
+      const rows = messages.map(msg => {
+        const timestamp = new Date(msg.timestamp).toISOString();
+        const role = msg.role;
+        // Properly escape content for CSV
+        const content = msg.content.replace(/"/g, '""'); // Double quotes to escape
+
+        // Wrap fields in quotes and join with commas
+        return `"${timestamp}","${role}","${content}"`;
+      });
+
+      // Build CSV with header
+      const csvContent = BOM +
+        "Timestamp,Role,Content\n" +
+        rows.join("\n");
+
+      // Create blob with UTF-8 encoding explicitly set
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8"
+      });
+
+      // Create and trigger download
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      // Set filename with current date
+      const date = new Date();
+      const filename = `alice_chat_history_${date.toISOString().split("T")[0]}.csv`;
+
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url); // Clean up to avoid memory leaks
+
+      logger.success(`Chat history exported as CSV: ${filename}`);
+    } catch (error) {
+      logger.error(`Failed to export chat history: ${error}`);
+    }
+  };
+
   return (
     <div className="flex-1 p-4 sm:p-8 overflow-auto ">
       <div className="w-full max-w-full mx-auto">
         <div className="flex justify-between items-center mb-4 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold">Chat with Alice</h1>
-          <Button
-            onClick={toggleLogs}
-            variant={showLogs ? "default" : "outline"}
-            size="sm"
-          >
-            {showLogs ? "Hide Logs" : "Show Logs"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={exportChatHistory}
+              variant="outline"
+              size="sm"
+              title="Export as CSV"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+            <Button
+              onClick={handleClearHistoryClick}
+              variant="destructive"
+              size="sm"
+            >
+              Clear History
+            </Button>
+            <Button
+              onClick={toggleLogs}
+              variant={showLogs ? "default" : "outline"}
+              size="sm"
+            >
+              {showLogs ? "Hide Logs" : "Show Logs"}
+            </Button>
+          </div>
         </div>
+
+        {/* 清除历史确认对话框 */}
+        <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Clear Chat History</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete all chat history? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowClearConfirm(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmClearHistory}
+              >
+                Confirm
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-12rem)]">
           {/* Chat area - fixed width */}
