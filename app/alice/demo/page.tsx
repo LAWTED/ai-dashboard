@@ -94,6 +94,7 @@ export default function Demo() {
   const MAX_LOGS = 100; // 最大日志数量
   const STORAGE_KEY = "alice_chat_history"; // localStorage 存储键
   const USERID_STORAGE_KEY = "alice_userid"; // userid 存储键
+  const MODEL_STORAGE_KEY = "alice_selected_model"; // model 存储键
 
   // ANSI 颜色代码常量
   const COLORS = {
@@ -440,7 +441,7 @@ export default function Demo() {
     localStorage.setItem(USERID_STORAGE_KEY, userid);
   };
 
-  // Record startup log when component mounts
+  // Record startup log when component mounts and load model preference
   useEffect(() => {
     logger.success("Chat interface started");
     logger.info(`Available models: ${MODELS.map(m => `${m.name} (${m.api})`).join(', ')}`);
@@ -451,6 +452,14 @@ export default function Demo() {
       setUserid(savedUserid);
       setNameEntered(true);
       logger.info(`User ID loaded from localStorage: ${savedUserid}`);
+    }
+
+    // 尝试从 localStorage 加载模型选择
+    const savedModel = localStorage.getItem(MODEL_STORAGE_KEY);
+    if (savedModel && MODELS.some(m => m.id === savedModel)) {
+      setSelectedModel(savedModel);
+      const modelInfo = MODELS.find(m => m.id === savedModel);
+      logger.model(modelInfo, "loaded from localStorage");
     }
 
     return () => {
@@ -671,8 +680,10 @@ export default function Demo() {
                     value={selectedModel}
                     onValueChange={(value) => {
                       setSelectedModel(value);
+                      // Save to localStorage
+                      localStorage.setItem(MODEL_STORAGE_KEY, value);
                       const newModel = MODELS.find(m => m.id === value);
-                      logger.model(newModel, "model selected by user");
+                      logger.model(newModel, "selected and saved to localStorage");
                     }}
                   >
                     <SelectTrigger className="w-[180px] h-9">
