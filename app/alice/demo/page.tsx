@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAliceConfigStore } from "@/app/store/alice-config";
-import { Download } from "lucide-react";
+import { Download, ListFilter } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +36,7 @@ type UserQueue = {
   lastMessageTime: number;
 };
 
-export default function AlicePage() {
+export default function Demo() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,6 +52,11 @@ export default function AlicePage() {
   const [showLogs, setShowLogs] = useState(false);
   // 确认对话框状态
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  // 用户名状态
+  const [userid, setUserid] = useState("");
+  const [nameEntered, setNameEntered] = useState(false);
+  // 添加学生信息状态
+  const [loadingStudentInfo, setLoadingStudentInfo] = useState(false);
 
   // 从配置 store 中获取配置
   const { config } = useAliceConfigStore();
@@ -63,6 +69,7 @@ export default function AlicePage() {
   const TYPING_SPEED = config.typingSpeed;           // 从 store 中获取
   const MAX_LOGS = 100; // 最大日志数量
   const STORAGE_KEY = "alice_chat_history"; // localStorage 存储键
+  const USERID_STORAGE_KEY = "alice_userid"; // userid 存储键
 
   // ANSI 颜色代码常量
   const COLORS = {
@@ -169,7 +176,7 @@ export default function AlicePage() {
 
   // Function to handle sending a user message
   const handleSendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !nameEntered) return;
 
     const userMessage = message.trim();
     setMessage("");
@@ -233,7 +240,7 @@ export default function AlicePage() {
         body: JSON.stringify({
           message: mergedMessage,
           conversationHistory,
-          username: "Lawted"
+          userid: userid
         }),
       });
 
@@ -277,12 +284,19 @@ export default function AlicePage() {
     setTyping(true);
     logger.info("AI starting to type reply...");
 
-    if (response.includes("\\")) {
-      // Split by backslash and remove empty parts
+    // Check if response contains any separators
+    if (response.includes("\\") || response.includes("\n")) {
+      // Split by backslash first, then further split each part by newlines
       const parts = response
         .split("\\")
-        .map((part) => part.trim())
+        .flatMap(part =>
+          part.split("\n")
+            .map(subPart => subPart.trim())
+            .filter(Boolean)
+        )
         .filter(Boolean);
+
+      logger.info(`Response will be displayed in ${parts.length} parts (split by \\ and \n)`);
 
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
@@ -366,9 +380,28 @@ export default function AlicePage() {
     });
   };
 
+  // 处理名字提交
+  const handleNameSubmit = () => {
+    if (!userid.trim()) return;
+
+    setNameEntered(true);
+    logger.success(`User ID set: ${userid}`);
+
+    // 保存用户ID到 localStorage
+    localStorage.setItem(USERID_STORAGE_KEY, userid);
+  };
+
   // Record startup log when component mounts
   useEffect(() => {
     logger.success("\u001b[32mChat interface started...!\u001b[0m");
+
+    // 尝试从 localStorage 加载用户ID
+    const savedUserid = localStorage.getItem(USERID_STORAGE_KEY);
+    if (savedUserid) {
+      setUserid(savedUserid);
+      setNameEntered(true);
+      logger.info(`User ID loaded from localStorage: ${savedUserid}`);
+    }
 
     return () => {
       logger.info("Chat interface closed");
@@ -377,6 +410,8 @@ export default function AlicePage() {
 
   // Load chat history from localStorage on component mount
   useEffect(() => {
+    if (!nameEntered) return; // 只有在用户输入ID后才加载聊天历史
+
     try {
       const savedMessages = localStorage.getItem(STORAGE_KEY);
       if (savedMessages) {
@@ -405,7 +440,7 @@ export default function AlicePage() {
     } catch (error) {
       logger.error(`Failed to load chat history from localStorage: ${error}`);
     }
-  }, []);
+  }, [nameEntered, userid]);
 
   // Save messages to localStorage whenever messages change
   useEffect(() => {
@@ -431,10 +466,35 @@ export default function AlicePage() {
   };
 
   // Clear chat history
-  const clearChatHistory = () => {
-    setMessages([]);
-    localStorage.removeItem(STORAGE_KEY);
-    logger.info("Chat history cleared");
+  const clearChatHistory = async () => {
+    try {
+      setMessages([]);
+      localStorage.removeItem(STORAGE_KEY);
+      logger.info("Chat history cleared from localStorage");
+
+      // 清空数据库中对应用户的记录
+      if (userid) {
+        logger.info(`Deleting user record for ID: ${userid} from database...`);
+        const { error } = await supabase
+          .from("studentinfo")
+          .delete()
+          .eq("userid", userid);
+
+        if (error) {
+          logger.error(`Failed to delete user data: ${error.message}`);
+        } else {
+          logger.success(`Successfully deleted user data for ID: ${userid}`);
+        }
+      }
+
+      // 刷新页面
+      logger.info("Refreshing page...");
+      window.location.reload();
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      logger.error(`Error during clearing history: ${errorMessage}`);
+    }
   };
 
   // Export chat history as CSV
@@ -491,17 +551,73 @@ export default function AlicePage() {
     }
   };
 
+  // 获取学生信息
+  const fetchStudentInfo = async () => {
+    try {
+      setLoadingStudentInfo(true);
+      logger.info("获取学生信息数据...");
+
+      const { data, error } = await supabase
+        .from("studentinfo")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data && data.length > 0) {
+        logger.info("========== 学生信息记录 ==========");
+
+        data.forEach((student, index) => {
+          const createdAt = new Date(student.created_at).toLocaleString();
+          const updatedAt = new Date(student.updated_at).toLocaleString();
+
+          logger.info(`${index + 1}. 用户ID: ${student.userid}`);
+          logger.info(`   创建时间: ${createdAt}`);
+          logger.info(`   更新时间: ${updatedAt}`);
+
+          // 过滤出学生关键信息字段
+          Object.keys(student).forEach(key => {
+            if (!['id', 'created_at', 'updated_at', 'userid'].includes(key) && student[key]) {
+              logger.info(`   ${key}: ${student[key]}`);
+            }
+          });
+
+          if (index < data.length - 1) {
+            logger.info("----------------------------------");
+          }
+        });
+
+        logger.info("=================================");
+      } else {
+        logger.warning("没有找到学生信息记录");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      logger.error(`获取学生信息失败: ${errorMessage}`);
+    } finally {
+      setLoadingStudentInfo(false);
+    }
+  };
+
   return (
     <div className="flex-1 p-4 sm:p-8 overflow-auto ">
       <div className="w-full max-w-full mx-auto">
         <div className="flex justify-between items-center mb-4 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold">Chat with Alice</h1>
           <div className="flex gap-2">
+            {nameEntered && (
+              <div className="flex items-center text-sm text-muted-foreground mr-2">
+                Current ID: <span className="font-medium ml-1">{userid}</span>
+              </div>
+            )}
             <Button
               onClick={exportChatHistory}
               variant="outline"
               size="sm"
               title="Export as CSV"
+              disabled={!nameEntered}
             >
               <Download className="h-4 w-4 mr-1" />
               Export
@@ -510,8 +626,19 @@ export default function AlicePage() {
               onClick={handleClearHistoryClick}
               variant="destructive"
               size="sm"
+              disabled={!nameEntered}
             >
               Clear History
+            </Button>
+            <Button
+              onClick={fetchStudentInfo}
+              variant="outline"
+              size="sm"
+              disabled={loadingStudentInfo}
+              title="查看学生信息"
+            >
+              <ListFilter className="h-4 w-4 mr-1" />
+              查看学生信息
             </Button>
             <Button
               onClick={toggleLogs}
@@ -522,6 +649,30 @@ export default function AlicePage() {
             </Button>
           </div>
         </div>
+
+        {/* ID输入界面 */}
+        {!nameEntered && (
+          <div className="flex flex-col items-center justify-center py-12 space-y-6 border rounded-lg bg-muted/50 mb-4">
+            <h2 className="text-xl font-semibold">请输入你的ID开始聊天</h2>
+            <div className="flex w-full max-w-sm items-center space-x-2 px-4">
+              <Input
+                value={userid}
+                onChange={(e) => setUserid(e.target.value)}
+                placeholder="请输入你的ID..."
+                className="flex-1"
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    handleNameSubmit();
+                  }
+                }}
+              />
+              <Button onClick={handleNameSubmit} disabled={!userid.trim()}>
+                开始聊天
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* 清除历史确认对话框 */}
         <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
@@ -549,102 +700,105 @@ export default function AlicePage() {
           </DialogContent>
         </Dialog>
 
-        <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-12rem)]">
-          {/* Chat area - fixed width */}
-          <div className="flex flex-col w-full md:w-[600px] md:flex-shrink-0 h-full">
-            <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-muted/50 mb-4">
-              {/* Container message scroll area */}
-              <div className="flex flex-col w-full">
-                {messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`mb-4 p-4 rounded-lg ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground self-end max-w-[85%]"
-                        : "bg-muted self-start max-w-[85%]"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
+        {/* 聊天界面 - 只有当用户输入ID后才显示 */}
+        {nameEntered && (
+          <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-12rem)]">
+            {/* Chat area - fixed width */}
+            <div className="flex flex-col w-full md:w-[600px] md:flex-shrink-0 h-full">
+              <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-[#ebebeb] mb-4">
+                {/* Container message scroll area */}
+                <div className="flex flex-col w-full">
+                  {messages.map((msg, index) => (
+                    <div
+                      key={index}
+                      className={`mb-4 p-4 rounded-lg ${
+                        msg.role === "user"
+                          ? "bg-[#95ec69] text-black self-end max-w-[85%]"
+                          : "bg-white border border-gray-200 self-start max-w-[85%]"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  disabled={false}
+                  className="flex-1 bg-white"
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (
+                      e.key === "Enter" &&
+                      !e.shiftKey &&
+                      !e.nativeEvent.isComposing
+                    ) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                />
+                <Button onClick={handleSendMessage} disabled={!message.trim()} className="bg-[#07c160] hover:bg-[#06ad56]">
+                  Send
+                </Button>
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type a message..."
-                disabled={false}
-                className="flex-1"
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (
-                    e.key === "Enter" &&
-                    !e.shiftKey &&
-                    !e.nativeEvent.isComposing
-                  ) {
-                    e.preventDefault();
-                    handleSendMessage();
+            {/* Log area - completely fill remaining width */}
+            <div
+              className={`flex-1 h-full overflow-hidden border rounded-lg bg-black/90 text-gray-200 font-mono text-xs ${
+                showLogs ? "md:block" : "hidden"
+              }`}
+            >
+              <h3 className="font-bold text-white p-2 sticky top-0 bg-black z-10">
+                System Logs
+              </h3>
+              <div className="h-[calc(100%-2rem)] overflow-y-auto p-3">
+                {logs.map((log, index) => {
+                  // Parse ANSI color codes
+                  let content = log.message;
+                  let textColor = "";
+
+                  if (log.color) {
+                    textColor = log.color;
+                  } else if (log.level === "error") {
+                    textColor = "red";
+                  } else if (log.level === "warning") {
+                    textColor = "yellow";
+                  } else if (log.level === "debug") {
+                    textColor = "blue";
                   }
-                }}
-              />
-              <Button onClick={handleSendMessage} disabled={!message.trim()}>
-                Send
-              </Button>
-            </div>
-          </div>
 
-          {/* Log area - completely fill remaining width */}
-          <div
-            className={`flex-1 h-full overflow-hidden border rounded-lg bg-black/90 text-gray-200 font-mono text-xs ${
-              showLogs ? "md:block" : "hidden"
-            }`}
-          >
-            <h3 className="font-bold text-white p-2 sticky top-0 bg-black z-10">
-              System Logs
-            </h3>
-            <div className="h-[calc(100%-2rem)] overflow-y-auto p-3">
-              {logs.map((log, index) => {
-                // Parse ANSI color codes
-                let content = log.message;
-                let textColor = "";
+                  // Remove ANSI color codes
+                  content = content.replace(/\u001b\[\d+m/g, "");
 
-                if (log.color) {
-                  textColor = log.color;
-                } else if (log.level === "error") {
-                  textColor = "red";
-                } else if (log.level === "warning") {
-                  textColor = "yellow";
-                } else if (log.level === "debug") {
-                  textColor = "blue";
-                }
-
-                // Remove ANSI color codes
-                content = content.replace(/\u001b\[\d+m/g, "");
-
-                return (
-                  <div
-                    key={index}
-                    className={`mb-1 py-1 border-b border-gray-800`}
-                  >
-                    <span className="text-gray-500">
-                      [{formatDateTime(log.timestamp)}]
-                    </span>{" "}
-                    <span
-                      className={`${
-                        textColor ? `text-${textColor}-400` : "text-gray-300"
-                      }`}
+                  return (
+                    <div
+                      key={index}
+                      className={`mb-1 py-1 border-b border-gray-800`}
                     >
-                      {content}
-                    </span>
-                  </div>
-                );
-              })}
-              <div ref={logsEndRef} />
+                      <span className="text-gray-500">
+                        [{formatDateTime(log.timestamp)}]
+                      </span>{" "}
+                      <span
+                        className={`${
+                          textColor ? `text-${textColor}-400` : "text-gray-300"
+                        }`}
+                      >
+                        {content}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div ref={logsEndRef} />
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
