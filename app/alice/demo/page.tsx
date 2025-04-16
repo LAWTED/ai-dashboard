@@ -233,6 +233,7 @@ export default function AlicePage() {
         body: JSON.stringify({
           message: mergedMessage,
           conversationHistory,
+          username: "Lawted"
         }),
       });
 
@@ -382,6 +383,24 @@ export default function AlicePage() {
         const parsedMessages = JSON.parse(savedMessages);
         setMessages(parsedMessages);
         logger.info(`Loaded ${parsedMessages.length} messages from localStorage`);
+      } else {
+        // Add default welcome message from Alice as three separate messages
+        const welcomeMessages = [
+          "Hello同学你好呀～ 是要申请grad school嘛？",
+          "我先自我介绍下，我叫Alice，中文名李星煜，本科清华，博士毕业于Stanford，目前在Stanford做research scientist（其实就是俗称的\"博士后\"～）。",
+          "怎么称呼你比较好呀？我给你微信备注上。"
+        ];
+
+        const timestamp = Date.now();
+        const initialMessages = welcomeMessages.map((content, index) => ({
+          role: "assistant" as const,
+          content,
+          timestamp: timestamp + (index * 100) // Add small time difference for message order
+        }));
+
+        setMessages(initialMessages);
+
+        logger.info(`【Alice】: Default greeting displayed as ${welcomeMessages.length} separate messages`);
       }
     } catch (error) {
       logger.error(`Failed to load chat history from localStorage: ${error}`);
