@@ -1,6 +1,31 @@
 import { getPromptByName, supabase } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
+import { openai } from "@/lib/openai";
 import { deepseek } from "@/lib/deepseek";
+
+// 定义信息收集顺序
+const INFO_COLLECTION_ORDER = [
+  { field: "degree_type", question: "你是申请PhD吗？还是Master呀？" },
+  { field: "application_cycle", question: "你是什么时候打算申呢？" },
+  { field: "specific_area", question: "你目前科研细分领域有定下来吗？你自己最感兴趣的area或者research keywords这样子～" },
+  { field: "dream_advisors", question: "有没有什么你特别喜欢TA科研方向的教授呀～Like your dream advisor这样～" },
+  { field: "dream_schools", question: "那选校方面你有什么偏好嘛？学校名气or地理位置什么的。" },
+  { field: "prep", question: "你目前准备的情况是怎么样呀？" },
+  { field: "resume_url", question: "方便把你目前的CV或者简历发来一份不～我看下可能可以更有针对性地帮到你，我们一起brainstorm下怎么申到好的PhD programs。" },
+  { field: "challenge", question: "你目前自己有什么最迷茫/对于申PhD最担忧的点吗？" },
+  { field: "letter_of_rec", question: "对了，之前忘记问，你目前推荐人找得怎么样啦？" },
+  { field: "family_concern", question: "那目前你家里是怎么想的？支持你申PhD吗？或者说他们有什么顾虑是你需要去说服的吗？" },
+  { field: "alternatives", question: "目前你有没有别的选项呀？如果不去读博的话，打算做什么呢？" },
+  // 其他可能需要收集的信息
+  { field: "current_school", question: "你目前在哪所学校就读呢？" },
+  { field: "gpa", question: "你的GPA大概是多少呢？" },
+  { field: "undergraduate_degree", question: "你本科是学什么专业的呢？" },
+  { field: "master_degree", question: "你硕士是学什么专业的呢？" },
+  { field: "how_many_research", question: "你有多少段研究经历呢？" },
+  { field: "months_research", question: "你的研究经历总共有多长时间呢？" },
+  { field: "big_name_research", question: "你有没有在知名实验室或者知名教授下做过研究呢？" },
+  { field: "gender", question: "方便问一下你的性别吗？" }
+];
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,7 +33,12 @@ export async function POST(req: NextRequest) {
       message,
       conversationHistory = [],
       userid = "default_user",
+      model = "gpt-4.1-2025-04-14",
     } = await req.json();
+
+    // 选择正确的AI客户端
+    const client = model.includes("deepseek") ? deepseek : openai;
+    console.log(`Using client for model: ${model}`);
 
     // 获取提示词
     const promptData = await getPromptByName("alice");
@@ -53,7 +83,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 使用已有数据或者新创建的数据
-    const effectiveUserData = userData || createdUserData;
+    const effectiveUserData = userData || createdUserData || { userid };
 
     // 准备对话历史
     const updatedConversationHistory = [...conversationHistory];
@@ -93,9 +123,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 分析用户数据，找出缺失的字段
+    const missingFields = [];
+    const collectedFields = [];
+
+    for (const field of INFO_COLLECTION_ORDER.map(item => item.field)) {
+      if (effectiveUserData[field] === undefined || effectiveUserData[field] === null) {
+        missingFields.push(field);
+      } else {
+        collectedFields.push(field);
+      }
+    }
+
+    // 确定下一个应该收集的字段
+    const nextFieldToCollect = missingFields.length > 0 ? missingFields[0] : null;
+    const nextQuestion = nextFieldToCollect
+      ? INFO_COLLECTION_ORDER.find(item => item.field === nextFieldToCollect)?.question
+      : null;
+
     // 第一个请求: 分析用户消息并更新数据库
-    const firstResponse = await deepseek.chat.completions.create({
-      model: "deepseek-chat",
+    const firstResponse = await client.chat.completions.create({
+      model: model,
       messages: [
         ...updatedConversationHistory,
         {
@@ -265,10 +313,29 @@ export async function POST(req: NextRequest) {
 
     // 第二个请求: 基于用户文本+用户信息生成回复
     try {
+      // 创建扩展的系统提示词，包含信息收集状态和指导
+      const extendedSystemPrompt = `
+${promptData.content}
+
+[信息收集状态]
+已收集信息: ${collectedFields.join(', ') || '无'}
+缺失信息: ${missingFields.join(', ') || '无'}
+${nextFieldToCollect ? `下一个应收集的信息: ${nextFieldToCollect}
+建议问题: ${nextQuestion}` : '所有必要信息已收集完毕'}
+
+[重要指示]
+1. 对于值为null的字段，必须想办法收集。务必按照指定顺序收集信息。
+2. 当前用户对话中应该优先收集${nextFieldToCollect || '剩余缺失信息'}。
+3. 自然地引导用户提供信息，避免机械地询问。
+4. 在收集完一个信息后，自然过渡到下一个需要收集的信息。
+5. 确保你的回复符合提示词中的输出格式，使用反斜线(\\)分隔句子，控制长度在2-4句之间。
+6. 如果用户表达兴趣点,优先共情 + 回应, 而不是立刻问下一个问题。
+`;
+
       const secondRequestMessages = [
         {
           role: "system",
-          content: promptData.content,
+          content: extendedSystemPrompt,
         },
         ...conversationHistory,
         {
@@ -277,8 +344,8 @@ export async function POST(req: NextRequest) {
         },
       ];
 
-      const secondResponse = await deepseek.chat.completions.create({
-        model: "deepseek-chat",
+      const secondResponse = await client.chat.completions.create({
+        model: model,
         messages: secondRequestMessages,
       });
 
@@ -286,8 +353,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         response: secondResponse.choices[0].message.content,
-        studentInfo: updatedStudentInfo,
+        studentInfo: updatedStudentInfo || effectiveUserData,
         db_operation: dbOperation,
+        nextFieldToCollect,
+        missingFields,
+        collectedFields,
+        model: model
       });
     } catch (aiError) {
       console.error("AI响应获取失败:", aiError);

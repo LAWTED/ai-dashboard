@@ -3,6 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAliceConfigStore } from "@/app/store/alice-config";
 import { Download, ListFilter } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -20,6 +27,19 @@ type Message = {
   content: string;
   timestamp: number;
 };
+
+// Define available model options
+type ModelOption = {
+  id: string;
+  name: string;
+  api: string; // Add API provider information
+};
+
+const MODELS: ModelOption[] = [
+  { id: "gpt-4.1-2025-04-14", name: "GPT-4.1", api: "OpenAI" },
+  { id: "deepseek-chat", name: "Deepseek v3", api: "Deepseek" },
+  { id: "o3-mini-2025-01-31", name: "o3-mini", api: "OpenAI" },
+];
 
 // 系统日志类型
 type LogEntry = {
@@ -57,6 +77,10 @@ export default function Demo() {
   const [nameEntered, setNameEntered] = useState(false);
   // 添加学生信息状态
   const [loadingStudentInfo, setLoadingStudentInfo] = useState(false);
+  // Add state for selected model
+  const [selectedModel, setSelectedModel] = useState<string>(MODELS[0].id);
+  // Add loading state for clear history operation
+  const [clearingHistory, setClearingHistory] = useState(false);
 
   // 从配置 store 中获取配置
   const { config } = useAliceConfigStore();
@@ -132,6 +156,29 @@ export default function Demo() {
       };
       addLog(logEntry);
       console.log(`SUCCESS: ${message}`);
+    },
+    model: (modelInfo: ModelOption | undefined, action: string) => {
+      const modelName = modelInfo?.name || "Unknown";
+      const apiProvider = modelInfo?.api || "Unknown";
+      const modelId = modelInfo?.id || "Unknown";
+      const logEntry = {
+        message: `${COLORS.MAGENTA}[${apiProvider} API] Using ${modelName} (${modelId}) for ${action}${COLORS.RESET}`,
+        timestamp: Date.now(),
+        level: "info" as const,
+        color: "magenta",
+      };
+      addLog(logEntry);
+      console.log(`MODEL: Using ${modelName} (${modelId}) via ${apiProvider} API for ${action}`);
+    },
+    api: (status: string, details: string) => {
+      const logEntry = {
+        message: `${COLORS.CYAN}[API ${status}] ${details}${COLORS.RESET}`,
+        timestamp: Date.now(),
+        level: "info" as const,
+        color: "cyan",
+      };
+      addLog(logEntry);
+      console.log(`API ${status}: ${details}`);
     },
   };
 
@@ -229,7 +276,8 @@ export default function Demo() {
         content: msg.content,
       }));
 
-      logger.info(`Calling API: Sending merged message (${mergedMessage.length} characters)`);
+      const modelInfo = MODELS.find(m => m.id === selectedModel);
+      logger.model(modelInfo, `sending ${mergedMessage.length} characters`);
       const startTime = Date.now();
 
       const res = await fetch("/api/alice", {
@@ -240,19 +288,20 @@ export default function Demo() {
         body: JSON.stringify({
           message: mergedMessage,
           conversationHistory,
-          userid: userid
+          userid: userid,
+          model: selectedModel
         }),
       });
 
       const data = await res.json();
       const apiTime = Date.now() - startTime;
-      logger.success(`API response time: ${apiTime}ms`);
+      logger.api("response", `Completed in ${apiTime}ms with status: ${data.success ? "success" : "failure"}`);
 
       if (data.success) {
-        logger.info(`Received AI reply: ${data.response.length} characters`);
+        logger.api("data", `Received ${data.response.length} characters from model: ${data.model}`);
         if (data.response.includes("\\")) {
           const parts = data.response.split("\\").filter(Boolean);
-          logger.info(`Reply will be displayed in ${parts.length} parts`);
+          logger.debug(`Reply will be displayed in ${parts.length} parts`);
         }
 
         // Process response - if contains \ splits, show each part with typing animation
@@ -296,7 +345,7 @@ export default function Demo() {
         )
         .filter(Boolean);
 
-      logger.info(`Response will be displayed in ${parts.length} parts (split by \\ and \n)`);
+      logger.debug(`Response will be displayed in ${parts.length} parts (split by \\ and \n)`);
 
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
@@ -304,10 +353,10 @@ export default function Demo() {
         // Calculate typing time directly using character length * speed
         const typingDelay = part.length * TYPING_SPEED;
 
-        logger.info(
-          `Displaying reply part ${i + 1}/${parts.length} (${
+        logger.debug(
+          `Displaying part ${i + 1}/${parts.length} (${
             part.length
-          } characters, delay ${typingDelay}ms)`
+          } chars, delay ${typingDelay}ms)`
         );
 
         // Show typing indicator
@@ -335,8 +384,8 @@ export default function Demo() {
       // Calculate typing time directly using character length * speed
       const typingDelay = response.length * TYPING_SPEED;
 
-      logger.info(
-        `Displaying full reply (${response.length} characters, delay ${typingDelay}ms)`
+      logger.debug(
+        `Displaying full reply (${response.length} chars, delay ${typingDelay}ms)`
       );
       await new Promise((resolve) => setTimeout(resolve, typingDelay));
 
@@ -354,7 +403,7 @@ export default function Demo() {
       logger.info(`【Alice】: ${response}`);
     }
 
-    logger.info("Reply fully displayed, AI stopped typing");
+    logger.success("Reply fully displayed");
     setTyping(false);
   };
 
@@ -393,7 +442,8 @@ export default function Demo() {
 
   // Record startup log when component mounts
   useEffect(() => {
-    logger.success("\u001b[32mChat interface started...!\u001b[0m");
+    logger.success("Chat interface started");
+    logger.info(`Available models: ${MODELS.map(m => `${m.name} (${m.api})`).join(', ')}`);
 
     // 尝试从 localStorage 加载用户ID
     const savedUserid = localStorage.getItem(USERID_STORAGE_KEY);
@@ -435,7 +485,7 @@ export default function Demo() {
 
         setMessages(initialMessages);
 
-        logger.info(`【Alice】: Default greeting displayed as ${welcomeMessages.length} separate messages`);
+        logger.info(`Default greeting displayed as ${welcomeMessages.length} separate messages`);
       }
     } catch (error) {
       logger.error(`Failed to load chat history from localStorage: ${error}`);
@@ -460,14 +510,17 @@ export default function Demo() {
   };
 
   // 确认清除历史
-  const confirmClearHistory = () => {
-    clearChatHistory();
+  const confirmClearHistory = async () => {
+    setClearingHistory(true);
+    await clearChatHistory();
     setShowClearConfirm(false);
+    setClearingHistory(false);
   };
 
   // Clear chat history
   const clearChatHistory = async () => {
     try {
+      logger.api("operation", "Starting to clear chat history...");
       setMessages([]);
       localStorage.removeItem(STORAGE_KEY);
       logger.info("Chat history cleared from localStorage");
@@ -494,6 +547,7 @@ export default function Demo() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       logger.error(`Error during clearing history: ${errorMessage}`);
+      setClearingHistory(false); // Reset loading state on error
     }
   };
 
@@ -608,9 +662,33 @@ export default function Demo() {
           <h1 className="text-2xl sm:text-3xl font-bold">Chat with Alice</h1>
           <div className="flex gap-2">
             {nameEntered && (
-              <div className="flex items-center text-sm text-muted-foreground mr-2">
-                Current ID: <span className="font-medium ml-1">{userid}</span>
-              </div>
+              <>
+                <div className="flex items-center text-sm text-muted-foreground mr-2">
+                  Current ID: <span className="font-medium ml-1">{userid}</span>
+                </div>
+                <div className="flex items-center gap-2 mr-2">
+                  <Select
+                    value={selectedModel}
+                    onValueChange={(value) => {
+                      setSelectedModel(value);
+                      const newModel = MODELS.find(m => m.id === value);
+                      logger.model(newModel, "model selected by user");
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px] h-9">
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MODELS.map((model) => (
+                        <SelectItem key={model.id} value={model.id} className="flex justify-between">
+                          <div>{model.name}</div>
+                          {/* <div className="text-xs text-muted-foreground ml-2">{model.api}</div> */}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
             <Button
               onClick={exportChatHistory}
@@ -626,9 +704,9 @@ export default function Demo() {
               onClick={handleClearHistoryClick}
               variant="destructive"
               size="sm"
-              disabled={!nameEntered}
+              disabled={!nameEntered || clearingHistory}
             >
-              Clear History
+              {clearingHistory ? "Clearing..." : "Clear History"}
             </Button>
             <Button
               onClick={fetchStudentInfo}
@@ -687,14 +765,23 @@ export default function Demo() {
               <Button
                 variant="outline"
                 onClick={() => setShowClearConfirm(false)}
+                disabled={clearingHistory}
               >
                 Cancel
               </Button>
               <Button
                 variant="destructive"
                 onClick={confirmClearHistory}
+                disabled={clearingHistory}
               >
-                Confirm
+                {clearingHistory ? (
+                  <>
+                    <span className="animate-spin mr-1">⟳</span>
+                    Clearing...
+                  </>
+                ) : (
+                  "Confirm"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -708,6 +795,17 @@ export default function Demo() {
               <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-[#ebebeb] mb-4">
                 {/* Container message scroll area */}
                 <div className="flex flex-col w-full">
+                  {/* Current model info */}
+                  <div className="bg-gray-100 rounded-lg p-2 mb-4 text-xs text-gray-700 flex items-center justify-center">
+                    <div className="flex items-center">
+                      <span className="font-medium">Model:</span>
+                      <span className="ml-1">{MODELS.find(m => m.id === selectedModel)?.name || selectedModel}</span>
+                      <span className="mx-1">|</span>
+                      <span className="font-medium">API:</span>
+                      <span className="ml-1">{MODELS.find(m => m.id === selectedModel)?.api || "Unknown"}</span>
+                    </div>
+                  </div>
+
                   {messages.map((msg, index) => (
                     <div
                       key={index}
@@ -761,34 +859,32 @@ export default function Demo() {
                 {logs.map((log, index) => {
                   // Parse ANSI color codes
                   let content = log.message;
-                  let textColor = "";
 
-                  if (log.color) {
-                    textColor = log.color;
-                  } else if (log.level === "error") {
-                    textColor = "red";
-                  } else if (log.level === "warning") {
-                    textColor = "yellow";
-                  } else if (log.level === "debug") {
-                    textColor = "blue";
-                  }
+                  // Define color classes based on log level or color
+                  let textColorClass = "";
+                  if (log.color === "red") textColorClass = "text-red-400";
+                  else if (log.color === "green") textColorClass = "text-green-400";
+                  else if (log.color === "yellow") textColorClass = "text-yellow-400";
+                  else if (log.color === "blue") textColorClass = "text-blue-400";
+                  else if (log.color === "magenta") textColorClass = "text-fuchsia-400";
+                  else if (log.color === "cyan") textColorClass = "text-cyan-400";
+                  else if (log.level === "error") textColorClass = "text-red-400";
+                  else if (log.level === "warning") textColorClass = "text-yellow-400";
+                  else if (log.level === "debug") textColorClass = "text-blue-400";
+                  else textColorClass = "text-gray-300";
 
-                  // Remove ANSI color codes
+                  // Remove ANSI color codes for display
                   content = content.replace(/\u001b\[\d+m/g, "");
 
                   return (
                     <div
                       key={index}
-                      className={`mb-1 py-1 border-b border-gray-800`}
+                      className="mb-1 py-1 border-b border-gray-800"
                     >
                       <span className="text-gray-500">
                         [{formatDateTime(log.timestamp)}]
                       </span>{" "}
-                      <span
-                        className={`${
-                          textColor ? `text-${textColor}-400` : "text-gray-300"
-                        }`}
-                      >
+                      <span className={textColorClass}>
                         {content}
                       </span>
                     </div>
