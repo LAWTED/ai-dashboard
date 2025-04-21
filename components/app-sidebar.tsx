@@ -7,6 +7,7 @@ import {
   Code,
   PlayCircle,
   Settings,
+  FileText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -41,6 +42,11 @@ const aliceGroup = {
       title: "Prompt",
       url: "/alice/prompt",
       icon: Code,
+    },
+    {
+      title: "File",
+      url: "/alice/file",
+      icon: FileText,
     },
     {
       title: "Demo",
