@@ -37,7 +37,6 @@ type ModelOption = {
 
 const MODELS: ModelOption[] = [
   { id: "gpt-4.1-2025-04-14", name: "GPT-4.1", api: "OpenAI" },
-  { id: "deepseek-chat", name: "Deepseek v3", api: "Deepseek" },
   { id: "o3-mini-2025-01-31", name: "o3-mini", api: "OpenAI" },
 ];
 
@@ -69,7 +68,7 @@ export default function Demo() {
   const [processingQueue, setProcessingQueue] = useState(false);
   // 添加日志状态
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [showLogs, setShowLogs] = useState(false);
+  const [showLogs, setShowLogs] = useState(true);
   // 确认对话框状态
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   // 用户名状态
@@ -90,7 +89,7 @@ export default function Demo() {
 
   // 使用配置 store 中的值
   const QUEUE_WAITING_TIME = config.queueWaitingTime; // 从 store 中获取
-  const TYPING_SPEED = config.typingSpeed;           // 从 store 中获取
+  const TYPING_SPEED = config.typingSpeed; // 从 store 中获取
   const MAX_LOGS = 100; // 最大日志数量
   const STORAGE_KEY = "alice_chat_history"; // localStorage 存储键
   const USERID_STORAGE_KEY = "alice_userid"; // userid 存储键
@@ -169,7 +168,9 @@ export default function Demo() {
         color: "magenta",
       };
       addLog(logEntry);
-      console.log(`MODEL: Using ${modelName} (${modelId}) via ${apiProvider} API for ${action}`);
+      console.log(
+        `MODEL: Using ${modelName} (${modelId}) via ${apiProvider} API for ${action}`
+      );
     },
     api: (status: string, details: string) => {
       const logEntry = {
@@ -269,7 +270,9 @@ export default function Demo() {
 
       // Merge messages
       const mergedMessage = userMessages.join(" ");
-      logger.info(`Processing message queue: ${userMessages.length} messages merged into one`);
+      logger.info(
+        `Processing message queue: ${userMessages.length} messages merged into one`
+      );
 
       // Get conversation history (excluding latest user messages already in queue)
       const conversationHistory = messages.map((msg) => ({
@@ -277,7 +280,7 @@ export default function Demo() {
         content: msg.content,
       }));
 
-      const modelInfo = MODELS.find(m => m.id === selectedModel);
+      const modelInfo = MODELS.find((m) => m.id === selectedModel);
       logger.model(modelInfo, `sending ${mergedMessage.length} characters`);
       const startTime = Date.now();
 
@@ -290,16 +293,24 @@ export default function Demo() {
           message: mergedMessage,
           conversationHistory,
           userid: userid,
-          model: selectedModel
+          model: selectedModel,
         }),
       });
 
       const data = await res.json();
       const apiTime = Date.now() - startTime;
-      logger.api("response", `Completed in ${apiTime}ms with status: ${data.success ? "success" : "failure"}`);
+      logger.api(
+        "response",
+        `Completed in ${apiTime}ms with status: ${
+          data.success ? "success" : "failure"
+        }`
+      );
 
       if (data.success) {
-        logger.api("data", `Received ${data.response.length} characters from model: ${data.model}`);
+        logger.api(
+          "data",
+          `Received ${data.response.length} characters from model: ${data.model}`
+        );
         if (data.response.includes("\\")) {
           const parts = data.response.split("\\").filter(Boolean);
           logger.debug(`Reply will be displayed in ${parts.length} parts`);
@@ -339,14 +350,17 @@ export default function Demo() {
       // Split by backslash first, then further split each part by newlines
       const parts = response
         .split("\\")
-        .flatMap(part =>
-          part.split("\n")
-            .map(subPart => subPart.trim())
+        .flatMap((part) =>
+          part
+            .split("\n")
+            .map((subPart) => subPart.trim())
             .filter(Boolean)
         )
         .filter(Boolean);
 
-      logger.debug(`Response will be displayed in ${parts.length} parts (split by \\ and \n)`);
+      logger.debug(
+        `Response will be displayed in ${parts.length} parts (split by \\ and \n)`
+      );
 
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
@@ -444,7 +458,11 @@ export default function Demo() {
   // Record startup log when component mounts and load model preference
   useEffect(() => {
     logger.success("Chat interface started");
-    logger.info(`Available models: ${MODELS.map(m => `${m.name} (${m.api})`).join(', ')}`);
+    logger.info(
+      `Available models: ${MODELS.map((m) => `${m.name} (${m.api})`).join(
+        ", "
+      )}`
+    );
 
     // 尝试从 localStorage 加载用户ID
     const savedUserid = localStorage.getItem(USERID_STORAGE_KEY);
@@ -456,9 +474,9 @@ export default function Demo() {
 
     // 尝试从 localStorage 加载模型选择
     const savedModel = localStorage.getItem(MODEL_STORAGE_KEY);
-    if (savedModel && MODELS.some(m => m.id === savedModel)) {
+    if (savedModel && MODELS.some((m) => m.id === savedModel)) {
       setSelectedModel(savedModel);
-      const modelInfo = MODELS.find(m => m.id === savedModel);
+      const modelInfo = MODELS.find((m) => m.id === savedModel);
       logger.model(modelInfo, "loaded from localStorage");
     }
 
@@ -476,25 +494,29 @@ export default function Demo() {
       if (savedMessages) {
         const parsedMessages = JSON.parse(savedMessages);
         setMessages(parsedMessages);
-        logger.info(`Loaded ${parsedMessages.length} messages from localStorage`);
+        logger.info(
+          `Loaded ${parsedMessages.length} messages from localStorage`
+        );
       } else {
         // Add default welcome message from Alice as three separate messages
         const welcomeMessages = [
           "Hello同学你好呀～ 是要申请grad school嘛？",
-          "我先自我介绍下，我叫Alice，中文名李星煜，本科清华，博士毕业于Stanford，目前在Stanford做research scientist（其实就是俗称的\"博士后\"～）。",
-          "怎么称呼你比较好呀？我给你微信备注上。"
+          '我先自我介绍下，我叫Alice，中文名李星煜，本科清华，博士毕业于Stanford，目前在Stanford做research scientist（其实就是俗称的"博士后"～）。',
+          "怎么称呼你比较好呀？我给你微信备注上。",
         ];
 
         const timestamp = Date.now();
         const initialMessages = welcomeMessages.map((content, index) => ({
           role: "assistant" as const,
           content,
-          timestamp: timestamp + (index * 100) // Add small time difference for message order
+          timestamp: timestamp + index * 100, // Add small time difference for message order
         }));
 
         setMessages(initialMessages);
 
-        logger.info(`Default greeting displayed as ${welcomeMessages.length} separate messages`);
+        logger.info(
+          `Default greeting displayed as ${welcomeMessages.length} separate messages`
+        );
       }
     } catch (error) {
       logger.error(`Failed to load chat history from localStorage: ${error}`);
@@ -552,9 +574,9 @@ export default function Demo() {
       // 刷新页面
       logger.info("Refreshing page...");
       window.location.reload();
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       logger.error(`Error during clearing history: ${errorMessage}`);
       setClearingHistory(false); // Reset loading state on error
     }
@@ -572,7 +594,7 @@ export default function Demo() {
       const BOM = "\uFEFF";
 
       // Create rows with proper escaping for CSV format
-      const rows = messages.map(msg => {
+      const rows = messages.map((msg) => {
         const timestamp = new Date(msg.timestamp).toISOString();
         const role = msg.role;
         // Properly escape content for CSV
@@ -583,13 +605,11 @@ export default function Demo() {
       });
 
       // Build CSV with header
-      const csvContent = BOM +
-        "Timestamp,Role,Content\n" +
-        rows.join("\n");
+      const csvContent = BOM + "Timestamp,Role,Content\n" + rows.join("\n");
 
       // Create blob with UTF-8 encoding explicitly set
       const blob = new Blob([csvContent], {
-        type: "text/csv;charset=utf-8"
+        type: "text/csv;charset=utf-8",
       });
 
       // Create and trigger download
@@ -598,7 +618,9 @@ export default function Demo() {
 
       // Set filename with current date
       const date = new Date();
-      const filename = `alice_chat_history_${date.toISOString().split("T")[0]}.csv`;
+      const filename = `alice_chat_history_${
+        date.toISOString().split("T")[0]
+      }.csv`;
 
       link.setAttribute("href", url);
       link.setAttribute("download", filename);
@@ -618,11 +640,13 @@ export default function Demo() {
   const fetchStudentInfo = async () => {
     try {
       setLoadingStudentInfo(true);
-      logger.info("获取学生信息数据...");
+      logger.info(`获取当前用户 (${userid}) 的信息数据...`);
 
+      // 修改查询，仅获取当前用户的信息
       const { data, error } = await supabase
         .from("studentinfo")
         .select("*")
+        .eq("userid", userid)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -630,20 +654,23 @@ export default function Demo() {
       }
 
       if (data && data.length > 0) {
-        logger.info("========== 学生信息记录 ==========");
+        logger.info(`========== ${userid} 的信息记录 ==========`);
 
         data.forEach((student, index) => {
           const createdAt = new Date(student.created_at).toLocaleString();
           const updatedAt = new Date(student.updated_at).toLocaleString();
 
-          logger.info(`${index + 1}. 用户ID: ${student.userid}`);
-          logger.info(`   创建时间: ${createdAt}`);
-          logger.info(`   更新时间: ${updatedAt}`);
+          logger.info(`用户ID: ${student.userid}`);
+          logger.info(`创建时间: ${createdAt}`);
+          logger.info(`更新时间: ${updatedAt}`);
 
           // 过滤出学生关键信息字段
-          Object.keys(student).forEach(key => {
-            if (!['id', 'created_at', 'updated_at', 'userid'].includes(key) && student[key]) {
-              logger.info(`   ${key}: ${student[key]}`);
+          Object.keys(student).forEach((key) => {
+            if (
+              !["id", "created_at", "updated_at", "userid"].includes(key) &&
+              student[key]
+            ) {
+              logger.info(`${key}: ${student[key]}`);
             }
           });
 
@@ -654,11 +681,12 @@ export default function Demo() {
 
         logger.info("=================================");
       } else {
-        logger.warning("没有找到学生信息记录");
+        logger.warning(`没有找到用户 ${userid} 的信息记录`);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      logger.error(`获取学生信息失败: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      logger.error(`获取用户信息失败: ${errorMessage}`);
     } finally {
       setLoadingStudentInfo(false);
     }
@@ -682,8 +710,11 @@ export default function Demo() {
                       setSelectedModel(value);
                       // Save to localStorage
                       localStorage.setItem(MODEL_STORAGE_KEY, value);
-                      const newModel = MODELS.find(m => m.id === value);
-                      logger.model(newModel, "selected and saved to localStorage");
+                      const newModel = MODELS.find((m) => m.id === value);
+                      logger.model(
+                        newModel,
+                        "selected and saved to localStorage"
+                      );
                     }}
                   >
                     <SelectTrigger className="w-[180px] h-9">
@@ -691,7 +722,11 @@ export default function Demo() {
                     </SelectTrigger>
                     <SelectContent>
                       {MODELS.map((model) => (
-                        <SelectItem key={model.id} value={model.id} className="flex justify-between">
+                        <SelectItem
+                          key={model.id}
+                          value={model.id}
+                          className="flex justify-between"
+                        >
                           <div>{model.name}</div>
                           {/* <div className="text-xs text-muted-foreground ml-2">{model.api}</div> */}
                         </SelectItem>
@@ -724,10 +759,10 @@ export default function Demo() {
               variant="outline"
               size="sm"
               disabled={loadingStudentInfo}
-              title="查看学生信息"
+              title="查看我的信息"
             >
               <ListFilter className="h-4 w-4 mr-1" />
-              查看学生信息
+              查看我的信息
             </Button>
             <Button
               onClick={toggleLogs}
@@ -750,7 +785,11 @@ export default function Demo() {
                 placeholder="请输入你的ID..."
                 className="flex-1"
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  if (
+                    e.key === "Enter" &&
+                    !e.shiftKey &&
+                    !e.nativeEvent.isComposing
+                  ) {
                     e.preventDefault();
                     handleNameSubmit();
                   }
@@ -769,7 +808,8 @@ export default function Demo() {
             <DialogHeader>
               <DialogTitle>Clear Chat History</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete all chat history? This action cannot be undone.
+                Are you sure you want to delete all chat history? This action
+                cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex justify-end gap-2 mt-4">
@@ -810,10 +850,16 @@ export default function Demo() {
                   <div className="bg-gray-100 rounded-lg p-2 mb-4 text-xs text-gray-700 flex items-center justify-center">
                     <div className="flex items-center">
                       <span className="font-medium">Model:</span>
-                      <span className="ml-1">{MODELS.find(m => m.id === selectedModel)?.name || selectedModel}</span>
+                      <span className="ml-1">
+                        {MODELS.find((m) => m.id === selectedModel)?.name ||
+                          selectedModel}
+                      </span>
                       <span className="mx-1">|</span>
                       <span className="font-medium">API:</span>
-                      <span className="ml-1">{MODELS.find(m => m.id === selectedModel)?.api || "Unknown"}</span>
+                      <span className="ml-1">
+                        {MODELS.find((m) => m.id === selectedModel)?.api ||
+                          "Unknown"}
+                      </span>
                     </div>
                   </div>
 
@@ -851,7 +897,11 @@ export default function Demo() {
                     }
                   }}
                 />
-                <Button onClick={handleSendMessage} disabled={!message.trim()} className="bg-[#07c160] hover:bg-[#06ad56]">
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!message.trim()}
+                  className="bg-[#07c160] hover:bg-[#06ad56]"
+                >
                   Send
                 </Button>
               </div>
@@ -874,14 +924,22 @@ export default function Demo() {
                   // Define color classes based on log level or color
                   let textColorClass = "";
                   if (log.color === "red") textColorClass = "text-red-400";
-                  else if (log.color === "green") textColorClass = "text-green-400";
-                  else if (log.color === "yellow") textColorClass = "text-yellow-400";
-                  else if (log.color === "blue") textColorClass = "text-blue-400";
-                  else if (log.color === "magenta") textColorClass = "text-fuchsia-400";
-                  else if (log.color === "cyan") textColorClass = "text-cyan-400";
-                  else if (log.level === "error") textColorClass = "text-red-400";
-                  else if (log.level === "warning") textColorClass = "text-yellow-400";
-                  else if (log.level === "debug") textColorClass = "text-blue-400";
+                  else if (log.color === "green")
+                    textColorClass = "text-green-400";
+                  else if (log.color === "yellow")
+                    textColorClass = "text-yellow-400";
+                  else if (log.color === "blue")
+                    textColorClass = "text-blue-400";
+                  else if (log.color === "magenta")
+                    textColorClass = "text-fuchsia-400";
+                  else if (log.color === "cyan")
+                    textColorClass = "text-cyan-400";
+                  else if (log.level === "error")
+                    textColorClass = "text-red-400";
+                  else if (log.level === "warning")
+                    textColorClass = "text-yellow-400";
+                  else if (log.level === "debug")
+                    textColorClass = "text-blue-400";
                   else textColorClass = "text-gray-300";
 
                   // Remove ANSI color codes for display
@@ -895,9 +953,7 @@ export default function Demo() {
                       <span className="text-gray-500">
                         [{formatDateTime(log.timestamp)}]
                       </span>{" "}
-                      <span className={textColorClass}>
-                        {content}
-                      </span>
+                      <span className={textColorClass}>{content}</span>
                     </div>
                   );
                 })}
