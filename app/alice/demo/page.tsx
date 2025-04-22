@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAliceConfigStore } from "@/app/store/alice-config";
-import { Download, ListFilter } from "lucide-react";
+import { Download, ListFilter, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
   Dialog,
@@ -80,6 +80,9 @@ export default function Demo() {
   const [selectedModel, setSelectedModel] = useState<string>(MODELS[0].id);
   // Add loading state for clear history operation
   const [clearingHistory, setClearingHistory] = useState(false);
+  // Add logout confirmation dialog state
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // 从配置 store 中获取配置
   const { config } = useAliceConfigStore();
@@ -91,7 +94,7 @@ export default function Demo() {
   const QUEUE_WAITING_TIME = config.queueWaitingTime; // 从 store 中获取
   const TYPING_SPEED = config.typingSpeed; // 从 store 中获取
   const MAX_LOGS = 100; // 最大日志数量
-  const STORAGE_KEY = "alice_chat_history"; // localStorage 存储键
+  const STORAGE_KEY_PREFIX = "alice_chat_history_"; // localStorage 存储键前缀
   const USERID_STORAGE_KEY = "alice_userid"; // userid 存储键
   const MODEL_STORAGE_KEY = "alice_selected_model"; // model 存储键
 
@@ -451,8 +454,8 @@ export default function Demo() {
     setNameEntered(true);
     logger.success(`User ID set: ${userid}`);
 
-    // 保存用户ID到 localStorage
-    localStorage.setItem(USERID_STORAGE_KEY, userid);
+    // 保存用户ID到 sessionStorage 而不是 localStorage
+    sessionStorage.setItem(USERID_STORAGE_KEY, userid);
   };
 
   // Record startup log when component mounts and load model preference
@@ -464,15 +467,15 @@ export default function Demo() {
       )}`
     );
 
-    // 尝试从 localStorage 加载用户ID
-    const savedUserid = localStorage.getItem(USERID_STORAGE_KEY);
+    // 尝试从 sessionStorage 加载用户ID
+    const savedUserid = sessionStorage.getItem(USERID_STORAGE_KEY);
     if (savedUserid) {
       setUserid(savedUserid);
       setNameEntered(true);
-      logger.info(`User ID loaded from localStorage: ${savedUserid}`);
+      logger.info(`User ID loaded from sessionStorage: ${savedUserid}`);
     }
 
-    // 尝试从 localStorage 加载模型选择
+    // 尝试从 localStorage 加载模型选择（模型选择可以在所有窗口共享）
     const savedModel = localStorage.getItem(MODEL_STORAGE_KEY);
     if (savedModel && MODELS.some((m) => m.id === savedModel)) {
       setSelectedModel(savedModel);
@@ -485,17 +488,23 @@ export default function Demo() {
     };
   }, []);
 
+  // 获取特定用户的聊天历史存储键
+  const getChatHistoryKey = (id: string) => {
+    return `${STORAGE_KEY_PREFIX}${id}`;
+  };
+
   // Load chat history from localStorage on component mount
   useEffect(() => {
-    if (!nameEntered) return; // 只有在用户输入ID后才加载聊天历史
+    if (!nameEntered || !userid) return; // 只有在用户输入ID后才加载聊天历史
 
     try {
-      const savedMessages = localStorage.getItem(STORAGE_KEY);
+      const chatHistoryKey = getChatHistoryKey(userid);
+      const savedMessages = localStorage.getItem(chatHistoryKey);
       if (savedMessages) {
         const parsedMessages = JSON.parse(savedMessages);
         setMessages(parsedMessages);
         logger.info(
-          `Loaded ${parsedMessages.length} messages from localStorage`
+          `Loaded ${parsedMessages.length} messages from localStorage for user ${userid}`
         );
       } else {
         // Add default welcome message from Alice as three separate messages
@@ -526,14 +535,15 @@ export default function Demo() {
   // Save messages to localStorage whenever messages change
   useEffect(() => {
     try {
-      if (messages.length > 0) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-        logger.debug(`Saved ${messages.length} messages to localStorage`);
+      if (messages.length > 0 && nameEntered && userid) {
+        const chatHistoryKey = getChatHistoryKey(userid);
+        localStorage.setItem(chatHistoryKey, JSON.stringify(messages));
+        logger.debug(`Saved ${messages.length} messages to localStorage for user ${userid}`);
       }
     } catch (error) {
       logger.error(`Failed to save chat history to localStorage: ${error}`);
     }
-  }, [messages]);
+  }, [messages, userid, nameEntered]);
 
   // 显示清除历史确认对话框
   const handleClearHistoryClick = () => {
@@ -553,11 +563,14 @@ export default function Demo() {
     try {
       logger.api("operation", "Starting to clear chat history...");
       setMessages([]);
-      localStorage.removeItem(STORAGE_KEY);
-      logger.info("Chat history cleared from localStorage");
 
-      // 清空数据库中对应用户的记录
       if (userid) {
+        // 删除特定用户的聊天历史
+        const chatHistoryKey = getChatHistoryKey(userid);
+        localStorage.removeItem(chatHistoryKey);
+        logger.info(`Chat history cleared from localStorage for user ${userid}`);
+
+        // 清空数据库中对应用户的记录
         logger.info(`Deleting user record for ID: ${userid} from database...`);
         const { error } = await supabase
           .from("studentinfo")
@@ -692,6 +705,43 @@ export default function Demo() {
     }
   };
 
+  // Display logout confirmation dialog
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  // Confirm logout
+  const confirmLogout = async () => {
+    setLoggingOut(true);
+    await handleLogout();
+    setShowLogoutConfirm(false);
+    setLoggingOut(false);
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      logger.api("operation", "Logging out user...");
+
+      // Clear userid and set nameEntered to false
+      setUserid("");
+      setNameEntered(false);
+
+      // Remove userid from sessionStorage
+      sessionStorage.removeItem(USERID_STORAGE_KEY);
+      logger.success("User ID removed from sessionStorage");
+
+      // Optionally clear messages from state
+      setMessages([]);
+
+      // Refresh page to ensure clean state
+      window.location.reload();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      logger.error(`Error during logout: ${errorMessage}`);
+    }
+  };
+
   return (
     <div className="flex-1 p-4 sm:p-8 overflow-auto ">
       <div className="w-full max-w-full mx-auto">
@@ -734,6 +784,15 @@ export default function Demo() {
                     </SelectContent>
                   </Select>
                 </div>
+                <Button
+                  onClick={handleLogoutClick}
+                  variant="secondary"
+                  size="sm"
+                  title="Log out"
+                >
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Logout
+                </Button>
               </>
             )}
             <Button
@@ -838,6 +897,41 @@ export default function Demo() {
           </DialogContent>
         </Dialog>
 
+        {/* 登出确认对话框 */}
+        <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Logout</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to log out? This will clear your current session.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowLogoutConfirm(false)}
+                disabled={loggingOut}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={confirmLogout}
+                disabled={loggingOut}
+              >
+                {loggingOut ? (
+                  <>
+                    <span className="animate-spin mr-1">⟳</span>
+                    Logging out...
+                  </>
+                ) : (
+                  "Confirm"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* 聊天界面 - 只有当用户输入ID后才显示 */}
         {nameEntered && (
           <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-12rem)]">
@@ -860,6 +954,9 @@ export default function Demo() {
                         {MODELS.find((m) => m.id === selectedModel)?.api ||
                           "Unknown"}
                       </span>
+                      <span className="mx-1">|</span>
+                      <span className="font-medium">User ID:</span>
+                      <span className="ml-1">{userid}</span>
                     </div>
                   </div>
 
