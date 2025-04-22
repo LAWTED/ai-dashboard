@@ -318,7 +318,7 @@ export async function POST(req: NextRequest) {
           },
         },
       ],
-      tool_choice: "auto",
+      tool_choice: "required",
     });
 
     // 处理工具调用和数据库更新
