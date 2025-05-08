@@ -36,6 +36,7 @@ type ModelOption = {
 };
 
 const MODELS: ModelOption[] = [
+  { id: "gpt-4o-2024-08-06", name: "GPT-4o", api: "OpenAI" },
   { id: "gpt-4.1-2025-04-14", name: "GPT-4.1", api: "OpenAI" },
   { id: "o3-mini-2025-01-31", name: "o3-mini", api: "OpenAI" },
 ];
