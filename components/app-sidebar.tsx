@@ -8,6 +8,7 @@ import {
   PlayCircle,
   Settings,
   FileText,
+  GraduationCap,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +31,11 @@ const items = [
     title: "Documentation",
     url: "/readme",
     icon: BookOpen,
+  },
+  {
+    title: "Professor",
+    url: "/professor",
+    icon: GraduationCap,
   },
 ];
 
