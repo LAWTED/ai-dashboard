@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       message,
       conversationHistory = [],
       userid = "default_user",
-      model = "gpt-4.1-2025-04-14",
+      model = "gpt-4o-2024-08-06",
     } = await req.json();
 
     // Use OpenAI client for all models
@@ -370,7 +370,7 @@ ${promptData.content}
 ${fileContent ? `[Alice知识库]\n${fileContent}\n` : ""}
 
 [信息收集状态]
-已收集信息: ${collectedFields.join(", ") || "无"}
+已收集信息: ${collectedFields.length > 0 ? collectedFields.map(field => `${field}: ${effectiveUserData[field]}`).join(", ") : "无"}
 缺失信息: ${missingFields.join(", ") || "无"}
 ${
   nextFieldToCollect
@@ -389,7 +389,6 @@ ${
 7. 每次只返回一个 output, 不要返回多个 output。
 `;
 
-      console.log(extendedSystemPrompt, "extendedSystemPrompt");
       const secondRequestMessages = [
         ...conversationHistory,
         {
@@ -403,12 +402,12 @@ ${
         model: model,
         instructions: extendedSystemPrompt,
         input: secondRequestMessages,
-        tools: [
-          {
-            type: "file_search" as const,
-            vector_store_ids: ["vs_680665c53aec8191a8cab29b88029241"],
-          },
-        ],
+        // tools: [
+        //   {
+        //     type: "file_search" as const,
+        //     vector_store_ids: ["vs_680665c53aec8191a8cab29b88029241"],
+        //   },
+        // ],
       };
 
       // 发送请求
