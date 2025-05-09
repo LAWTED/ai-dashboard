@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       message,
       conversationHistory = [],
       userid = "default_user",
-      model = "gpt-4o-2024-08-06",
+      model = "gpt-4.1-2025-04-14",
     } = await req.json();
 
     // Use OpenAI client for all models
