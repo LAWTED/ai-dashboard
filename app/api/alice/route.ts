@@ -4,6 +4,7 @@ import { openai } from "@/lib/openai";
 
 // 定义信息收集顺序
 const INFO_COLLECTION_ORDER = [
+  { field: "username", question: "你的名字是什么呀？" },
   { field: "degree_type", question: "你是申请PhD吗？还是Master呀？" },
   { field: "application_cycle", question: "你是什么时候打算申呢？" },
   {
@@ -129,14 +130,9 @@ export async function POST(req: NextRequest) {
       );
 
       if (Object.keys(relevantUserData).length > 0) {
-        updatedConversationHistory.unshift({
-          role: "tool",
-          tool_call_id: "student-info-tool-call",
-          name: "get_student_info",
-          content: JSON.stringify({ success: true, message: "已获取学生信息" }),
-        });
-
-        updatedConversationHistory.unshift({
+        // Use push to add messages at the end in the correct order
+        // First add the assistant message with the tool call
+        updatedConversationHistory.push({
           role: "assistant",
           content: null,
           tool_calls: [
@@ -145,10 +141,18 @@ export async function POST(req: NextRequest) {
               type: "function",
               function: {
                 name: "get_student_info",
-                arguments: JSON.stringify(relevantUserData),
+                arguments: JSON.stringify({}),
               },
             },
           ],
+        });
+
+        // Then add the tool response
+        updatedConversationHistory.push({
+          role: "tool",
+          tool_call_id: "student-info-tool-call",
+          name: "get_student_info",
+          content: JSON.stringify(relevantUserData),
         });
       }
     }
@@ -191,50 +195,43 @@ export async function POST(req: NextRequest) {
           type: "function",
           function: {
             name: "update_student_info",
-            description:
-              "更新学生信息的函数, 当学生提到任何申请相关信息时，包括但不限于学位类型、申请年份、研究方向、梦想导师、目标学校等，应调用此函数",
+            description: "更新学生申请相关信息的函数，当从对话中识别到任何申请相关信息时调用此函数。同一次对话中可能需要更新多个字段。",
             parameters: {
               type: "object",
               properties: {
                 userid: {
                   type: "string",
                   description: "用户唯一标识符",
-                  optional: false,
                 },
                 username: {
                   type: "string",
-                  description: "学生的名字（从对话中获取）",
+                  description: "学生的名字",
                   optional: true,
                 },
                 dream_schools: {
                   type: "array",
                   items: { type: "string" },
-                  description:
-                    "学生想申请的学校列表（问题5：那选校方面你有什么偏好嘛？）",
+                  description: "学生想申请的学校列表",
                   optional: true,
                 },
                 degree_type: {
                   type: "string",
-                  description:
-                    "学位类型，如PhD、Master（问题1：你是申请PhD吗？还是Master呀？）",
+                  description: "学位类型，如PhD、Master",
                   optional: true,
                 },
                 application_cycle: {
                   type: "integer",
-                  description:
-                    "学生将申请的年份, 今年是2025年（问题2：你是什么时候打算申呢？）",
+                  description: "学生将申请的年份，当前年份是2025年",
                   optional: true,
                 },
                 specific_area: {
                   type: "string",
-                  description:
-                    "特定研究领域/方向（问题3：你目前科研细分领域有定下来吗？）",
+                  description: "特定研究领域/方向",
                   optional: true,
                 },
                 dream_advisors: {
                   type: "string",
-                  description:
-                    "想要合作的导师（问题4：有没有什么你特别喜欢TA科研方向的教授呀？）",
+                  description: "想要合作的导师",
                   optional: true,
                 },
                 current_school: {
@@ -264,20 +261,17 @@ export async function POST(req: NextRequest) {
                 },
                 prep: {
                   type: "string",
-                  description:
-                    "申请准备情况（问题6：你目前准备的情况是怎么样呀？）",
+                  description: "申请准备情况",
                   optional: true,
                 },
                 resume_url: {
                   type: "string",
-                  description:
-                    "简历链接（问题7：方便把你目前的CV或者简历发来一份不？）",
+                  description: "简历链接",
                   optional: true,
                 },
                 challenge: {
                   type: "string",
-                  description:
-                    "面临的挑战（问题8：你目前自己有什么最迷茫/对于申PhD最担忧的点吗？）",
+                  description: "面临的挑战",
                   optional: true,
                 },
                 how_many_research: {
@@ -297,20 +291,17 @@ export async function POST(req: NextRequest) {
                 },
                 letter_of_rec: {
                   type: "string",
-                  description:
-                    "推荐信情况（问题9：对了，之前忘记问，你目前推荐人找得怎么样啦？）",
+                  description: "推荐信情况",
                   optional: true,
                 },
                 family_concern: {
                   type: "string",
-                  description:
-                    "家庭相关顾虑（问题10：那目前你家里是怎么想的？支持你申PhD吗？）",
+                  description: "家庭相关顾虑",
                   optional: true,
                 },
                 alternatives: {
                   type: "string",
-                  description:
-                    "替代方案（问题11：目前你有没有别的选项呀？如果不去读博的话，打算做什么呢？）",
+                  description: "替代方案",
                   optional: true,
                 },
               },
@@ -370,7 +361,13 @@ ${promptData.content}
 ${fileContent ? `[Alice知识库]\n${fileContent}\n` : ""}
 
 [信息收集状态]
-已收集信息: ${collectedFields.length > 0 ? collectedFields.map(field => `${field}: ${effectiveUserData[field]}`).join(", ") : "无"}
+已收集信息: ${
+        collectedFields.length > 0
+          ? collectedFields
+              .map((field) => `${field}: ${effectiveUserData[field]}`)
+              .join(", ")
+          : "无"
+      }
 缺失信息: ${missingFields.join(", ") || "无"}
 ${
   nextFieldToCollect
@@ -379,6 +376,12 @@ ${
     : "所有必要信息已收集完毕"
 }
 
+[持续性提示]
+你是一个引导式助手 - 请持续推进对话直至完成用户信息收集。只有在确信本轮所需信息已收集后才结束你的回合。
+
+[规划提示]
+在每次询问新信息之前，请先计划如何自然地引导对话。在收到用户回复后，请仔细分析内容并思考如何进行下一步信息收集。
+
 [重要指示]
 1. 对于值为null的字段，必须想办法收集。务必按照指定顺序收集信息。
 2. 当前用户对话中应该优先收集${nextFieldToCollect || "剩余缺失信息"}。
@@ -386,7 +389,16 @@ ${
 4. 在收集完一个信息后，自然过渡到下一个需要收集的信息。
 5. 确保你的回复符合提示词中的输出格式，使用反斜线(\\)分隔句子，控制长度在2-3句之间。
 6. 如果用户表达兴趣点,优先共情 + 回应, 而不是立刻问下一个问题。
-7. 每次只返回一个 output, 不要返回多个 output。
+7. 每次只返回一个 assistant 消息, 不要返回多个 assistant 消息。
+
+# 示例
+## 自然引导示例
+用户: "我对ML方向很感兴趣"
+助手: "ML是个非常广阔的领域呢，从传统算法到深度学习都有很多精彩的研究方向。\\你对ML中的哪些具体方向更感兴趣呢？比如CV、NLP或者强化学习？"
+
+## 信息收集示例
+用户: "我目前在北大读本科"
+助手: "北大是非常棒的学校，为你的求学经历点赞！\\你现在是大几呢？方便分享一下你的GPA情况吗？"
 `;
 
       const secondRequestMessages = [
@@ -402,12 +414,7 @@ ${
         model: model,
         instructions: extendedSystemPrompt,
         input: secondRequestMessages,
-        // tools: [
-        //   {
-        //     type: "file_search" as const,
-        //     vector_store_ids: ["vs_680665c53aec8191a8cab29b88029241"],
-        //   },
-        // ],
+        temperature: 0.7, // 适度的创造性
       };
 
       // 发送请求
