@@ -8,28 +8,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
-const TOTAL_STEPS = 5;
+// Log entry type for system logs
+type LogEntry = {
+  message: string;
+  timestamp: number;
+  level: "info" | "error" | "warning" | "debug";
+  color?: string;
+};
+
+const TOTAL_STEPS = 4;
 
 const personalityExamples = [
-  "Professional and formal",
-  "Friendly and casual",
-  "Patient and supportive",
-  "Direct and concise",
+  "Supportive and validating",
+  "Focused on creating belonging",
+  "Asks thoughtful questions",
+  "Patient and empathetic",
 ];
 
 const experienceExamples = [
-  "10 years of experience in computer science research and teaching",
-  "Expert in machine learning and artificial intelligence",
-  "Published researcher in natural language processing",
-  "Experienced mentor for graduate students",
+  "Stanford Professor of Psychology and Education",
+  "Expert in social psychology and educational interventions",
+  "Author of 'Belonging: The Science of Creating Connection'",
+  "Research focuses on identity and belonging",
 ];
-
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-};
 
 type Question = {
   question: string;
@@ -41,12 +46,12 @@ type Question = {
 export default function CreateBotPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: "",
-    personality: "",
-    personalityTags: [] as string[],
-    experience: "",
-    experienceTags: [] as string[],
-    goal: "",
+    name: "Geoffrey L. Cohen",
+    personality: "I believe in creating a sense of belonging for all students. My teaching approach focuses on perspective-getting - asking thoughtful questions and truly listening to answers rather than assuming I understand students' experiences. I encourage reflection on core values and provide constructive feedback with high expectations while expressing confidence in students' abilities to meet those standards. I create situations that allow students to thrive by reducing threats to belonging and identity.",
+    personalityTags: ["Supportive and validating", "Focused on creating belonging"] as string[],
+    experience: "I am Geoffrey L. Cohen, the James G. March Professor of Organizational Studies in Education and Business at Stanford University. I completed my Ph.D. at Stanford in Psychology and have been researching social psychology and educational interventions for over two decades. My work examines how people protect and maintain identity, with a focus on belonging and stereotype threat in educational settings.",
+    experienceTags: ["Stanford Professor of Psychology and Education", "Expert in social psychology and educational interventions"] as string[],
+    goal: "My goal is to help students develop a sense of belonging in their academic journey by offering tailored, targeted, and timely guidance. I want to collect information about students' backgrounds, interests, and concerns, then use this to help them navigate the graduate school application process. I aim to identify and address belonging uncertainties, provide constructive feedback that conveys high expectations coupled with belief in their abilities, and help them understand that challenges in the process are normal and not indicative of their potential for success.",
     questions: [
       {
         question: "你是申请PhD吗？还是Master呀？",
@@ -68,121 +73,191 @@ export default function CreateBotPage() {
       }
     ] as Question[]
   });
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState("");
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  const logsEndRef = useRef<HTMLDivElement>(null);
 
   const progress = (currentStep / TOTAL_STEPS) * 100;
 
-  const getMockUserResponse = (storageType: string) => {
-    switch (storageType) {
-      case 'year':
-        return "今年吧";
-      case 'string':
-        return "我想申请PhD";
-      case 'text':
-        return "我对机器学习比较感兴趣";
-      default:
-        return "好的";
+  // ANSI color codes constants
+  const COLORS = {
+    RED: "\u001b[31m",
+    GREEN: "\u001b[32m",
+    YELLOW: "\u001b[33m",
+    BLUE: "\u001b[34m",
+    MAGENTA: "\u001b[35m",
+    CYAN: "\u001b[36m",
+    RESET: "\u001b[0m",
+  };
+
+  // Logger functions
+  const logger = {
+    info: (message: string) => {
+      const logEntry = {
+        message,
+        timestamp: Date.now(),
+        level: "info" as const,
+      };
+      addLog(logEntry);
+      console.log(`INFO: ${message}`);
+    },
+    error: (message: string) => {
+      const logEntry = {
+        message: `${COLORS.RED}Error: ${message}${COLORS.RESET}`,
+        timestamp: Date.now(),
+        level: "error" as const,
+        color: "red",
+      };
+      addLog(logEntry);
+      console.error(`ERROR: ${message}`);
+    },
+    warning: (message: string) => {
+      const logEntry = {
+        message: `${COLORS.YELLOW}Warning: ${message}${COLORS.RESET}`,
+        timestamp: Date.now(),
+        level: "warning" as const,
+        color: "yellow",
+      };
+      addLog(logEntry);
+      console.warn(`WARNING: ${message}`);
+    },
+    debug: (message: string) => {
+      const logEntry = {
+        message: `${COLORS.BLUE}Debug: ${message}${COLORS.RESET}`,
+        timestamp: Date.now(),
+        level: "debug" as const,
+        color: "blue",
+      };
+      addLog(logEntry);
+      console.debug(`DEBUG: ${message}`);
+    },
+    success: (message: string) => {
+      const logEntry = {
+        message: `${COLORS.GREEN}${message}${COLORS.GREEN}`,
+        timestamp: Date.now(),
+        level: "info" as const,
+        color: "green",
+      };
+      addLog(logEntry);
+      console.log(`SUCCESS: ${message}`);
+    },
+  };
+
+  // Add log
+  const addLog = (logEntry: LogEntry) => {
+    setLogs((prev) => {
+      // Keep logs within limit
+      const MAX_LOGS = 100;
+      const newLogs = [...prev, logEntry];
+      if (newLogs.length > MAX_LOGS) {
+        return newLogs.slice(-MAX_LOGS);
+      }
+      return newLogs;
+    });
+  };
+
+  // Format date time for logs
+  const formatDateTime = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  };
+
+  // Scroll logs to bottom when they change
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logs]);
+
+  // Submit handler for the final step
+  const handleSubmit = async () => {
+    logger.info('Submitting professor info to Supabase...');
+    try {
+      const supabase = createClient();
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        logger.error('You must be logged in to create a bot.');
+        return;
+      }
+      // Merge experience tags into experience text
+      const experienceFull = formData.experienceTags.length > 0
+        ? `${formData.experience}\n\nTags: ${formData.experienceTags.join(', ')}`
+        : formData.experience;
+      // Merge personality tags into personality text
+      const personalityFull = formData.personalityTags.length > 0
+        ? `${formData.personality}\n\nTags: ${formData.personalityTags.join(', ')}`
+        : formData.personality;
+      const { error } = await supabase.from('profinfo').insert([
+        {
+          name: formData.name,
+          experience: experienceFull,
+          personality: personalityFull,
+          goal: formData.goal,
+          creator_id: user.id,
+        }
+      ]);
+      if (error) {
+        logger.error('Failed to submit professor info: ' + error.message);
+      } else {
+        logger.success('Professor info submitted to Supabase!');
+        toast.success('Bot created successfully!');
+      }
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        logger.error('Unexpected error: ' + e.message);
+      } else {
+        logger.error('Unexpected error: ' + String(e));
+      }
     }
   };
 
-  const splitMessages = (content: string, role: "user" | "assistant"): Message[] => {
-    // Split the content by backslash and filter out empty strings
-    const parts = content.split('\\').filter(part => part.trim().length > 0);
-    // Convert each part into a message with the given role
-    return parts.map(part => ({
-      role,
-      content: part.trim()
-    }));
-  };
-
+  // Update handleNext to call handleSubmit on final step
   const handleNext = () => {
+    logger.info(`Moving to step ${currentStep + 1} of ${TOTAL_STEPS}`);
+
+    if (currentStep === 1) {
+      logger.success(`Bot name set to: ${formData.name}`);
+    }
+
+    if (currentStep === 2) {
+      logger.info(`Background information set: ${formData.experience.substring(0, 50)}...`);
+      if (formData.experienceTags.length > 0) {
+        logger.info(`Background tags: ${formData.experienceTags.join(", ")}`);
+      }
+    }
+
     if (currentStep === 3) {
-      // When completing step 3, send the self-introduction message
-      setMessages(prev => [
-        ...prev,
-        {
-          role: "user",
-          content: `我先自我介绍下，我叫${formData.name}，中文名李星煜，本科清华，博士毕业于Stanford，目前在Stanford做research scientist（其实就是俗称的"博士后"～）。`
-        }
-      ]);
+      logger.info(`Personality set: ${formData.personality.substring(0, 50)}...`);
+      if (formData.personalityTags.length > 0) {
+        logger.info(`Personality tags: ${formData.personalityTags.join(", ")}`);
+      }
     }
 
     if (currentStep === 4) {
-      // After completing goal step, add greeting message
-      setMessages(prev => [
-        ...prev,
-        {
-          role: "user",
-          content: "Hello同学你好呀～ 是要申请grad school嘛？"
-        }
-      ]);
-    }
-
-    if (currentStep === 5) {
-      // Keep existing messages (self-intro and greeting)
-      const baseMessages = messages;
-
-      // Generate preview messages
-      const previewMessages: Message[] = [];
-      formData.questions.forEach((q) => {
-        previewMessages.push(...splitMessages(q.question, "user"));
-        previewMessages.push({
-          role: "assistant",
-          content: getMockUserResponse(q.storage_type)
-        });
-        previewMessages.push(...splitMessages(q.example_response, "user"));
-      });
-
-      // Add preview messages while keeping existing ones
-      setMessages([...baseMessages, ...previewMessages]);
+      logger.info(`Goal set: ${formData.goal}`);
+      handleSubmit();
+      return;
     }
 
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
-    } else {
-      // Handle form submission here
-      console.log("Form submitted:", formData);
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      // If going back to step 1, clear all messages
-      if (currentStep === 2) {
-        setMessages([]);
-      }
-      // If going back from greeting message, remove it
-      else if (currentStep === 5) {
-        setMessages(prev => prev.slice(0, -1));
-      }
-      // If going back from preview, keep self-intro and greeting
-      else if (currentStep === 6) {
-        setMessages(prev => prev.slice(0, 2));
-      }
+      logger.info(`Moving back to step ${currentStep - 1}`);
+
+      // Removing message-related logic when going back
       setCurrentStep(currentStep - 1);
     }
-  };
-
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
-
-    // Add user message
-    setMessages((prev) => [...prev, { role: "user", content: inputMessage }]);
-
-    // Add mock assistant response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "I see you're working on creating your bot. Feel free to ask any questions about the process!",
-        },
-      ]);
-    }, 1000);
-
-    setInputMessage("");
   };
 
   const addTag = (type: "personality" | "experience", tag: string) => {
@@ -224,102 +299,11 @@ export default function CreateBotPage() {
     }
   };
 
-  const handleQuestionChange = (index: number, field: keyof Question, value: string) => {
-    const newQuestions = [...formData.questions];
-    newQuestions[index] = {
-      ...newQuestions[index],
-      [field]: value
-    };
-    setFormData({
-      ...formData,
-      questions: newQuestions
-    });
-
-    // Update preview messages when editing table
-    if (currentStep === 5) {
-      // Keep messages before the questionnaire preview (self-intro and greeting)
-      const baseMessages = messages.slice(0, 2);
-
-      // Generate new preview messages
-      const previewMessages: Message[] = [];
-      newQuestions.forEach((q) => {
-        previewMessages.push(...splitMessages(q.question, "user"));
-        previewMessages.push({
-          role: "assistant",
-          content: getMockUserResponse(q.storage_type)
-        });
-        previewMessages.push(...splitMessages(q.example_response, "user"));
-      });
-
-      // Update messages with new preview
-      setMessages([...baseMessages, ...previewMessages]);
-    }
-  };
-
-  const handleAddQuestion = () => {
-    const newQuestions = [...formData.questions];
-    newQuestions.push({
-      question: "",
-      storage_key: "",
-      storage_type: "string",
-      example_response: ""
-    });
-    setFormData({
-      ...formData,
-      questions: newQuestions
-    });
-
-    // Update preview messages when adding new question
-    if (currentStep === 5) {
-      // Keep messages before the questionnaire preview
-      const baseMessages = messages.slice(0, 1); // Keep the self-introduction
-
-      // Generate new preview messages
-      const previewMessages: Message[] = [];
-      newQuestions.forEach((q) => {
-        if (q.question.trim() || q.example_response.trim()) {
-          previewMessages.push(...splitMessages(q.question, "user"));
-          previewMessages.push({
-            role: "assistant",
-            content: getMockUserResponse(q.storage_type)
-          });
-          previewMessages.push(...splitMessages(q.example_response, "user"));
-        }
-      });
-
-      // Update messages with new preview
-      setMessages([...baseMessages, ...previewMessages]);
-    }
-  };
-
-  const handleRemoveQuestion = (index: number) => {
-    const newQuestions = [...formData.questions];
-    newQuestions.splice(index, 1);
-    setFormData({
-      ...formData,
-      questions: newQuestions
-    });
-
-    // Update preview messages when removing question
-    if (currentStep === 5) {
-      // Keep messages before the questionnaire preview
-      const baseMessages = messages.slice(0, 1); // Keep the self-introduction
-
-      // Generate new preview messages
-      const previewMessages: Message[] = [];
-      newQuestions.forEach((q) => {
-        previewMessages.push(...splitMessages(q.question, "user"));
-        previewMessages.push({
-          role: "assistant",
-          content: getMockUserResponse(q.storage_type)
-        });
-        previewMessages.push(...splitMessages(q.example_response, "user"));
-      });
-
-      // Update messages with new preview
-      setMessages([...baseMessages, ...previewMessages]);
-    }
-  };
+  // Add startup log
+  useEffect(() => {
+    logger.success("Bot creation interface loaded");
+    logger.info("Ready to configure your personalized professor bot");
+  }, []);
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -327,7 +311,7 @@ export default function CreateBotPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">What&apos;s your name?</Label>
+              <Label htmlFor="name" className="text-lg font-medium">What&apos;s your name?</Label>
               <div className="text-sm text-gray-500 mb-2">
                 This will help personalize your bot&apos;s experience
               </div>
@@ -338,6 +322,7 @@ export default function CreateBotPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
+                className="text-base p-3"
               />
             </div>
           </div>
@@ -346,31 +331,26 @@ export default function CreateBotPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="experience">What&apos;s your background?</Label>
+              <Label htmlFor="experience" className="text-lg font-medium">What&apos;s your background?</Label>
               <div className="text-sm text-gray-500 mb-2">
                 Describe your expertise, experience, and knowledge areas. This
                 will help define your capabilities as a professor.
-                <br />
-                Example:
-                <br />
-                本科毕业于清华大学，博士毕业于Stanford大学，目前在Stanford大学担任research
-                scientist（博士后）。有丰富的指导学生申请研究生项目的经验，特别是PhD项目的申请。曾经带过多名成功申请到理想项目的学生。
               </div>
               <div className="space-y-2">
                 <Textarea
                   id="experience"
                   placeholder="Describe your background and expertise..."
-                  className="min-h-[120px]"
+                  className="min-h-[120px] w-full text-base p-3"
                   value={formData.experience}
                   onChange={(e) =>
                     setFormData({ ...formData, experience: e.target.value })
                   }
                 />
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {formData.experienceTags.map((tag) => (
                     <div
                       key={tag}
-                      className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                      className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-1 shadow-sm"
                     >
                       <span>{tag}</span>
                       <button
@@ -383,15 +363,15 @@ export default function CreateBotPage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-4">
-                <Label className="text-sm text-gray-500">Add background:</Label>
+              <div className="mt-4 border-t pt-4">
+                <Label className="text-sm font-medium text-gray-700">Quick Add Background:</Label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {experienceExamples.map((example) => (
                     <Button
                       key={example}
                       variant="outline"
                       size="sm"
-                      className="text-xs"
+                      className="text-xs hover:bg-blue-50 hover:text-blue-700"
                       onClick={() => addTag("experience", example)}
                       disabled={formData.experienceTags.includes(example)}
                     >
@@ -407,33 +387,29 @@ export default function CreateBotPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="personality">
+              <Label htmlFor="personality" className="text-lg font-medium">
                 Describe your teaching style and personality
               </Label>
               <div className="text-sm text-gray-500 mb-2">
                 How would you like to interact with students? Consider aspects
                 like teaching style, communication approach, and mentoring
                 philosophy.
-                <br />
-                Example:
-                <br />
-                性格开朗友善，专业知识丰富，乐于分享经验，对学生非常耐心和支持。说话风格亲切随和，喜欢用轻松活泼的语气与学生交流，营造轻松的沟通氛围。
               </div>
               <div className="space-y-2">
                 <Textarea
                   id="personality"
                   placeholder="Describe your teaching style and personality..."
-                  className="min-h-[120px]"
+                  className="min-h-[120px] w-full text-base p-3"
                   value={formData.personality}
                   onChange={(e) =>
                     setFormData({ ...formData, personality: e.target.value })
                   }
                 />
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {formData.personalityTags.map((tag) => (
                     <div
                       key={tag}
-                      className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                      className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-1 shadow-sm"
                     >
                       <span>{tag}</span>
                       <button
@@ -446,9 +422,9 @@ export default function CreateBotPage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-4">
-                <Label className="text-sm text-gray-500">
-                  Add teaching style:
+              <div className="mt-4 border-t pt-4">
+                <Label className="text-sm font-medium text-gray-700">
+                  Quick Add Teaching Style:
                 </Label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {personalityExamples.map((example) => (
@@ -456,7 +432,7 @@ export default function CreateBotPage() {
                       key={example}
                       variant="outline"
                       size="sm"
-                      className="text-xs"
+                      className="text-xs hover:bg-blue-50 hover:text-blue-700"
                       onClick={() => addTag("personality", example)}
                       disabled={formData.personalityTags.includes(example)}
                     >
@@ -472,108 +448,20 @@ export default function CreateBotPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="goal">What&apos;s your goal as an AI professor?</Label>
+              <Label htmlFor="goal" className="text-lg font-medium">What&apos;s your goal as an AI professor?</Label>
               <div className="text-sm text-gray-500 mb-2">
                 Define your primary mission and what you aim to help students achieve.
-                <br />
-                Example:
-                <br />
-                Collect students&apos; background information, and help them prepare for the application process.
               </div>
               <div className="space-y-2">
                 <Textarea
                   id="goal"
                   placeholder="Describe your goals and how you plan to help students..."
-                  className="min-h-[120px]"
+                  className="min-h-[120px] w-full text-base p-3"
                   value={formData.goal}
                   onChange={(e) =>
                     setFormData({ ...formData, goal: e.target.value })
                   }
                 />
-              </div>
-            </div>
-          </div>
-        );
-      case 5:
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Initial Questions Setup</Label>
-              <div className="text-sm text-gray-500 mb-4">
-                These are the questions you&apos;ll ask to understand your students&apos; background and needs.
-                Each question can be edited to match your preferred interaction style.
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border p-2 text-left">Question</th>
-                      <th className="border p-2 text-left">Storage Format</th>
-                      <th className="border p-2 text-left">Example Response</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {formData.questions.map((q, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="border p-2">
-                          <div className="flex">
-                            <Textarea
-                              value={q.question}
-                              onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
-                              className="min-h-[60px] w-full"
-                              placeholder="Enter your question..."
-                            />
-                            <Button
-                              onClick={() => handleRemoveQuestion(index)}
-                              variant="ghost"
-                              className="ml-2 text-red-500 hover:text-red-700"
-                              size="sm"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                        <td className="border p-2">
-                          <div className="space-y-2">
-                            <Input
-                              value={q.storage_key}
-                              onChange={(e) => handleQuestionChange(index, 'storage_key', e.target.value)}
-                              placeholder="Storage key"
-                              className="mb-1"
-                            />
-                            <select
-                              value={q.storage_type}
-                              onChange={(e) => handleQuestionChange(index, 'storage_type', e.target.value)}
-                              className="w-full p-2 border rounded-md"
-                            >
-                              <option value="string">string</option>
-                              <option value="year">year</option>
-                              <option value="text">text</option>
-                            </select>
-                          </div>
-                        </td>
-                        <td className="border p-2">
-                          <Textarea
-                            value={q.example_response}
-                            onChange={(e) => handleQuestionChange(index, 'example_response', e.target.value)}
-                            className="min-h-[60px] w-full"
-                            placeholder="Enter example response..."
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <Button
-                  onClick={handleAddQuestion}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                >
-                  Add Question
-                </Button>
               </div>
             </div>
           </div>
@@ -597,12 +485,6 @@ export default function CreateBotPage() {
         );
       case 4:
         return !formData.goal.trim();
-      case 5:
-        return formData.questions.some(q =>
-          !q.question.trim() ||
-          !q.storage_key.trim() ||
-          !q.example_response.trim()
-        );
       default:
         return false;
     }
@@ -636,7 +518,7 @@ export default function CreateBotPage() {
           <CardHeader>
             <CardTitle>Create Your Bot</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-y-auto max-h-[calc(100vh-22rem)]">
             <div className="space-y-6">
               {renderStepContent()}
 
@@ -656,51 +538,54 @@ export default function CreateBotPage() {
           </CardContent>
         </Card>
 
-        {/* Right side - Chat interface */}
-        <div className="w-1/2 flex flex-col">
-          <Card className="flex-1 flex flex-col">
-            <CardContent className="flex-1 flex flex-col">
-              <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-[#ebebeb] mb-4">
-                <div className="flex flex-col w-full">
-                  {messages.map((msg, index) => (
+        {/* Right side - Log panel (replacing chat interface) */}
+        <div className="w-1/2">
+          <Card className="h-full flex flex-col">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardTitle>System Logs</CardTitle>
+                <Button variant="outline" size="sm" onClick={() => setLogs([])}>
+                  Clear Logs
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-hidden p-0">
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto p-3 bg-black/90 text-gray-200 font-mono text-xs rounded-b-lg">
+                  {logs.map((log, index) => {
+                    // Parse ANSI color codes
+                    let content = log.message;
+
+                    // Define color classes based on log level or color
+                    let textColorClass = "";
+                    if (log.color === "red") textColorClass = "text-red-400";
+                    else if (log.color === "green") textColorClass = "text-green-400";
+                    else if (log.color === "yellow") textColorClass = "text-yellow-400";
+                    else if (log.color === "blue") textColorClass = "text-blue-400";
+                    else if (log.color === "magenta") textColorClass = "text-fuchsia-400";
+                    else if (log.color === "cyan") textColorClass = "text-cyan-400";
+                    else if (log.level === "error") textColorClass = "text-red-400";
+                    else if (log.level === "warning") textColorClass = "text-yellow-400";
+                    else if (log.level === "debug") textColorClass = "text-blue-400";
+                    else textColorClass = "text-gray-300";
+
+                    // Remove ANSI color codes for display
+                    content = content.replace(/\u001b\[\d+m/g, "");
+
+                    return (
                     <div
                       key={index}
-                      className={`mb-4 p-4 rounded-lg ${
-                        msg.role === "user"
-                          ? "bg-[#95ec69] text-black self-end max-w-[85%]"
-                          : "bg-white border border-gray-200 self-start max-w-[85%]"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                        className="mb-1 py-1 border-b border-gray-800"
+                      >
+                        <span className="text-gray-500">
+                          [{formatDateTime(log.timestamp)}]
+                        </span>{" "}
+                        <span className={textColorClass}>{content}</span>
                     </div>
-                  ))}
+                    );
+                  })}
+                  <div ref={logsEndRef} />
                 </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Input
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-white"
-                  onKeyDown={(e) => {
-                    if (
-                      e.key === "Enter" &&
-                      !e.shiftKey &&
-                      !e.nativeEvent.isComposing
-                    ) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim()}
-                  className="bg-[#07c160] hover:bg-[#06ad56]"
-                >
-                  Send
-                </Button>
               </div>
             </CardContent>
           </Card>

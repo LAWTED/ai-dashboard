@@ -1,0 +1,26 @@
+/* src/components/StartButton.css */
+.pixel-button {
+  background-image: url("/gui-elements.png");
+  width: 78px; /* 31px * 2.5 */
+  height: 45px; /* 18px * 2.5 */
+  background-position: -280px -198px; /* -112px * 2.5, -79px * 2.5 */
+  background-size: 480px 760px; /* 192px * 2.5, 304px * 2.5 */
+  image-rendering: pixelated; /* 保持像素风格 */
+  cursor: pointer;
+}
+
+.new-pixel-button {
+  border-width: 1em;
+  border-image-source: url("https://www.convex.dev/ai-town/assets/button-5d1423a2.svg");
+  border-image-repeat: stretch;
+  border-image-slice: 25%;
+  cursor: pointer;
+}
+
+.new-pixel-button:hover {
+  filter: brightness(1.2);
+}
+
+.pixel-button:hover {
+  filter: brightness(1.2);
+}

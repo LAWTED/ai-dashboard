@@ -27,10 +27,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <SidebarProvider>
+        <SidebarProvider defaultOpen={false}>
           <div className="flex h-screen w-full">
             <AppSidebar />
-            <main className="flex-1 w-full">
+            <main className="flex-1 w-full overflow-y-hidden">
               <div className="flex items-center justify-between  p-2">
                 <SidebarTrigger />
               </div>
