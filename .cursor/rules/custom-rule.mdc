@@ -8,3 +8,4 @@ alwaysApply: true
 
 <!-- - Use OpenAI Response API instead of completion api, here is the doc: https://platform.openai.com/docs/api-reference/responses -->
 - use shadcn when needed, use command to install like: npx shadcn@latest add card
+- interface Text use Enlish. 
