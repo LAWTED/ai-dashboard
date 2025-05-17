@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, X, Search, Check } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,19 @@ type LogEntry = {
   timestamp: number;
   level: "info" | "error" | "warning" | "debug";
   color?: string;
+};
+
+// Author type from OpenAlex API
+type Author = {
+  id: string;
+  display_name: string;
+  works_count: number;
+  cited_by_count: number;
+  last_known_institutions?: {
+    id: string;
+    display_name: string;
+    country_code?: string;
+  }[];
 };
 
 const TOTAL_STEPS = 4;
@@ -74,6 +87,9 @@ export default function CreateBotPage() {
     ] as Question[]
   });
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null);
 
   const logsEndRef = useRef<HTMLDivElement>(null);
 
@@ -175,6 +191,53 @@ export default function CreateBotPage() {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
+  // Search for authors when name changes
+  const searchAuthors = async () => {
+    if (!formData.name.trim()) return;
+
+    setIsSearching(true);
+    setAuthors([]);
+    setSelectedAuthor(null);
+
+    try {
+      logger.info(`Searching for author: ${formData.name}`);
+      const response = await fetch(`https://api.openalex.org/authors?search=${encodeURIComponent(formData.name)}&mailto=lawtedwu@gmail.com`);
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        setAuthors(data.results);
+        logger.success(`Found ${data.results.length} authors matching "${formData.name}"`);
+      } else {
+        logger.info(`No authors found for "${formData.name}"`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(`Failed to search authors: ${error.message}`);
+      } else {
+        logger.error('Failed to search authors: Unknown error');
+      }
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Select an author
+  const handleSelectAuthor = (author: Author) => {
+    setSelectedAuthor(author);
+    logger.success(`Selected author: ${author.display_name}`);
+    logger.info(`Author OpenAlex ID: ${author.id}`);
+
+    // Automatically update the name field
+    setFormData({
+      ...formData,
+      name: author.display_name
+    });
+  };
+
   // Submit handler for the final step
   const handleSubmit = async () => {
     logger.info('Submitting professor info to Supabase...');
@@ -201,6 +264,7 @@ export default function CreateBotPage() {
           personality: personalityFull,
           goal: formData.goal,
           creator_id: user.id,
+          author_id: selectedAuthor?.id || null,
         }
       ]);
       if (error) {
@@ -224,6 +288,9 @@ export default function CreateBotPage() {
 
     if (currentStep === 1) {
       logger.success(`Bot name set to: ${formData.name}`);
+      if (selectedAuthor) {
+        logger.info(`Associated with author ID: ${selectedAuthor.id}`);
+      }
     }
 
     if (currentStep === 2) {
@@ -315,15 +382,67 @@ export default function CreateBotPage() {
               <div className="text-sm text-gray-500 mb-2">
                 This will help personalize your bot&apos;s experience
               </div>
-              <Input
-                id="name"
-                placeholder="Enter your name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="text-base p-3"
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  id="name"
+                  placeholder="Enter your name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className="text-base p-3 flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={searchAuthors}
+                  disabled={isSearching || !formData.name.trim()}
+                >
+                  {isSearching ? "Searching..." : "Search"}
+                  {!isSearching && <Search className="ml-2 h-4 w-4" />}
+                </Button>
+              </div>
+
+              {/* Author Search Results */}
+              {authors.length > 0 && (
+                <div className="mt-4">
+                  <Label className="text-sm font-medium">Select your profile:</Label>
+                  <div className="mt-2 grid gap-2">
+                    {authors.map((author) => (
+                      <div
+                        key={author.id}
+                        className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                          selectedAuthor?.id === author.id
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'hover:bg-gray-50 border-gray-200'
+                        }`}
+                        onClick={() => handleSelectAuthor(author)}
+                      >
+                        <div className="flex flex-col gap-2">
+                          <div className="flex justify-between items-center">
+                            <div className="font-medium">{author.display_name}</div>
+                            {selectedAuthor?.id === author.id && (
+                              <Check className="h-5 w-5 text-blue-500 ml-2 opacity-100 transition-opacity" />
+                            )}
+                            {selectedAuthor?.id !== author.id && (
+                              <Check className="h-5 w-5 text-blue-500 ml-2 opacity-0 transition-opacity" />
+                            )}
+                          </div>
+                          <div className="flex justify-between items-center text-sm text-gray-600">
+                            <span>{author.works_count} publications · {author.cited_by_count} citations</span>
+                            {author.last_known_institutions && author.last_known_institutions.length > 0 && (
+                              <span className="text-gray-600">
+                                {author.last_known_institutions[0].display_name}
+                                {author.last_known_institutions[0].country_code && ` (${author.last_known_institutions[0].country_code})`}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
