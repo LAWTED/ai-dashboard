@@ -10,3 +10,4 @@ alwaysApply: true
 - use shadcn when needed, use command to install like: npx shadcn@latest add card
 - interface Text use Enlish.
 - Use Proxy Setting if network doesn't work: export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_proxy=socks5://127.0.0.1:7890
+- Use npm to install
