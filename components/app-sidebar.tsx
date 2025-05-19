@@ -9,6 +9,7 @@ import {
   Settings,
   FileText,
   GraduationCap,
+  Globe,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +37,11 @@ const items = [
     title: "Professor",
     url: "/professor",
     icon: GraduationCap,
+  },
+  {
+    title: "OpenHatch",
+    url: "/openhatch",
+    icon: Globe,
   },
 ];
 
@@ -75,6 +81,10 @@ export function AppSidebar() {
     // 对于readme路径特殊处理，因为主页也会重定向到这里
     if (url === '/readme' && (pathname === '/' || pathname === '/readme')) {
       return true;
+    }
+    // 对于其他路径，检查是否以url开头
+    if (url !== '/readme') {
+      return pathname?.startsWith(url);
     }
     return pathname === url;
   };
