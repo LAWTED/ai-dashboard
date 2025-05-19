@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     // 重定向到 /readme
-    router.push('/readme');
+    router.push('/professor');
   }, [router]);
 
   return (

@@ -11,3 +11,5 @@ alwaysApply: true
 - interface Text use Enlish.
 - Use Proxy Setting if network doesn't work: export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_proxy=socks5://127.0.0.1:7890
 - Use npm to install
+- Use ai sdk to deal LLM, https://ai-sdk.dev/docs
+- Do not run npm run dev since i've run it.

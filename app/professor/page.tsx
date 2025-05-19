@@ -10,14 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Plus, Mail } from "lucide-react";
 import Link from "next/link";
 import { LogoutButton } from "@/components/logout-button";
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 // Mock data for bots
 const mockBots = [
   {
     id: 1,
     name: "Research Assistant",
-    description: "An AI bot specialized in academic research and paper analysis",
+    description:
+      "An AI bot specialized in academic research and paper analysis",
     status: "Active",
     lastActive: "2 hours ago",
   },
@@ -33,7 +34,7 @@ const mockBots = [
 export default async function ProfessorPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  const userEmail = data.user?.email || 'Not logged in';
+  const userEmail = data.user?.email || "Not logged in";
 
   return (
     <div className="container mx-auto p-4">
@@ -61,11 +62,13 @@ export default async function ProfessorPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 {bot.name}
-                <span className={`text-sm px-2 py-1 rounded-full ${
-                  bot.status === "Active"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-700"
-                }`}>
+                <span
+                  className={`text-sm px-2 py-1 rounded-full ${
+                    bot.status === "Active"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
                   {bot.status}
                 </span>
               </CardTitle>
