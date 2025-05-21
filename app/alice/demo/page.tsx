@@ -21,12 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  timestamp: number;
-};
+import { WeChatChat, Message } from "@/components/ui/wechat-chat";
 
 // Define available model options
 type ModelOption = {
@@ -55,8 +50,114 @@ type UserQueue = {
   lastMessageTime: number;
 };
 
+// ANSI 颜色代码常量
+const COLORS = {
+  RED: "\u001b[31m",
+  GREEN: "\u001b[32m",
+  YELLOW: "\u001b[33m",
+  BLUE: "\u001b[34m",
+  MAGENTA: "\u001b[35m",
+  CYAN: "\u001b[36m",
+  RESET: "\u001b[0m",
+};
+
+// Create logger outside component to avoid recreation on each render
+const createLogger = () => {
+  const addLog = (logEntry: LogEntry, setLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>) => {
+    setLogs((prev) => {
+      // 保持日志数量在限制内
+      const MAX_LOGS = 100; // Define MAX_LOGS here since it's used only in this function
+      const newLogs = [...prev, logEntry];
+      if (newLogs.length > MAX_LOGS) {
+        return newLogs.slice(-MAX_LOGS);
+      }
+      return newLogs;
+    });
+  };
+
+  return {
+    createLogFunctions: (setLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>) => ({
+      info: (message: string) => {
+        const logEntry = {
+          message,
+          timestamp: Date.now(),
+          level: "info" as const,
+        };
+        addLog(logEntry, setLogs);
+        console.log(`INFO: ${message}`);
+      },
+      error: (message: string) => {
+        const logEntry = {
+          message: `${COLORS.RED}Error: ${message}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "error" as const,
+          color: "red",
+        };
+        addLog(logEntry, setLogs);
+        console.error(`ERROR: ${message}`);
+      },
+      warning: (message: string) => {
+        const logEntry = {
+          message: `${COLORS.YELLOW}Warning: ${message}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "warning" as const,
+          color: "yellow",
+        };
+        addLog(logEntry, setLogs);
+        console.warn(`WARNING: ${message}`);
+      },
+      debug: (message: string) => {
+        const logEntry = {
+          message: `${COLORS.BLUE}Debug: ${message}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "debug" as const,
+          color: "blue",
+        };
+        addLog(logEntry, setLogs);
+        console.debug(`DEBUG: ${message}`);
+      },
+      success: (message: string) => {
+        const logEntry = {
+          message: `${COLORS.GREEN}${message}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "info" as const,
+          color: "green",
+        };
+        addLog(logEntry, setLogs);
+        console.log(`SUCCESS: ${message}`);
+      },
+      model: (modelInfo: ModelOption | undefined, action: string) => {
+        const modelName = modelInfo?.name || "Unknown";
+        const apiProvider = modelInfo?.api || "Unknown";
+        const modelId = modelInfo?.id || "Unknown";
+        const logEntry = {
+          message: `${COLORS.MAGENTA}[${apiProvider} API] Using ${modelName} (${modelId}) for ${action}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "info" as const,
+          color: "magenta",
+        };
+        addLog(logEntry, setLogs);
+        console.log(
+          `MODEL: Using ${modelName} (${modelId}) via ${apiProvider} API for ${action}`
+        );
+      },
+      api: (status: string, details: string) => {
+        const logEntry = {
+          message: `${COLORS.CYAN}[API ${status}] ${details}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "info" as const,
+          color: "cyan",
+        };
+        addLog(logEntry, setLogs);
+        console.log(`API ${status}: ${details}`);
+      },
+    })
+  };
+};
+
+const loggerFactory = createLogger();
+
 export default function Demo() {
-  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [userQueue, setUserQueue] = useState<UserQueue>({
@@ -87,123 +188,19 @@ export default function Demo() {
   // 从配置 store 中获取配置
   const { config } = useAliceConfigStore();
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   // 使用配置 store 中的值
   const QUEUE_WAITING_TIME = config.queueWaitingTime; // 从 store 中获取
   const TYPING_SPEED = config.typingSpeed; // 从 store 中获取
-  const MAX_LOGS = 100; // 最大日志数量
   const STORAGE_KEY_PREFIX = "alice_chat_history_"; // localStorage 存储键前缀
   const USERID_STORAGE_KEY = "alice_userid"; // userid 存储键
   const MODEL_STORAGE_KEY = "alice_selected_model"; // model 存储键
 
-  // ANSI 颜色代码常量
-  const COLORS = {
-    RED: "\u001b[31m",
-    GREEN: "\u001b[32m",
-    YELLOW: "\u001b[33m",
-    BLUE: "\u001b[34m",
-    MAGENTA: "\u001b[35m",
-    CYAN: "\u001b[36m",
-    RESET: "\u001b[0m",
-  };
+  // Create logger instance with setLogs function
+  const logger = loggerFactory.createLogFunctions(setLogs);
 
-  // bot.py风格的日志功能
-  const logger = {
-    info: (message: string) => {
-      const logEntry = {
-        message,
-        timestamp: Date.now(),
-        level: "info" as const,
-      };
-      addLog(logEntry);
-      console.log(`INFO: ${message}`);
-    },
-    error: (message: string) => {
-      const logEntry = {
-        message: `${COLORS.RED}Error: ${message}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "error" as const,
-        color: "red",
-      };
-      addLog(logEntry);
-      console.error(`ERROR: ${message}`);
-    },
-    warning: (message: string) => {
-      const logEntry = {
-        message: `${COLORS.YELLOW}Warning: ${message}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "warning" as const,
-        color: "yellow",
-      };
-      addLog(logEntry);
-      console.warn(`WARNING: ${message}`);
-    },
-    debug: (message: string) => {
-      const logEntry = {
-        message: `${COLORS.BLUE}Debug: ${message}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "debug" as const,
-        color: "blue",
-      };
-      addLog(logEntry);
-      console.debug(`DEBUG: ${message}`);
-    },
-    success: (message: string) => {
-      const logEntry = {
-        message: `${COLORS.GREEN}${message}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "info" as const,
-        color: "green",
-      };
-      addLog(logEntry);
-      console.log(`SUCCESS: ${message}`);
-    },
-    model: (modelInfo: ModelOption | undefined, action: string) => {
-      const modelName = modelInfo?.name || "Unknown";
-      const apiProvider = modelInfo?.api || "Unknown";
-      const modelId = modelInfo?.id || "Unknown";
-      const logEntry = {
-        message: `${COLORS.MAGENTA}[${apiProvider} API] Using ${modelName} (${modelId}) for ${action}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "info" as const,
-        color: "magenta",
-      };
-      addLog(logEntry);
-      console.log(
-        `MODEL: Using ${modelName} (${modelId}) via ${apiProvider} API for ${action}`
-      );
-    },
-    api: (status: string, details: string) => {
-      const logEntry = {
-        message: `${COLORS.CYAN}[API ${status}] ${details}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "info" as const,
-        color: "cyan",
-      };
-      addLog(logEntry);
-      console.log(`API ${status}: ${details}`);
-    },
-  };
-
-  // 添加日志
-  const addLog = (logEntry: LogEntry) => {
-    setLogs((prev) => {
-      // 保持日志数量在限制内
-      const newLogs = [...prev, logEntry];
-      if (newLogs.length > MAX_LOGS) {
-        return newLogs.slice(-MAX_LOGS);
-      }
-      return newLogs;
-    });
-  };
-
-  // Scroll to bottom when messages or logs change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
+  // Scroll to bottom when logs change
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
@@ -224,14 +221,12 @@ export default function Demo() {
     }, QUEUE_WAITING_TIME + 100); // Add 100ms buffer
 
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userQueue, processingQueue, loading, typing]);
 
   // Function to handle sending a user message
-  const handleSendMessage = async () => {
-    if (!message.trim() || !nameEntered) return;
-
-    const userMessage = message.trim();
-    setMessage("");
+  const handleSendMessage = async (userMessage: string) => {
+    if (!userMessage.trim() || !nameEntered) return;
 
     const timestamp = Date.now();
     logger.info(`【User】: ${userMessage}`);
@@ -430,8 +425,6 @@ export default function Demo() {
     setShowLogs(!showLogs);
     logger.debug(`Log display status: ${!showLogs}`);
   };
-
-  // 注意: 聊天消息不再显示时间戳，相关的 formatTime 函数已移除
 
   // Format full date and time, similar to bot.py format
   const formatDateTime = (timestamp: number) => {
@@ -742,6 +735,24 @@ export default function Demo() {
     }
   };
 
+  // Render model info for the chat component
+  const renderModelInfo = () => (
+    <div className="flex items-center">
+      <span className="font-medium">Model:</span>
+      <span className="ml-1">
+        {MODELS.find((m) => m.id === selectedModel)?.name || selectedModel}
+      </span>
+      <span className="mx-1">|</span>
+      <span className="font-medium">API:</span>
+      <span className="ml-1">
+        {MODELS.find((m) => m.id === selectedModel)?.api || "Unknown"}
+      </span>
+      <span className="mx-1">|</span>
+      <span className="font-medium">User ID:</span>
+      <span className="ml-1">{userid}</span>
+    </div>
+  );
+
   return (
     <div className="flex-1 p-4 sm:p-8 overflow-auto ">
       <div className="w-full max-w-full mx-auto">
@@ -937,71 +948,13 @@ export default function Demo() {
           <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-12rem)]">
             {/* Chat area - fixed width */}
             <div className="flex flex-col w-full md:w-[600px] md:flex-shrink-0 h-full">
-              <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-[#ebebeb] mb-4">
-                {/* Container message scroll area */}
-                <div className="flex flex-col w-full">
-                  {/* Current model info */}
-                  <div className="bg-gray-100 rounded-lg p-2 mb-4 text-xs text-gray-700 flex items-center justify-center">
-                    <div className="flex items-center">
-                      <span className="font-medium">Model:</span>
-                      <span className="ml-1">
-                        {MODELS.find((m) => m.id === selectedModel)?.name ||
-                          selectedModel}
-                      </span>
-                      <span className="mx-1">|</span>
-                      <span className="font-medium">API:</span>
-                      <span className="ml-1">
-                        {MODELS.find((m) => m.id === selectedModel)?.api ||
-                          "Unknown"}
-                      </span>
-                      <span className="mx-1">|</span>
-                      <span className="font-medium">User ID:</span>
-                      <span className="ml-1">{userid}</span>
-                    </div>
-                  </div>
-
-                  {messages.map((msg, index) => (
-                    <div
-                      key={index}
-                      className={`mb-4 p-4 rounded-lg ${
-                        msg.role === "user"
-                          ? "bg-[#95ec69] text-black self-end max-w-[85%]"
-                          : "bg-white border border-gray-200 self-start max-w-[85%]"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Input
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  disabled={false}
-                  className="flex-1 bg-white"
-                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                    if (
-                      e.key === "Enter" &&
-                      !e.shiftKey &&
-                      !e.nativeEvent.isComposing
-                    ) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!message.trim()}
-                  className="bg-[#07c160] hover:bg-[#06ad56]"
-                >
-                  Send
-                </Button>
-              </div>
+              <WeChatChat
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                disabled={false}
+                placeholder="Type a message..."
+                modelInfo={renderModelInfo()}
+              />
             </div>
 
             {/* Log area - completely fill remaining width */}

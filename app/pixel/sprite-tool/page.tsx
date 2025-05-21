@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import Image from "next/image";
 
 const IMAGE_SRC = "/gui-elements.png";
 const IMAGE_WIDTH = 192; // px, adjust to your actual image size
@@ -9,7 +10,7 @@ export default function SpriteToolPage() {
   const [selecting, setSelecting] = useState(false);
   const [start, setStart] = useState<{ x: number; y: number } | null>(null);
   const [rect, setRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const imgRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Mouse down: start selection
@@ -55,18 +56,20 @@ export default function SpriteToolPage() {
     <div style={{ display: "flex", gap: 32, padding: 32 }}>
       {/* Image and selection overlay */}
       <div style={{ position: "relative", width: IMAGE_WIDTH, height: IMAGE_HEIGHT, userSelect: "none" }}>
-        <img
-          ref={imgRef}
-          src={IMAGE_SRC}
-          width={IMAGE_WIDTH}
-          height={IMAGE_HEIGHT}
-          alt="gui-elements"
-          style={{ display: "block", imageRendering: "pixelated", border: "1px solid #ccc" }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          draggable={false}
-        />
+        <div ref={imgRef}>
+          <Image
+            src={IMAGE_SRC}
+            width={IMAGE_WIDTH}
+            height={IMAGE_HEIGHT}
+            alt="gui-elements"
+            style={{ display: "block", imageRendering: "pixelated", border: "1px solid #ccc" }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            draggable={false}
+            unoptimized
+          />
+        </div>
         {/* Selection rectangle */}
         {rect && (
           <div

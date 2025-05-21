@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/lib/ai-sdk-client";
-import { generateText, tool } from "ai";
-import { z } from "zod";
+import { generateText } from "ai";
 
 // Handle POST requests
 export async function POST(req: NextRequest) {

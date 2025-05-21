@@ -10,6 +10,7 @@ import {
   FileText,
   GraduationCap,
   Globe,
+  Gamepad2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,11 @@ const items = [
     title: "OpenHatch",
     url: "/openhatch",
     icon: Globe,
+  },
+  {
+    title: "Games",
+    url: "/games",
+    icon: Gamepad2,
   },
 ];
 
@@ -79,23 +85,24 @@ export function AppSidebar() {
   // 检查路径是否与给定的URL匹配
   const isActive = (url: string) => {
     // 对于readme路径特殊处理，因为主页也会重定向到这里
-    if (url === '/readme' && (pathname === '/' || pathname === '/readme')) {
+    if (url === "/readme" && (pathname === "/" || pathname === "/readme")) {
       return true;
     }
     // 对于其他路径，检查是否以url开头
-    if (url !== '/readme') {
+    if (url !== "/readme") {
       return pathname?.startsWith(url);
     }
     return pathname === url;
   };
 
   // 检查当前路径是否是Alice的子路径
-  const isAliceActive = pathname?.startsWith('/alice');
+  const isAliceActive = pathname?.startsWith("/alice");
 
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel></SidebarGroupLabel>
           <SidebarGroupLabel>AI Platform</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

@@ -253,7 +253,7 @@ export default function VAModule() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentSlide, isTransitioning]);
+  }, [currentSlide, isTransitioning, nextSlide, prevSlide]);
 
   // Render list content if it's an array
   const renderContent = (content: SlideContent) => {
