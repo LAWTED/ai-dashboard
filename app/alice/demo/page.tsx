@@ -213,6 +213,7 @@ export default function Demo() {
     }, QUEUE_WAITING_TIME + 100); // Add 100ms buffer
 
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userQueue, processingQueue, loading, typing]);
 
   // Function to handle sending a user message
@@ -514,7 +515,7 @@ export default function Demo() {
     } catch (error) {
       logger.error(`Failed to load chat history from localStorage: ${error}`);
     }
-  }, [nameEntered, userid]);
+  }, [logger, nameEntered, userid]);
 
   // Save messages to localStorage whenever messages change
   useEffect(() => {
@@ -527,7 +528,7 @@ export default function Demo() {
     } catch (error) {
       logger.error(`Failed to save chat history to localStorage: ${error}`);
     }
-  }, [messages, userid, nameEntered]);
+  }, [messages, userid, nameEntered, logger]);
 
   // 显示清除历史确认对话框
   const handleClearHistoryClick = () => {
