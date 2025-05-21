@@ -9,6 +9,7 @@ import {
   Settings,
   FileText,
   GraduationCap,
+  Gamepad2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +37,11 @@ const items = [
     title: "Professor",
     url: "/professor",
     icon: GraduationCap,
+  },
+  {
+    title: "Games",
+    url: "/games",
+    icon: Gamepad2,
   },
 ];
 
@@ -73,19 +79,20 @@ export function AppSidebar() {
   // 检查路径是否与给定的URL匹配
   const isActive = (url: string) => {
     // 对于readme路径特殊处理，因为主页也会重定向到这里
-    if (url === '/readme' && (pathname === '/' || pathname === '/readme')) {
+    if (url === "/readme" && (pathname === "/" || pathname === "/readme")) {
       return true;
     }
     return pathname === url;
   };
 
   // 检查当前路径是否是Alice的子路径
-  const isAliceActive = pathname?.startsWith('/alice');
+  const isAliceActive = pathname?.startsWith("/alice");
 
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel></SidebarGroupLabel>
           <SidebarGroupLabel>AI Platform</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
