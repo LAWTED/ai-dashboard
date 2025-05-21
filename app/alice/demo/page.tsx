@@ -50,6 +50,113 @@ type UserQueue = {
   lastMessageTime: number;
 };
 
+// ANSI 颜色代码常量
+const COLORS = {
+  RED: "\u001b[31m",
+  GREEN: "\u001b[32m",
+  YELLOW: "\u001b[33m",
+  BLUE: "\u001b[34m",
+  MAGENTA: "\u001b[35m",
+  CYAN: "\u001b[36m",
+  RESET: "\u001b[0m",
+};
+
+// Create logger outside component to avoid recreation on each render
+const createLogger = () => {
+  const addLog = (logEntry: LogEntry, setLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>) => {
+    setLogs((prev) => {
+      // 保持日志数量在限制内
+      const MAX_LOGS = 100; // Define MAX_LOGS here since it's used only in this function
+      const newLogs = [...prev, logEntry];
+      if (newLogs.length > MAX_LOGS) {
+        return newLogs.slice(-MAX_LOGS);
+      }
+      return newLogs;
+    });
+  };
+
+  return {
+    createLogFunctions: (setLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>) => ({
+      info: (message: string) => {
+        const logEntry = {
+          message,
+          timestamp: Date.now(),
+          level: "info" as const,
+        };
+        addLog(logEntry, setLogs);
+        console.log(`INFO: ${message}`);
+      },
+      error: (message: string) => {
+        const logEntry = {
+          message: `${COLORS.RED}Error: ${message}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "error" as const,
+          color: "red",
+        };
+        addLog(logEntry, setLogs);
+        console.error(`ERROR: ${message}`);
+      },
+      warning: (message: string) => {
+        const logEntry = {
+          message: `${COLORS.YELLOW}Warning: ${message}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "warning" as const,
+          color: "yellow",
+        };
+        addLog(logEntry, setLogs);
+        console.warn(`WARNING: ${message}`);
+      },
+      debug: (message: string) => {
+        const logEntry = {
+          message: `${COLORS.BLUE}Debug: ${message}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "debug" as const,
+          color: "blue",
+        };
+        addLog(logEntry, setLogs);
+        console.debug(`DEBUG: ${message}`);
+      },
+      success: (message: string) => {
+        const logEntry = {
+          message: `${COLORS.GREEN}${message}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "info" as const,
+          color: "green",
+        };
+        addLog(logEntry, setLogs);
+        console.log(`SUCCESS: ${message}`);
+      },
+      model: (modelInfo: ModelOption | undefined, action: string) => {
+        const modelName = modelInfo?.name || "Unknown";
+        const apiProvider = modelInfo?.api || "Unknown";
+        const modelId = modelInfo?.id || "Unknown";
+        const logEntry = {
+          message: `${COLORS.MAGENTA}[${apiProvider} API] Using ${modelName} (${modelId}) for ${action}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "info" as const,
+          color: "magenta",
+        };
+        addLog(logEntry, setLogs);
+        console.log(
+          `MODEL: Using ${modelName} (${modelId}) via ${apiProvider} API for ${action}`
+        );
+      },
+      api: (status: string, details: string) => {
+        const logEntry = {
+          message: `${COLORS.CYAN}[API ${status}] ${details}${COLORS.RESET}`,
+          timestamp: Date.now(),
+          level: "info" as const,
+          color: "cyan",
+        };
+        addLog(logEntry, setLogs);
+        console.log(`API ${status}: ${details}`);
+      },
+    })
+  };
+};
+
+const loggerFactory = createLogger();
+
 export default function Demo() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -86,111 +193,12 @@ export default function Demo() {
   // 使用配置 store 中的值
   const QUEUE_WAITING_TIME = config.queueWaitingTime; // 从 store 中获取
   const TYPING_SPEED = config.typingSpeed; // 从 store 中获取
-  const MAX_LOGS = 100; // 最大日志数量
   const STORAGE_KEY_PREFIX = "alice_chat_history_"; // localStorage 存储键前缀
   const USERID_STORAGE_KEY = "alice_userid"; // userid 存储键
   const MODEL_STORAGE_KEY = "alice_selected_model"; // model 存储键
 
-  // ANSI 颜色代码常量
-  const COLORS = {
-    RED: "\u001b[31m",
-    GREEN: "\u001b[32m",
-    YELLOW: "\u001b[33m",
-    BLUE: "\u001b[34m",
-    MAGENTA: "\u001b[35m",
-    CYAN: "\u001b[36m",
-    RESET: "\u001b[0m",
-  };
-
-  // bot.py风格的日志功能
-  const logger = {
-    info: (message: string) => {
-      const logEntry = {
-        message,
-        timestamp: Date.now(),
-        level: "info" as const,
-      };
-      addLog(logEntry);
-      console.log(`INFO: ${message}`);
-    },
-    error: (message: string) => {
-      const logEntry = {
-        message: `${COLORS.RED}Error: ${message}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "error" as const,
-        color: "red",
-      };
-      addLog(logEntry);
-      console.error(`ERROR: ${message}`);
-    },
-    warning: (message: string) => {
-      const logEntry = {
-        message: `${COLORS.YELLOW}Warning: ${message}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "warning" as const,
-        color: "yellow",
-      };
-      addLog(logEntry);
-      console.warn(`WARNING: ${message}`);
-    },
-    debug: (message: string) => {
-      const logEntry = {
-        message: `${COLORS.BLUE}Debug: ${message}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "debug" as const,
-        color: "blue",
-      };
-      addLog(logEntry);
-      console.debug(`DEBUG: ${message}`);
-    },
-    success: (message: string) => {
-      const logEntry = {
-        message: `${COLORS.GREEN}${message}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "info" as const,
-        color: "green",
-      };
-      addLog(logEntry);
-      console.log(`SUCCESS: ${message}`);
-    },
-    model: (modelInfo: ModelOption | undefined, action: string) => {
-      const modelName = modelInfo?.name || "Unknown";
-      const apiProvider = modelInfo?.api || "Unknown";
-      const modelId = modelInfo?.id || "Unknown";
-      const logEntry = {
-        message: `${COLORS.MAGENTA}[${apiProvider} API] Using ${modelName} (${modelId}) for ${action}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "info" as const,
-        color: "magenta",
-      };
-      addLog(logEntry);
-      console.log(
-        `MODEL: Using ${modelName} (${modelId}) via ${apiProvider} API for ${action}`
-      );
-    },
-    api: (status: string, details: string) => {
-      const logEntry = {
-        message: `${COLORS.CYAN}[API ${status}] ${details}${COLORS.RESET}`,
-        timestamp: Date.now(),
-        level: "info" as const,
-        color: "cyan",
-      };
-      addLog(logEntry);
-      console.log(`API ${status}: ${details}`);
-    },
-  };
-
-  // 添加日志
-  const addLog = (logEntry: LogEntry) => {
-    setLogs((prev) => {
-      // 保持日志数量在限制内
-      const newLogs = [...prev, logEntry];
-      if (newLogs.length > MAX_LOGS) {
-        return newLogs.slice(-MAX_LOGS);
-      }
-      return newLogs;
-    });
-  };
+  // Create logger instance with setLogs function
+  const logger = loggerFactory.createLogFunctions(setLogs);
 
   // Scroll to bottom when logs change
   useEffect(() => {
@@ -515,7 +523,7 @@ export default function Demo() {
     } catch (error) {
       logger.error(`Failed to load chat history from localStorage: ${error}`);
     }
-  }, [logger, nameEntered, userid]);
+  }, [nameEntered, userid]);
 
   // Save messages to localStorage whenever messages change
   useEffect(() => {
@@ -528,7 +536,7 @@ export default function Demo() {
     } catch (error) {
       logger.error(`Failed to save chat history to localStorage: ${error}`);
     }
-  }, [messages, userid, nameEntered, logger]);
+  }, [messages, userid, nameEntered]);
 
   // 显示清除历史确认对话框
   const handleClearHistoryClick = () => {

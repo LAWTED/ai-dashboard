@@ -3,60 +3,30 @@
 import { useState } from "react";
 import { WeChatChat, Message } from "@/components/ui/wechat-chat";
 import { Button } from "@/components/ui/button";
+import { gameConfigs } from "@/app/games/config";
 
-// MBTI types
-const mbtiTypes = [
-  "INTJ",
-  "INTP",
-  "ENTJ",
-  "ENTP",
-  "INFJ",
-  "INFP",
-  "ENFJ",
-  "ENFP",
-  "ISTJ",
-  "ISFJ",
-  "ESTJ",
-  "ESFJ",
-  "ISTP",
-  "ISFP",
-  "ESTP",
-  "ESFP",
-];
-
-// Common questions to ask for guessing MBTI type
-const commonQuestions = [
-  "你喜欢独处还是和朋友一起玩？",
-  "你更关注事实和细节，还是喜欢想象和创意？",
-  "做决定时，你更看重逻辑还是感受？",
-  "你喜欢提前计划还是灵活应对？",
-  "你如何看待冲突和矛盾？",
-  "你在压力下会怎么反应？",
-  "对于新事物，你的第一反应是什么？",
-  "你更喜欢哪种工作环境？",
-];
-
-export default function MBTIGuessingGame() {
+export default function GamesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
-  const [selectedMBTI, setSelectedMBTI] = useState<string | null>(null);
+  const [selectedGameType, setSelectedGameType] = useState<string>("mbti");
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [guessedCorrectly, setGuessedCorrectly] = useState(false);
-  const [aiMBTI, setAiMBTI] = useState<string>("");
+  const [gameParam, setGameParam] = useState<string>("");
 
   // Start the game
   const startGame = () => {
-    const randomMBTI = mbtiTypes[Math.floor(Math.random() * mbtiTypes.length)];
-    setAiMBTI(randomMBTI);
+    const gameConfig = gameConfigs[selectedGameType];
+    const randomOption = gameConfig.options[Math.floor(Math.random() * gameConfig.options.length)];
+    setGameParam(randomOption);
     setGameStarted(true);
     setGuessedCorrectly(false);
-    setSelectedMBTI(null);
+    setSelectedOption(null);
 
     const initialMessages: Message[] = [
       {
         role: "assistant",
-        content:
-          "你好！我正在扮演一个MBTI类型。通过与我聊天，猜猜我是哪种类型吧！你可以问我一些问题，或者直接猜测。",
+        content: gameConfig.initialMessage,
         timestamp: Date.now(),
       },
     ];
@@ -68,6 +38,8 @@ export default function MBTIGuessingGame() {
   const handleSendMessage = async (content: string) => {
     if (guessedCorrectly) return;
 
+    const gameConfig = gameConfigs[selectedGameType];
+
     // Add user message
     const userMessage: Message = {
       role: "user",
@@ -78,22 +50,34 @@ export default function MBTIGuessingGame() {
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
-    // Check if user is guessing a MBTI type
-    const mbtiGuess = mbtiTypes.find((type) =>
-      content.toUpperCase().includes(type)
-    );
+    // Check if user is guessing
+    const isOptionGuess = gameConfig.options.some((option) => {
+      if (selectedGameType === "mbti") {
+        return content.toUpperCase().includes(option);
+      } else {
+        return content.includes(option);
+      }
+    });
+
+    // Format conversation history for the API
+    const conversationHistory = messages.map((msg) => ({
+      role: msg.role as "user" | "assistant",
+      content: msg.content,
+    }));
 
     try {
       // Call our API
-      const response = await fetch("/api/games/mbti", {
+      const response = await fetch("/api/games/guess", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           message: content,
-          mbtiType: aiMBTI,
-          isGuessing: !!mbtiGuess,
+          gameType: selectedGameType,
+          gameParam: gameParam,
+          isGuessing: isOptionGuess,
+          conversationHistory,
         }),
       });
 
@@ -134,25 +118,52 @@ export default function MBTIGuessingGame() {
   };
 
   // Make a guess
-  const makeGuess = (mbtiType: string) => {
+  const makeGuess = (option: string) => {
     if (guessedCorrectly) return;
 
-    setSelectedMBTI(mbtiType);
-    handleSendMessage(`我猜你是${mbtiType}类型`);
+    setSelectedOption(option);
+    const gameConfig = gameConfigs[selectedGameType];
+    const guessMessage = gameConfig.formatGuessMessage(option);
+    handleSendMessage(guessMessage);
   };
+
+  // Change game type
+  const changeGameType = (type: string) => {
+    if (type !== selectedGameType) {
+      setSelectedGameType(type);
+      setGameStarted(false);
+      setMessages([]);
+      setGuessedCorrectly(false);
+      setSelectedOption(null);
+    }
+  };
+
+  const gameConfig = gameConfigs[selectedGameType];
 
   return (
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-4xl h-full flex flex-col">
+      <div className="flex justify-center mb-4 gap-2">
+        {Object.keys(gameConfigs).map((type) => (
+          <Button
+            key={type}
+            variant={selectedGameType === type ? "default" : "outline"}
+            onClick={() => changeGameType(type)}
+            className="text-sm h-auto"
+            size="sm"
+          >
+            {gameConfigs[type].title}
+          </Button>
+        ))}
+      </div>
+
       <h1 className="text-center text-xl sm:text-2xl font-bold mb-4">
-        MBTI 猜猜猜
+        {gameConfig.title}
       </h1>
 
       <div className="flex-1 overflow-hidden flex flex-col">
         {!gameStarted ? (
           <div className="text-center flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg p-6">
-            <p className="mb-4 px-4">
-              在这个游戏中，AI将扮演一个MBTI性格类型。通过与AI对话，猜测它代表的MBTI类型。
-            </p>
+            <p className="mb-4 px-4">{gameConfig.description}</p>
             <Button onClick={startGame} className="mx-auto">
               开始游戏
             </Button>
@@ -164,13 +175,14 @@ export default function MBTIGuessingGame() {
               onSendMessage={handleSendMessage}
               loading={loading}
               placeholder="输入问题或猜测..."
-              className="h-full"
+              className="grow min-h-0"
             />
 
             {guessedCorrectly ? (
               <div className="text-center mt-2 bg-gray-50 rounded-lg p-4">
                 <p className="mb-3 text-green-600 font-bold">
-                  恭喜你猜对了！AI的MBTI类型是: {aiMBTI}
+                  恭喜你猜对了！
+                  {gameConfig.formatSuccessMessage(gameParam)}
                 </p>
                 <Button onClick={startGame} className="mx-auto">
                   再玩一次
@@ -183,7 +195,7 @@ export default function MBTIGuessingGame() {
                     常见问题:
                   </h3>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {commonQuestions.map((question, index) => (
+                    {gameConfig.commonQuestions.map((question, index) => (
                       <Button
                         key={index}
                         variant="outline"
@@ -199,18 +211,18 @@ export default function MBTIGuessingGame() {
 
                 <div>
                   <h3 className="text-base sm:text-lg font-medium mb-2">
-                    猜测MBTI类型:
+                    {gameConfig.optionsTitle}
                   </h3>
                   <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-                    {mbtiTypes.map((type) => (
+                    {gameConfig.options.map((option) => (
                       <Button
-                        key={type}
-                        variant={selectedMBTI === type ? "default" : "outline"}
-                        onClick={() => makeGuess(type)}
+                        key={option}
+                        variant={selectedOption === option ? "default" : "outline"}
+                        onClick={() => makeGuess(option)}
                         className="text-xs sm:text-sm py-1 h-auto"
                         size="sm"
                       >
-                        {type}
+                        {option}
                       </Button>
                     ))}
                   </div>
