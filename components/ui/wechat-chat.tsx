@@ -64,7 +64,9 @@ export function WeChatChat({
                   : "bg-white border border-gray-200 self-start max-w-[85%]"
               }`}
             >
-              <p className="whitespace-pre-wrap text-sm sm:text-base">{msg.content}</p>
+              <p className="whitespace-pre-wrap text-sm sm:text-base">
+                {msg.content}
+              </p>
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -77,7 +79,7 @@ export function WeChatChat({
           onChange={(e) => setMessage(e.target.value)}
           placeholder={placeholder}
           disabled={disabled || loading}
-          className="flex-1 bg-white text-sm sm:text-base h-9 sm:h-10"
+          className="flex-1 bg-white text-base h-9 sm:h-10"
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (
               e.key === "Enter" &&
