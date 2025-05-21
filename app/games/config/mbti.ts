@@ -60,6 +60,12 @@ J (判断): 喜欢计划和条理，喜欢确定性
 P (感知): 保持灵活性，适应变化，不喜欢严格规划`,
   validateGuess: (guess: string, mbtiType: string) => guess.includes(mbtiType),
   generateCorrectResponse: (mbtiType: string) => `恭喜你猜对了！我确实是${mbtiType}类型。要再玩一次吗？`,
-  generateIncorrectResponse: (userGuess: string) => `不，我不是${userGuess}类型。再猜猜看！`
+  generateIncorrectResponse: (userGuess: string) => {
+    // Extract MBTI type from user's guess
+    const mbtiMatch = mbtiTypes.find(type => userGuess.toUpperCase().includes(type));
+    if (!mbtiMatch) return "不，这个猜测不对。再猜猜看！";
+
+    return `不，我不是${mbtiMatch}类型。再猜猜看！`;
+  }
 };
 

@@ -47,5 +47,11 @@ export const foodApiConfig: ApiGameConfig = {
 - 可以提及自己最近的心情和${foodType}的关系，但不要直接说出"我想吃${foodType}"`,
   validateGuess: (guess: string, foodType: string) => guess.includes(foodType),
   generateCorrectResponse: (foodType: string) => `啊！你太了解我了！我确实很想吃${foodType}！那我们等下就去吃这个吧！`,
-  generateIncorrectResponse: (userGuess: string) => `嗯...${userGuess}, 我不想吃...`
+  generateIncorrectResponse: (userGuess: string) => {
+    // Extract food type from user's guess
+    const foodMatch = foodOptions.find(food => userGuess.includes(food));
+    if (!foodMatch) return "嗯...这个不是我现在想吃的...";
+
+    return `嗯...${foodMatch}，我不太想吃这个...`;
+  }
 };

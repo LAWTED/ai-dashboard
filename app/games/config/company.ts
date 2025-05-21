@@ -53,5 +53,11 @@ export const companyApiConfig: ApiGameConfig = {
 回答不要太长，一般不超过100字，要自然地融入公司黑话，但不要过于刻意或直接提到公司名称。`,
   validateGuess: (guess: string, companyName: string) => guess.includes(companyName),
   generateCorrectResponse: (companyName: string) => `哈哈，被你发现了！我确实是${companyName}的员工。看来我们公司的黑话太明显了！`,
-  generateIncorrectResponse: (userGuess: string) => `不，我不是${userGuess}的。我们和他们的文化确实有些不同，继续猜猜看？`
+  generateIncorrectResponse: (userGuess: string) => {
+    // Extract company name from user's guess
+    const companyMatch = techCompanies.find(company => userGuess.includes(company));
+    if (!companyMatch) return "不，我不是这家公司的。继续猜猜看？";
+
+    return `不，我不是${companyMatch}的。继续猜猜看？`;
+  }
 };
