@@ -46,15 +46,15 @@ export default function CreateBotPage() {
       if (authorDetails?.summary_stats) {
         logger.info(`Academic metrics - h-index: ${authorDetails.summary_stats.h_index}, i10-index: ${authorDetails.summary_stats.i10_index}`);
       }
+      if (selectedAuthor && authorDetails) {
+        logger.info(`OpenAlex data will be saved to database for ${selectedAuthor.display_name}`);
+      }
     }
 
     if (currentStep === 3) {
       logger.info(
         `Background information set: ${formData.experience.substring(0, 50)}...`
       );
-      if (formData.experienceTags.length > 0) {
-        logger.info(`Background tags: ${formData.experienceTags.join(", ")}`);
-      }
     }
 
     if (currentStep === 4) {
@@ -93,9 +93,7 @@ export default function CreateBotPage() {
         // Need to have loaded author details
         return !authorDetails;
       case 3:
-        return (
-          !formData.experience.trim() && formData.experienceTags.length === 0
-        );
+        return !formData.experience.trim();
       case 4:
         return (
           !formData.personality.trim() && formData.personalityTags.length === 0
@@ -150,25 +148,25 @@ export default function CreateBotPage() {
       <div className="flex gap-6 h-[calc(100vh-15rem)]">
         {/* Left side - Form */}
         <Card className="w-1/2">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Create Your Bot</CardTitle>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                disabled={currentStep === 1}
+                size="sm"
+              >
+                Back
+              </Button>
+              <Button onClick={handleNext} disabled={isNextDisabled()} size="sm">
+                {currentStep === TOTAL_STEPS ? "Create Bot" : "Next Step"}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="overflow-y-auto max-h-[calc(100vh-22rem)]">
             <div className="space-y-6">
               {renderStepContent()}
-
-              <div className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                  disabled={currentStep === 1}
-                >
-                  Back
-                </Button>
-                <Button onClick={handleNext} disabled={isNextDisabled()}>
-                  {currentStep === TOTAL_STEPS ? "Create Bot" : "Next Step"}
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>

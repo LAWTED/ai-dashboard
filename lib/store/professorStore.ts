@@ -77,7 +77,6 @@ type ProfessorFormData = {
   personality: string;
   personalityTags: string[];
   experience: string;
-  experienceTags: string[];
   goal: string;
   questions: Question[];
 };
@@ -140,10 +139,6 @@ const initialFormData: ProfessorFormData = {
   ],
   experience:
     "I am Geoffrey L. Cohen",
-  experienceTags: [
-    "Stanford Professor of Psychology and Education",
-    "Expert in social psychology and educational interventions",
-  ],
   goal: "My goal is to help students develop a sense of belonging in their academic journey by offering tailored, targeted, and timely guidance. I want to collect information about students' backgrounds, interests, and concerns, then use this to help them navigate the graduate school application process. I aim to identify and address belonging uncertainties, provide constructive feedback that conveys high expectations coupled with belief in their abilities, and help them understand that challenges in the process are normal and not indicative of their potential for success.",
   questions: [
     {
@@ -208,14 +203,8 @@ export const useProfessorStore = create<ProfessorState>((set, get) => ({
         };
       }
     } else {
-      if (!state.formData.experienceTags.includes(tag)) {
-        return {
-          formData: {
-            ...state.formData,
-            experienceTags: [...state.formData.experienceTags, tag],
-          }
-        };
-      }
+      // Experience tags are removed
+      return {};
     }
     return {};
   }),
@@ -231,14 +220,8 @@ export const useProfessorStore = create<ProfessorState>((set, get) => ({
         }
       };
     } else {
-      return {
-        formData: {
-          ...state.formData,
-          experienceTags: state.formData.experienceTags.filter(
-            (tag) => tag !== tagToRemove
-          ),
-        }
-      };
+      // Experience tags are removed
+      return {};
     }
   }),
 
@@ -401,13 +384,7 @@ export const useProfessorStore = create<ProfessorState>((set, get) => ({
         logger.error("You must be logged in to create a bot.");
         return;
       }
-      // Merge experience tags into experience text
-      const experienceFull =
-        formData.experienceTags.length > 0
-          ? `${formData.experience}\n\nTags: ${formData.experienceTags.join(
-              ", "
-            )}`
-          : formData.experience;
+
       // Merge personality tags into personality text
       const personalityFull =
         formData.personalityTags.length > 0
@@ -432,14 +409,28 @@ export const useProfessorStore = create<ProfessorState>((set, get) => ({
         additionalInfo += `- i10-index: ${authorDetails.summary_stats.i10_index}\n`;
       }
 
+      // Prepare simplified detail data for storage (only include institution info)
+      const detail = selectedAuthor ? {
+        institution: selectedAuthor.last_known_institutions?.[0]?.display_name || "",
+        country_code: selectedAuthor.last_known_institutions?.[0]?.country_code || "",
+        works_count: selectedAuthor.works_count,
+        cited_by_count: selectedAuthor.cited_by_count
+      } : null;
+
+      // Extract just the ID part from the OpenAlex URL
+      const authorId = selectedAuthor?.id ? selectedAuthor.id.split('/').pop() : null;
+
+      logger.info("Saving professor details to database...");
+
       const { error } = await supabase.from("profinfo").insert([
         {
           name: formData.name,
-          experience: experienceFull + additionalInfo,
+          experience: formData.experience + additionalInfo,
           personality: personalityFull,
           goal: formData.goal,
           creator_id: user.id,
-          author_id: selectedAuthor?.id || null,
+          author_id: authorId,
+          detail // Simplified data with the new field name
         },
       ]);
       if (error) {

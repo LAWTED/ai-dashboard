@@ -1,11 +1,8 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "@/components/ui/sonner";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "AI Platform",
@@ -13,7 +10,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/Favicon64x64.png", sizes: "64x64" }
+      { url: "/Favicon64x64.png", sizes: "64x64" },
     ],
     apple: "/apple-touch-icon.png",
   },
@@ -26,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <SidebarProvider defaultOpen={false}>
           <div className="flex h-dvh w-full">
             <AppSidebar />

@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
 import { useProfessorStore } from "@/lib/store/professorStore";
 import { toast } from "sonner";
 
@@ -9,7 +8,6 @@ export default function BackgroundStep() {
   const {
     formData,
     updateFormData,
-    removeTag,
     selectedAuthor,
     logger
   } = useProfessorStore();
@@ -107,22 +105,6 @@ export default function BackgroundStep() {
             value={formData.experience}
             onChange={(e) => updateFormData({ experience: e.target.value })}
           />
-          <div className="flex flex-wrap gap-2 mt-3">
-            {formData.experienceTags.map((tag) => (
-              <div
-                key={tag}
-                className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-1 shadow-sm"
-              >
-                <span>{tag}</span>
-                <button
-                  onClick={() => removeTag("experience", tag)}
-                  className="hover:text-blue-900"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
