@@ -21,12 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  timestamp: number;
-};
+import { WeChatChat, Message } from "@/components/ui/wechat-chat";
 
 // Define available model options
 type ModelOption = {
@@ -56,7 +51,6 @@ type UserQueue = {
 };
 
 export default function Demo() {
-  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [userQueue, setUserQueue] = useState<UserQueue>({
@@ -87,7 +81,6 @@ export default function Demo() {
   // 从配置 store 中获取配置
   const { config } = useAliceConfigStore();
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   // 使用配置 store 中的值
@@ -199,11 +192,7 @@ export default function Demo() {
     });
   };
 
-  // Scroll to bottom when messages or logs change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
+  // Scroll to bottom when logs change
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
@@ -227,11 +216,8 @@ export default function Demo() {
   }, [userQueue, processingQueue, loading, typing]);
 
   // Function to handle sending a user message
-  const handleSendMessage = async () => {
-    if (!message.trim() || !nameEntered) return;
-
-    const userMessage = message.trim();
-    setMessage("");
+  const handleSendMessage = async (userMessage: string) => {
+    if (!userMessage.trim() || !nameEntered) return;
 
     const timestamp = Date.now();
     logger.info(`【User】: ${userMessage}`);
@@ -430,8 +416,6 @@ export default function Demo() {
     setShowLogs(!showLogs);
     logger.debug(`Log display status: ${!showLogs}`);
   };
-
-  // 注意: 聊天消息不再显示时间戳，相关的 formatTime 函数已移除
 
   // Format full date and time, similar to bot.py format
   const formatDateTime = (timestamp: number) => {
@@ -742,6 +726,24 @@ export default function Demo() {
     }
   };
 
+  // Render model info for the chat component
+  const renderModelInfo = () => (
+    <div className="flex items-center">
+      <span className="font-medium">Model:</span>
+      <span className="ml-1">
+        {MODELS.find((m) => m.id === selectedModel)?.name || selectedModel}
+      </span>
+      <span className="mx-1">|</span>
+      <span className="font-medium">API:</span>
+      <span className="ml-1">
+        {MODELS.find((m) => m.id === selectedModel)?.api || "Unknown"}
+      </span>
+      <span className="mx-1">|</span>
+      <span className="font-medium">User ID:</span>
+      <span className="ml-1">{userid}</span>
+    </div>
+  );
+
   return (
     <div className="flex-1 p-4 sm:p-8 overflow-auto ">
       <div className="w-full max-w-full mx-auto">
@@ -937,71 +939,13 @@ export default function Demo() {
           <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-12rem)]">
             {/* Chat area - fixed width */}
             <div className="flex flex-col w-full md:w-[600px] md:flex-shrink-0 h-full">
-              <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-[#ebebeb] mb-4">
-                {/* Container message scroll area */}
-                <div className="flex flex-col w-full">
-                  {/* Current model info */}
-                  <div className="bg-gray-100 rounded-lg p-2 mb-4 text-xs text-gray-700 flex items-center justify-center">
-                    <div className="flex items-center">
-                      <span className="font-medium">Model:</span>
-                      <span className="ml-1">
-                        {MODELS.find((m) => m.id === selectedModel)?.name ||
-                          selectedModel}
-                      </span>
-                      <span className="mx-1">|</span>
-                      <span className="font-medium">API:</span>
-                      <span className="ml-1">
-                        {MODELS.find((m) => m.id === selectedModel)?.api ||
-                          "Unknown"}
-                      </span>
-                      <span className="mx-1">|</span>
-                      <span className="font-medium">User ID:</span>
-                      <span className="ml-1">{userid}</span>
-                    </div>
-                  </div>
-
-                  {messages.map((msg, index) => (
-                    <div
-                      key={index}
-                      className={`mb-4 p-4 rounded-lg ${
-                        msg.role === "user"
-                          ? "bg-[#95ec69] text-black self-end max-w-[85%]"
-                          : "bg-white border border-gray-200 self-start max-w-[85%]"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Input
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  disabled={false}
-                  className="flex-1 bg-white"
-                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                    if (
-                      e.key === "Enter" &&
-                      !e.shiftKey &&
-                      !e.nativeEvent.isComposing
-                    ) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!message.trim()}
-                  className="bg-[#07c160] hover:bg-[#06ad56]"
-                >
-                  Send
-                </Button>
-              </div>
+              <WeChatChat
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                disabled={false}
+                placeholder="Type a message..."
+                modelInfo={renderModelInfo()}
+              />
             </div>
 
             {/* Log area - completely fill remaining width */}
