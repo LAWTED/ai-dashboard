@@ -3,6 +3,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { Londrina_Solid } from "next/font/google";
+
+const londrinaSolid = Londrina_Solid({
+  subsets: ["latin"],
+  weight: ["400", "300", "900"],
+  variable: "--font-londrina-solid",
+});
 
 export const metadata: Metadata = {
   title: "AI Platform",
@@ -23,7 +30,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={`${londrinaSolid.variable}`}>
         <SidebarProvider defaultOpen={false}>
           <div className="flex h-dvh w-full">
             <AppSidebar />

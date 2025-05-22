@@ -30,7 +30,7 @@ export default async function ProfessorPage() {
     <div className="container mx-auto p-4">
       <div className="flex items-center justify-between mb-6">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold">My Bots</h1>
+          <h1 className="text-4xl font-normal font-londrina">My Bots</h1>
           <div className="flex items-center text-sm text-muted-foreground">
             <Mail className="h-3 w-3 mr-1" />
             <span>Current account: {userEmail}</span>
@@ -54,7 +54,7 @@ export default async function ProfessorPage() {
               className="hover:shadow-lg transition-shadow"
             >
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between font-londrina font-normal text-2xl">
                   {professor.name}
                   <span className="text-sm px-2 py-1 rounded-full bg-green-100 text-green-700">
                     Active
