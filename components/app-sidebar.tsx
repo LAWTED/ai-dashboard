@@ -11,6 +11,8 @@ import {
   GraduationCap,
   Globe,
   Gamepad2,
+  Users,
+  Coffee,
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,6 +52,29 @@ const items = [
     icon: Gamepad2,
   },
 ];
+
+// Student 分组及其子项目
+const studentGroup = {
+  title: "Student",
+  icon: Users,
+  subItems: [
+    {
+      title: "Home",
+      url: "/student",
+      icon: GraduationCap,
+    },
+    {
+      title: "Professor Cafe",
+      url: "/student/cafe",
+      icon: Coffee,
+    },
+    {
+      title: "Chat",
+      url: "/student/chat",
+      icon: MessageSquare,
+    },
+  ],
+};
 
 // Alice 分组及其子项目
 const aliceGroup = {
@@ -95,6 +120,9 @@ export function AppSidebar() {
     return pathname === url;
   };
 
+  // 检查当前路径是否是Student的子路径
+  const isStudentActive = pathname?.startsWith("/student");
+
   // 检查当前路径是否是Alice的子路径
   const isAliceActive = pathname?.startsWith("/alice");
 
@@ -117,6 +145,32 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Student 分组 */}
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={isStudentActive}>
+                  <studentGroup.icon className="h-4 w-4" />
+                  <span>{studentGroup.title}</span>
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </SidebarMenuButton>
+                <SidebarMenuSub>
+                  {studentGroup.subItems.map((subItem) => (
+                    <SidebarMenuSubItem key={subItem.title}>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={isActive(subItem.url)}
+                      >
+                        <a href={subItem.url}>
+                          {subItem.icon && (
+                            <subItem.icon className="h-4 w-4 mr-2" />
+                          )}
+                          <span>{subItem.title}</span>
+                        </a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </SidebarMenuItem>
 
               {/* Alice 分组 */}
               <SidebarMenuItem>
