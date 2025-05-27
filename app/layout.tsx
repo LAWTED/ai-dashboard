@@ -3,12 +3,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "@/components/ui/sonner";
-import { Londrina_Solid } from "next/font/google";
+import { Londrina_Solid, Shantell_Sans } from "next/font/google";
 
 const londrinaSolid = Londrina_Solid({
   subsets: ["latin"],
   weight: ["400", "300", "900"],
   variable: "--font-londrina-solid",
+});
+
+const shantellSans = Shantell_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-shantell-sans",
 });
 
 export const metadata: Metadata = {
@@ -30,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${londrinaSolid.variable}`}>
+      <body className={`${londrinaSolid.variable} ${shantellSans.variable}`}>
         <SidebarProvider defaultOpen={false}>
           <div className="flex h-dvh w-full">
             <AppSidebar />

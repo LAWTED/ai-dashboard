@@ -64,7 +64,7 @@ export function WeChatChat({
                   : "bg-white border border-gray-200 self-start max-w-[85%]"
               }`}
             >
-              <p className="whitespace-pre-wrap text-sm sm:text-base">
+              <p className="whitespace-pre-wrap text-sm sm:text-base font-shantell">
                 {msg.content}
               </p>
             </div>
