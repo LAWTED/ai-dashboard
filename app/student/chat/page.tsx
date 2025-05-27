@@ -7,92 +7,32 @@ import { ArrowLeft, User } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
-import { createClient } from "@/lib/supabase/client";
-
-interface ProfessorDetail {
-  institution?: string;
-  works_count?: number;
-  cited_by_count?: number;
-  h_index?: number;
-}
-
-interface Professor {
-  id: string;
-  name: string;
-  experience?: string;
-  personality?: string;
-  goal?: string;
-  detail?: ProfessorDetail;
-}
-
-function generateSystemPrompt(professor: Professor): string {
-  const {
-    name,
-    experience,
-    personality,
-    goal,
-    detail,
-  } = professor;
-
-  const institution = detail?.institution || "Unknown Institution";
-  const worksCount = detail?.works_count || 0;
-  const citedByCount = detail?.cited_by_count || 0;
-  const hIndex = detail?.h_index || "N/A";
-
-  return `You are ${name}, a professor at ${institution}. You are having a conversation with a graduate student who is seeking academic guidance and mentorship.
-
-## Your Background and Experience:
-${experience || "No specific experience information available."}
-
-## Your Personality and Teaching Style:
-${personality || "You are a supportive and encouraging mentor who believes in helping students reach their potential."}
-
-## Your Goals in This Conversation:
-${goal || "Your goal is to provide helpful academic guidance and support to students in their academic journey."}
-
-## Your Academic Credentials:
-- Institution: ${institution}
-- Publications: ${worksCount} works
-- Citations: ${citedByCount}
-- H-Index: ${hIndex}
-
-## Conversation Guidelines:
-1. Respond as ${name} would, drawing from your experience and expertise
-2. Be supportive, encouraging, and constructive in your feedback
-3. Ask thoughtful questions to better understand the student's situation
-4. Provide specific, actionable advice when appropriate
-5. Share relevant experiences or insights from your academic career
-6. Help students develop a sense of belonging in academia
-7. Address any concerns about graduate school applications, research, or academic life
-8. Keep responses conversational and accessible, not overly formal
-9. Show genuine interest in the student's academic journey and goals
-
-Remember: You are here to mentor and guide, creating a safe space for academic discussion and growth.`;
-}
+import { feifeiLi } from "@/lib/prompt/professors/feifei-li";
+import { geoffreyCohen } from "@/lib/prompt/professors/geoffrey-cohen";
+import { PromptComposer } from "@/lib/prompt/composer";
 
 function ChatContent() {
   const searchParams = useSearchParams();
-  const professorName = searchParams.get("professor") || "Professor";
-  const [professor, setProfessor] = useState<Professor | null>(null);
+  const professorName = searchParams.get("professor") || "Fei-Fei Li";
   const [systemPrompt, setSystemPrompt] = useState<string>("");
 
-  // Fetch professor data on component mount
+  // Set system prompt based on selected professor with PromptComposer
   useEffect(() => {
-    async function fetchProfessor() {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("profinfo")
-        .select("*")
-        .eq("name", professorName)
-        .single();
+    const composer = new PromptComposer();
 
-      if (data && !error) {
-        setProfessor(data);
-        setSystemPrompt(generateSystemPrompt(data));
-      }
+    // Select professor configuration based on professor name
+    let professorConfig;
+    switch (professorName) {
+      case "Geoffrey L. Cohen":
+        professorConfig = geoffreyCohen;
+        break;
+      case "Fei-Fei Li":
+      default:
+        professorConfig = feifeiLi;
+        break;
     }
 
-    fetchProfessor();
+    setSystemPrompt(composer.compose(professorConfig.modules));
   }, [professorName]);
 
   const { messages, status, append } = useChat({
@@ -130,7 +70,7 @@ function ChatContent() {
       <User className="h-4 w-4" />
       <span>Chatting with {professorName}</span>
       <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-        {professor ? "Online" : "Loading..."}
+        Online
       </span>
     </div>
   );
