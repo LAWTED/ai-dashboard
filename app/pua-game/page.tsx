@@ -572,8 +572,8 @@ export default function PuaGame() {
         />
 
         <Card className="my-6 p-6 text-center">
-          <h2 className="text-xl font-bold mb-4">游戏结束 - {currentScenario.title}</h2>
-          <p className="mb-6">{currentScenario.description}</p>
+          <h2 className="text-xl font-bold mb-4">游戏结束 - {currentScenario?.title}</h2>
+          <p className="mb-6">{currentScenario?.description}</p>
 
           <div className="space-y-2 mb-6">
             <p>Ψ 心理值: {stats.mental}/100</p>
