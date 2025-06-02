@@ -13,6 +13,7 @@ import {
   Gamepad2,
   Users,
   Coffee,
+  Heart,
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,6 +51,11 @@ const items = [
     title: "Games",
     url: "/games",
     icon: Gamepad2,
+  },
+  {
+    title: "PUA Game",
+    url: "/pua-game",
+    icon: Heart,
   },
 ];
 
