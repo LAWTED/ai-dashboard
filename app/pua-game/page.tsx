@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import OptionsPanel from "@/app/pua-game/components/OptionsPanel";
 import StatsPanel from "@/app/pua-game/components/StatsPanel";
 import ScenarioCard from "@/app/pua-game/components/ScenarioCard";
+import { Button } from "@/components/ui/button";
 
 // Define types for our game
 interface Character {
@@ -533,6 +534,11 @@ export default function PuaGame() {
     return (
       <div className="flex flex-col min-h-screen p-4 max-w-md mx-auto">
         <h1 className="text-2xl font-bold mb-6 text-center">凤舞九天 - 学术PUA生存游戏</h1>
+        <a href="/pua-game/debug">
+          <Button>
+            调试模式
+          </Button>
+        </a>
         <p className="mb-6 text-center">选择你的角色开始游戏</p>
 
         <div className="space-y-4">

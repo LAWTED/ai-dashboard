@@ -180,7 +180,7 @@ export default function PuaGameDebug() {
         </CardHeader>
 
         <div className="flex-1  p-4  ">
-          <div className="flex flex-col h-[320px] w-full space-y-4 overflow-y-auto">
+          <div className="flex flex-col h-[340px] w-full space-y-4 overflow-y-auto">
             {messages.map((message) => (
               <div
                 key={message.id}
