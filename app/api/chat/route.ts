@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Use AI SDK to generate response
     const result = await streamText({
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-4.1"),
       system: systemPrompt || "You are a helpful assistant.",
       messages: messages,
       temperature: 0.7,
