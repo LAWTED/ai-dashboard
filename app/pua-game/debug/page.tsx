@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
 // import { ScrollArea } from "@/components/ui/scroll-area"; // 已不再使用
-import { SendIcon, Calendar } from "lucide-react";
+import { SendIcon, Calendar, Upload, Info, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function PuaGameDebug() {
   const [gameDay, setGameDay] = useState(1);
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const systemPrompt = `你是学术PUA游戏中的郑凤教授角色。这是一个橙光风格的文字RPG游戏。
 
@@ -85,6 +87,7 @@ export default function PuaGameDebug() {
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 使用与wechat-chat.tsx相同的滚动逻辑
   useEffect(() => {
@@ -144,189 +147,273 @@ export default function PuaGameDebug() {
     });
   };
 
+  // 处理背景图片上传
+  const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setBackgroundImage(imageUrl);
+    }
+  };
+
+  // 触发文件选择对话框
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // 清除背景图片
+  const clearBackgroundImage = () => {
+    if (backgroundImage) {
+      URL.revokeObjectURL(backgroundImage);
+      setBackgroundImage(null);
+    }
+  };
+
   return (
-    <div className="container mx-auto py-8 max-w-3xl h-full overflow-y-auto">
-      <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl">学术PUA生存游戏 - 橙光模式</CardTitle>
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
+    <div
+      className="min-h-screen w-full relative flex flex-col"
+      style={{
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* 游戏状态条 */}
+      <div className="absolute top-0 left-0 right-0 p-2 z-20 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-black/40 text-white flex items-center gap-1 px-3 py-1 text-sm">
+            <Calendar className="h-4 w-4" />
             <span>第{gameDay}天</span>
           </Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-md p-4">
-            <h3 className="font-medium mb-2">游戏说明</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              在这个游戏中，你是郑凤教授的研究生。她会使用各种PUA手段对你进行学术霸凌。
-            </p>
-            <p className="text-sm text-muted-foreground mb-2">
-              你可以选择不同的行动来应对，系统会自动掷骰子判断成功与否。
-            </p>
-            <p className="text-sm text-muted-foreground">
-              游戏将持续7天，每一天的选择都会影响最终结局。
-            </p>
-          </div>
-
-          <Button onClick={handleSendHelp} className="mt-4" variant="outline">
-            请求行动选项
+          <Button
+            size="sm"
+            variant="ghost"
+            className="bg-black/40 text-white hover:bg-black/60"
+            onClick={() => setShowInstructions(!showInstructions)}
+          >
+            <Info className="h-4 w-4" />
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="bg-black/40 text-white hover:bg-black/60 flex items-center gap-1"
+            onClick={handleUploadClick}
+          >
+            <Upload className="h-4 w-4" />
+            <span className="text-xs">背景图片</span>
+          </Button>
+          {backgroundImage && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="bg-black/40 text-white hover:bg-black/60"
+              onClick={clearBackgroundImage}
+            >
+              清除背景
+            </Button>
+          )}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleBackgroundUpload}
+            accept="image/*"
+            className="hidden"
+          />
+        </div>
+      </div>
 
-      <Card className="grow min-h-0 flex flex-col">
-        <CardHeader className="border-b">
-          <CardTitle>与郑凤教授的互动</CardTitle>
-        </CardHeader>
+      {/* 游戏说明弹窗 */}
+      {showInstructions && (
+        <div className="absolute inset-0 bg-black/60 z-30 flex items-center justify-center p-4">
+          <Card className="max-w-md w-full relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-2 top-2"
+              onClick={() => setShowInstructions(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <CardHeader>
+              <CardTitle>学术PUA生存游戏 - 游戏说明</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm mb-2">
+                在这个游戏中，你是郑凤教授的研究生。她会使用各种PUA手段对你进行学术霸凌。
+              </p>
+              <p className="text-sm mb-2">
+                你可以选择不同的行动来应对，系统会自动掷骰子判断成功与否。
+              </p>
+              <p className="text-sm">
+                游戏将持续7天，每一天的选择都会影响最终结局。
+              </p>
+              <Button onClick={handleSendHelp} className="mt-4 w-full">
+                请求行动选项
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-        <div className="flex-1  p-4  ">
-          <div className="flex flex-col h-[340px] w-full space-y-4 overflow-y-auto">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
+      {/* 游戏主要内容区 - 填充大部分空间 */}
+      <div className="flex-grow" />
+
+      {/* 对话框部分 - 固定在底部 */}
+      <div className="w-full">
+        <Card className="rounded-b-none m-6 rounded-t-lg bg-background/80 backdrop-blur-sm border-background/30">
+          <div className="p-4">
+            <div className="max-h-[280px] overflow-y-auto mb-4">
+              {messages.map((message) => (
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                  key={message.id}
+                  className={`mb-3 ${
+                    message.role === "user" ? "pl-12" : ""
                   }`}
                 >
-                  {message.role === "assistant" && message.parts ? (
-                    <div>
-                      {message.parts.map((part, index) => {
-                        if (part.type === "text") {
-                          // 高亮显示天数标记
-                          const textWithDayHighlight = part.text.replace(
-                            /【第(\d+)天】/g,
-                            '<span class="font-bold text-amber-600 dark:text-amber-400">【第$1天】</span>'
-                          );
-
-                          return (
-                            <p
-                              key={index}
-                              className="text-sm whitespace-pre-wrap"
-                              dangerouslySetInnerHTML={{
-                                __html: textWithDayHighlight,
-                              }}
-                            />
-                          );
-                        }
-
-                        if (part.type === "tool-invocation") {
-                          const toolInvocation = part.toolInvocation;
-
-                          if (toolInvocation.toolName === "renderChoices") {
-                            if (toolInvocation.state === "call") {
-                              const choices = toolInvocation.args
-                                .choices as string[];
-                              return (
-                                <div key={index} className="mt-3 space-y-2">
-                                  <p className="text-sm font-medium">
-                                    可选行动:
-                                  </p>
-                                  {choices.map((choice, choiceIndex) => (
-                                    <Button
-                                      key={choiceIndex}
-                                      variant="secondary"
-                                      size="sm"
-                                      className="w-full text-left justify-start text-sm"
-                                      onClick={() =>
-                                        handleSelectChoice(
-                                          choice,
-                                          toolInvocation.toolCallId
-                                        )
-                                      }
-                                    >
-                                      {choice}
-                                    </Button>
-                                  ))}
-                                </div>
-                              );
-                            } else if (toolInvocation.state === "result") {
-                              return (
-                                <div
-                                  key={index}
-                                  className="mt-2 text-sm text-green-600 dark:text-green-400"
-                                >
-                                  选择了: {toolInvocation.result}
-                                </div>
-                              );
-                            }
-                          }
-
-                          if (toolInvocation.toolName === "rollADice") {
-                            if (toolInvocation.state === "result") {
-                              const result = parseInt(toolInvocation.result);
-                              const isSuccess = result > 10;
-                              return (
-                                <div
-                                  key={index}
-                                  className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md"
-                                >
-                                  <p className="text-sm">
-                                    🎲 掷骰结果:{" "}
-                                    <span className="font-bold">{result}</span>{" "}
-                                    ({isSuccess ? "成功!" : "失败!"})
-                                  </p>
-                                </div>
-                              );
-                            } else if (toolInvocation.state === "call") {
-                              return (
-                                <div
-                                  key={index}
-                                  className="mt-2 text-sm text-gray-500"
-                                >
-                                  正在掷骰...
-                                </div>
-                              );
-                            }
-                          }
-                        }
-
-                        return null;
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                  {message.role === "assistant" && (
+                    <div className="mb-1 text-xs text-muted-foreground">郑凤教授:</div>
                   )}
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
+                  <div
+                    className={`rounded-lg p-3 ${
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    {message.role === "assistant" && message.parts ? (
+                      <div>
+                        {message.parts.map((part, index) => {
+                          if (part.type === "text") {
+                            // 高亮显示天数标记
+                            const textWithDayHighlight = part.text.replace(
+                              /【第(\d+)天】/g,
+                              '<span class="font-bold text-amber-600 dark:text-amber-400">【第$1天】</span>'
+                            );
 
-        <div className="border-t p-4">
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <Input
-              value={input}
-              onChange={handleInputChange}
-              placeholder="输入你的回应或行动..."
-              disabled={status === "streaming" || hasUnhandledToolCalls()}
-              className="flex-1"
-            />
-            <Button
-              type="submit"
-              disabled={
-                status === "streaming" ||
-                !input.trim() ||
-                hasUnhandledToolCalls()
-              }
-            >
-              <SendIcon className="h-4 w-4" />
-            </Button>
-          </form>
-          {hasUnhandledToolCalls() && (
-            <p className="text-xs text-amber-600 mt-1">请先选择一个行动选项</p>
-          )}
-        </div>
-      </Card>
+                            return (
+                              <p
+                                key={index}
+                                className="text-sm whitespace-pre-wrap"
+                                dangerouslySetInnerHTML={{
+                                  __html: textWithDayHighlight,
+                                }}
+                              />
+                            );
+                          }
+
+                          if (part.type === "tool-invocation") {
+                            const toolInvocation = part.toolInvocation;
+
+                            if (toolInvocation.toolName === "renderChoices") {
+                              if (toolInvocation.state === "call") {
+                                const choices = toolInvocation.args
+                                  .choices as string[];
+                                return (
+                                  <div key={index} className="mt-3 space-y-2">
+                                    <p className="text-sm font-medium">
+                                      可选行动:
+                                    </p>
+                                    {choices.map((choice, choiceIndex) => (
+                                      <Button
+                                        key={choiceIndex}
+                                        variant="secondary"
+                                        size="sm"
+                                        className="w-full text-left justify-start text-sm"
+                                        onClick={() =>
+                                          handleSelectChoice(
+                                            choice,
+                                            toolInvocation.toolCallId
+                                          )
+                                        }
+                                      >
+                                        {choice}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                );
+                              } else if (toolInvocation.state === "result") {
+                                return (
+                                  <div
+                                    key={index}
+                                    className="mt-2 text-sm text-green-600 dark:text-green-400"
+                                  >
+                                    选择了: {toolInvocation.result}
+                                  </div>
+                                );
+                              }
+                            }
+
+                            if (toolInvocation.toolName === "rollADice") {
+                              if (toolInvocation.state === "result") {
+                                const result = parseInt(toolInvocation.result);
+                                const isSuccess = result > 10;
+                                return (
+                                  <div
+                                    key={index}
+                                    className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md"
+                                  >
+                                    <p className="text-sm">
+                                      🎲 掷骰结果:{" "}
+                                      <span className="font-bold">{result}</span>{" "}
+                                      ({isSuccess ? "成功!" : "失败!"})
+                                    </p>
+                                  </div>
+                                );
+                              } else if (toolInvocation.state === "call") {
+                                return (
+                                  <div
+                                    key={index}
+                                    className="mt-2 text-sm text-gray-500"
+                                  >
+                                    正在掷骰...
+                                  </div>
+                                );
+                              }
+                            }
+                          }
+
+                          return null;
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex gap-2">
+              <Input
+                value={input}
+                onChange={handleInputChange}
+                placeholder="输入你的回应或行动..."
+                disabled={status === "streaming" || hasUnhandledToolCalls()}
+                className="flex-1"
+              />
+              <Button
+                type="submit"
+                disabled={
+                  status === "streaming" ||
+                  !input.trim() ||
+                  hasUnhandledToolCalls()
+                }
+              >
+                <SendIcon className="h-4 w-4" />
+              </Button>
+            </form>
+            {hasUnhandledToolCalls() && (
+              <p className="text-xs text-amber-600 mt-1">请先选择一个行动选项</p>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
