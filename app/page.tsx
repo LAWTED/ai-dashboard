@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     // 重定向到 /readme
-    router.push('/professor');
+    router.push('/pua-game/debug');
   }, [router]);
 
   return (
