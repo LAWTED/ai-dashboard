@@ -1,15 +1,17 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useChat } from "@ai-sdk/react";
-import { Calendar, Upload, Info, X, Play } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { CustomMarkdown } from "@/components/ui/custom-markdown";
-import { TextShimmer } from "@/components/ui/text-shimmer";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import {
+  StatsPanel,
+  InteractionPanel,
+  InteractionPanelFooter,
+  GameHeader,
+  InstructionsModal,
+  GameMessageDisplay
+} from "@/components/pua-game";
 
 // 定义交互类型
 type InteractionMode = "idle" | "choices" | "dice";
@@ -214,9 +216,8 @@ export default function PuaGameDebug() {
 ## 重要规则：
 
 1. 用户永远无法回复你, 需要你使用工具提供选项。
-2. 每当需要用户做出选择时，必须使用工具 renderChoices 工具，绝不能只输出文本提示。
-3. 当你输出像"请选择你的行动："这样的提示时，后就要使用工具 renderChoices 工具提供选项。
-4. 文本内容使用markdown格式输出。
+2. 每当需要用户做出选择, 选择行动时, 必须使用工具 renderChoices 工具, 绝不能只输出文本提示。
+3. 当输出像"请选择你的行动："这样的提示时, 后就要使用工具 renderChoices 工具提供选项。
 
 
 ---
@@ -387,11 +388,6 @@ export default function PuaGameDebug() {
     }
   }, [messages, gameDay, gameStarted]);
 
-  // 监听工具结果
-  useEffect(() => {
-    // 这里不再需要本地重置、已在 handleSelectChoice 里处理
-  }, [messages, interactionMode]);
-
   // 监听 statsHistory 变化，高亮数值面板
   useEffect(() => {
     if (statsHistory.length > 0) {
@@ -479,141 +475,6 @@ export default function PuaGameDebug() {
     });
   };
 
-  // 渲染交互面板
-  const renderInteractionPanel = () => {
-    if (!gameStarted) {
-      // 游戏未开始、显示开始游戏按钮
-      return (
-        <div className="flex flex-col items-center justify-center h-full">
-          <Button
-            onClick={startGame}
-            size="lg"
-            className="flex items-center gap-2 px-8 py-6 text-lg"
-          >
-            <Play className="h-5 w-5" />
-            开始游戏
-          </Button>
-        </div>
-      );
-    }
-
-    // 根据当前交互模式显示不同的面板
-    switch (interactionMode) {
-      case "choices":
-        return (
-          <div className="space-y-2">
-            <div className="text-center mb-3 text-sm text-muted-foreground">
-              请选择你的行动:
-            </div>
-            {currentChoices.map((choice, choiceIndex) => (
-              <Button
-                key={choiceIndex}
-                variant="secondary"
-                size="sm"
-                className="w-full text-left justify-start text-sm"
-                onClick={() =>
-                  handleSelectChoice(choice.text, choice.toolCallId)
-                }
-              >
-                {choice.text}
-              </Button>
-            ))}
-          </div>
-        );
-
-      case "dice":
-        return (
-          <div className="flex flex-col items-center justify-center py-4">
-            {diceValue === null ? (
-              <>
-                <div className="text-center mb-4 ">
-                  点击骰子来决定你的行动结果
-                </div>
-                <button
-                  onClick={() => !isManualRolling && handleDiceClick()}
-                  disabled={isManualRolling}
-                  className="relative w-24 h-24 mb-4 cursor-pointer hover:scale-110 transition-transform disabled:cursor-not-allowed"
-                >
-                  <div
-                    className={`absolute inset-0 flex items-center justify-center ${
-                      isManualRolling ? "animate-spin" : ""
-                    }`}
-                  >
-                    <div
-                      className={`${
-                        isManualRolling
-                          ? "rounded-full h-16 w-16 border-b-2 border-primary"
-                          : ""
-                      }`}
-                    ></div>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-4xl">🎲</span>
-                  </div>
-                </button>
-                <div className="text-sm text-muted-foreground text-center">
-                  {isManualRolling
-                    ? "骰子正在转动..."
-                    : "骰子结果将决定你的行动是否成功"}
-                  <br />
-                  <span className="text-xs">(1-10: 失败, 11-20: 成功)</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-center mb-4 text-sm font-medium">
-                  骰子结果已出:
-                </div>
-                <div className="w-24 h-24 mb-4 bg-background/60 rounded-lg flex items-center justify-center">
-                  <div className="text-4xl font-bold">{diceValue}</div>
-                </div>
-                <div
-                  className={`text-center font-semibold ${
-                    diceValue > 10 ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {diceValue > 10 ? "成功!" : "失败!"}
-                </div>
-                <div className="mt-3 text-sm text-muted-foreground text-center">
-                  等待教授的回应...
-                </div>
-              </>
-            )}
-          </div>
-        );
-
-      default:
-        return (
-          <div className="text-sm text-center text-muted-foreground py-4">
-            <p className="mb-2">当前没有可用选项</p>
-            <Button variant="ghost" onClick={handleSendHelp} className="mt-20">
-              请给我一些可以选择的行动(ops, 卡死了)
-            </Button>
-          </div>
-        );
-    }
-  };
-
-  // 在 statsHistory 展示时，使用 emoji+中文
-  const studentStatMap: {
-    key: keyof (typeof statsHistory)[0]["studentStats"];
-    label: string;
-  }[] = [
-    { key: "psi", label: "Ψ 心理值" },
-    { key: "progress", label: "🛠 进度值" },
-    { key: "evidence", label: "📂 证据值" },
-    { key: "network", label: "🤝 网络值" },
-    { key: "money", label: "💰 金钱" },
-  ];
-  const professorStatMap: {
-    key: keyof (typeof statsHistory)[0]["professorStats"];
-    label: string;
-  }[] = [
-    { key: "authority", label: "⚖️ 威权" },
-    { key: "risk", label: "📉 风险" },
-    { key: "anxiety", label: "😰 焦虑" },
-  ];
-
   return (
     <div
       className="min-h-screen w-full relative flex flex-col"
@@ -626,228 +487,28 @@ export default function PuaGameDebug() {
     >
       {/* 数值面板 - 固定在右上角 */}
       <div className="fixed top-4 right-4 z-30 w-[340px] max-h-[60vh] overflow-y-auto">
-        {statsHistory.length > 0 && (
-          <Card
-            className={`mb-2 border-primary/30 transition-colors duration-500 ${
-              statsHighlight
-                ? "bg-green-100/60 dark:bg-green-900/40 border-green-400"
-                : "bg-background/70"
-            }`}
-          >
-            <CardHeader>
-              <CardTitle className="text-xs font-semibold">
-                最新数值变化
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xs mb-1">{statsHistory[0].desc}</div>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="min-w-0">
-                  <span className="font-bold">学生：</span>
-                  {studentStatMap.map(({ key, label }) => (
-                    <div key={key} className="mb-2">
-                      <div className="flex items-center justify-between">
-                        <span>{label}</span>
-                        <span className="ml-2 font-mono">
-                          {statsHistory[0].studentStats[key]}
-                        </span>
-                      </div>
-                      <Progress
-                        value={Math.max(
-                          0,
-                          Math.min(100, statsHistory[0].studentStats[key])
-                        )}
-                        className="h-2 mt-1"
-                      />
-                    </div>
-                  ))}
-                  {/* {statsHistory[0].studentDesc && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {statsHistory[0].studentDesc}
-                    </div>
-                  )} */}
-                </div>
-                <div className="min-w-0">
-                  <span className="font-bold">教授：</span>
-                  {professorStatMap.map(({ key, label }) => (
-                    <div key={key} className="mb-2">
-                      <div className="flex items-center justify-between">
-                        <span>{label}</span>
-                        <span className="ml-2 font-mono">
-                          {statsHistory[0].professorStats[key]}
-                        </span>
-                      </div>
-                      <Progress
-                        value={Math.max(
-                          0,
-                          Math.min(100, statsHistory[0].professorStats[key])
-                        )}
-                        className="h-2 mt-1"
-                      />
-                    </div>
-                  ))}
-                  {/* {statsHistory[0].professorDesc && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {statsHistory[0].professorDesc}
-                    </div>
-                  )} */}
-                </div>
-              </div>
-              {statsHistory.length > 1 && (
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-xs text-muted-foreground">
-                    历史记录
-                  </summary>
-                  <div className="mt-1 max-h-32 overflow-y-auto">
-                    {statsHistory.slice(1).map((item) => (
-                      <div
-                        key={item.time}
-                        className="mb-2 border-b pb-1 last:border-b-0"
-                      >
-                        <div className="text-xs mb-1">{item.desc}</div>
-                        <div className="grid grid-cols-2 gap-4 text-xs">
-                          <div className="min-w-0">
-                            <span className="font-bold">学生：</span>
-                            {studentStatMap.map(({ key, label }) => (
-                              <div key={key} className="mb-2">
-                                <div className="flex items-center justify-between">
-                                  <span>{label}</span>
-                                  <span className="ml-2 font-mono">
-                                    {item.studentStats[key]}
-                                  </span>
-                                </div>
-                                <Progress
-                                  value={Math.max(
-                                    0,
-                                    Math.min(100, item.studentStats[key])
-                                  )}
-                                  className="h-2 mt-1"
-                                />
-                              </div>
-                            ))}
-                            {item.studentDesc && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {item.studentDesc}
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <span className="font-bold">教授：</span>
-                            {professorStatMap.map(({ key, label }) => (
-                              <div key={key} className="mb-2">
-                                <div className="flex items-center justify-between">
-                                  <span>{label}</span>
-                                  <span className="ml-2 font-mono">
-                                    {item.professorStats[key]}
-                                  </span>
-                                </div>
-                                <Progress
-                                  value={Math.max(
-                                    0,
-                                    Math.min(100, item.professorStats[key])
-                                  )}
-                                  className="h-2 mt-1"
-                                />
-                              </div>
-                            ))}
-                            {item.professorDesc && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {item.professorDesc}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        <StatsPanel
+          statsHistory={statsHistory}
+          statsHighlight={statsHighlight}
+        />
       </div>
-      {/* 游戏状态条 */}
-      <div className="absolute top-0 left-0 right-0 p-2 z-20 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Badge
-            variant="outline"
-            className="bg-black/40 text-white flex items-center gap-1 px-3 py-1 text-sm"
-          >
-            <Calendar className="h-4 w-4" />
-            <span>第{gameDay}/9天</span>
-          </Badge>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="bg-black/40 text-white hover:bg-black/60"
-            onClick={() => setShowInstructions(!showInstructions)}
-          >
-            <Info className="h-4 w-4" />
-          </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="bg-black/40 text-white hover:bg-black/60 flex items-center gap-1"
-            onClick={handleUploadClick}
-          >
-            <Upload className="h-4 w-4" />
-            <span className="text-xs">背景图片</span>
-          </Button>
-          {backgroundImage && backgroundImage !== "/default-pua-game.png" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="bg-black/40 text-white hover:bg-black/60"
-              onClick={clearBackgroundImage}
-            >
-              清除背景
-            </Button>
-          )}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleBackgroundUpload}
-            accept="image/*"
-            className="hidden"
-          />
-        </div>
-      </div>
+      {/* 游戏状态条 */}
+      <GameHeader
+        gameDay={gameDay}
+        onShowInstructions={() => setShowInstructions(true)}
+        onUploadClick={handleUploadClick}
+        onClearBackground={clearBackgroundImage}
+        showClearButton={backgroundImage !== "/default-pua-game.png"}
+      />
 
       {/* 游戏说明弹窗 */}
-      {showInstructions && (
-        <div className="absolute inset-0 bg-black/60 z-30 flex items-center justify-center p-4">
-          <Card className="max-w-md w-full relative">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-2 top-2"
-              onClick={() => setShowInstructions(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <CardHeader>
-              <CardTitle>学术PUA生存游戏 - 游戏说明</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm mb-2">
-                在这个游戏中、你是郑凤教授的研究生。她会使用各种PUA手段对你进行学术霸凌。
-              </p>
-              <p className="text-sm mb-2">
-                你可以选择不同的行动来应对、系统会自动掷骰子判断成功与否。
-              </p>
-              <p className="text-sm">
-                游戏将持续9天、每一天的选择都会影响最终结局。
-              </p>
-              {gameStarted && (
-                <Button onClick={handleSendHelp} className="mt-4 w-full">
-                  请求行动选项
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <InstructionsModal
+        show={showInstructions}
+        onClose={() => setShowInstructions(false)}
+        onRequestHelp={handleSendHelp}
+        gameStarted={gameStarted}
+      />
 
       {/* 游戏主要内容区 - 填充大部分空间 */}
       <div className="flex-grow" />
@@ -855,146 +516,21 @@ export default function PuaGameDebug() {
       {/* 对话框部分 - 固定在底部 */}
       <div className="w-full">
         <div className="relative m-6">
-          {/* {status === "streaming" && (
-            <GlowEffect
-              colors={["#0894FF", "#C959DD", "#FF2E54", "#FF9004"]}
-              mode="colorShift"
-              blur="soft"
-              duration={3}
-            />
-          )} */}
-          <Card className=" rounded-lg bg-background/80 backdrop-blur-sm border-background/30 h-[400px] relative z-10">
-            <div className="flex flex-col md:flex-row">
+          <Card className="rounded-lg bg-background/80 backdrop-blur-sm border-background/30 h-[400px] relative z-10">
+            <div className="flex flex-col md:flex-row h-full">
               {/* 左侧对话区域 - 占2/3宽度 */}
-              <div className="p-4 md:w-2/3 ">
-                <div className="max-h-[280px] overflow-y-auto mb-4 prose prose-sm dark:prose-invert ">
-                  {!gameStarted ? (
-                    // 游戏未开始时显示介绍
-                    <CustomMarkdown>{gameIntroduction}</CustomMarkdown>
-                  ) : (
-                    // 游戏开始后显示游戏内容
-                    messages.map((message, messageIndex) => {
-                      // 只显示助手（教授）的消息作为剧情
-                      if (message.role === "assistant") {
-                        if (message.parts) {
-                          // 处理带有parts的消息
-                          return (
-                            <div key={message.id} className="mb-4">
-                              {message.parts.map((part, partIndex) => {
-                                if (part.type === "text") {
-                                  // 高亮显示天数标记
-                                  const textWithDayHighlight =
-                                    part.text.replace(
-                                      /【第(\d+)天】/g,
-                                      '<span class="font-bold text-amber-600 dark:text-amber-400">【第$1天】</span>'
-                                    );
-                                  return (
-                                    <div key={`${messageIndex}-${partIndex}`}>
-                                      <CustomMarkdown>
-                                        {textWithDayHighlight}
-                                      </CustomMarkdown>
-                                    </div>
-                                  );
-                                }
-
-                                if (part.type === "tool-invocation") {
-                                  const toolInvocation = part.toolInvocation;
-
-                                  // 显示用户选择的结果、但不显示选项本身
-                                  if (
-                                    toolInvocation.toolName ===
-                                      "renderChoices" &&
-                                    toolInvocation.state === "result"
-                                  ) {
-                                    return (
-                                      <div
-                                        key={`${messageIndex}-${partIndex}`}
-                                        className="my-2 text-sm italic text-muted-foreground border-l-2 border-primary pl-2"
-                                      >
-                                        玩家选择了: {toolInvocation.result}
-                                      </div>
-                                    );
-                                  }
-
-                                  // 显示骰子结果
-                                  if (
-                                    toolInvocation.toolName === "rollADice" &&
-                                    toolInvocation.state === "result"
-                                  ) {
-                                    const result = parseInt(
-                                      toolInvocation.result
-                                    );
-                                    const isSuccess = result > 10;
-                                    return (
-                                      <div
-                                        key={`${messageIndex}-${partIndex}`}
-                                        className={`my-2 text-sm italic ${
-                                          isSuccess
-                                            ? "text-green-600"
-                                            : "text-red-600"
-                                        } border-l-2 border-primary pl-2`}
-                                      >
-                                        🎲 掷骰结果: {result} (
-                                        {isSuccess ? "成功!" : "失败!"})
-                                      </div>
-                                    );
-                                  }
-                                }
-                                return null;
-                              })}
-                            </div>
-                          );
-                        } else if (typeof message.content === "string") {
-                          // 处理普通文本消息
-                          // 高亮显示天数标记
-                          const textWithDayHighlight = message.content.replace(
-                            /【第(\d+)天】/g,
-                            '<span class="font-bold text-amber-600 dark:text-amber-400">【第$1天】</span>'
-                          );
-                          return (
-                            <div
-                              key={message.id}
-                              className="mb-4 text-sm whitespace-pre-wrap"
-                            >
-                              <CustomMarkdown>
-                                {textWithDayHighlight}
-                              </CustomMarkdown>
-                            </div>
-                          );
-                        }
-                      } else if (
-                        message.role === "user" &&
-                        typeof message.content === "string"
-                      ) {
-                        // 用户的消息显示为选择
-                        return (
-                          <div
-                            key={message.id}
-                            className="my-2 text-sm italic text-muted-foreground border-l-2 border-primary pl-2"
-                          >
-                            玩家说: {message.content}
-                          </div>
-                        );
-                      }
-                      return null;
-                    })
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {status === "streaming" && (
-                  <TextShimmer
-                    className="font-mono text-sm absolute top-3 left-4"
-                    duration={1}
-                  >
-                    Generating ...
-                  </TextShimmer>
-                )}
+              <div className="p-4 md:w-2/3 h-full">
+                <GameMessageDisplay
+                  messages={messages}
+                  status={status}
+                  gameStarted={gameStarted}
+                  gameIntroduction={gameIntroduction}
+                />
               </div>
 
               {/* 右侧选项区域 - 占1/3宽度 */}
               <div
-                className={`p-4 md:w-1/3 bg-background/40 rounded-lg mr-4 ${
+                className={`p-4 md:w-1/3 bg-background/40 rounded-lg mr-4 h-full ${
                   interactionMode === "choices" || interactionMode === "dice"
                     ? "bg-primary/10 border-primary/40"
                     : ""
@@ -1007,20 +543,35 @@ export default function PuaGameDebug() {
 
                   {/* 显示当前可用选项或骰子 */}
                   <div className="flex-grow overflow-y-auto">
-                    {renderInteractionPanel()}
+                    <InteractionPanel
+                      interactionMode={interactionMode}
+                      currentChoices={currentChoices}
+                      diceValue={diceValue}
+                      isManualRolling={isManualRolling}
+                      gameStarted={gameStarted}
+                      onSelectChoice={handleSelectChoice}
+                      onDiceClick={handleDiceClick}
+                      onSendHelp={handleSendHelp}
+                      startGame={startGame}
+                    />
                   </div>
 
-                  <div className="mt-4 text-xs text-center text-muted-foreground">
-                    <Badge variant="outline" className="bg-black/20">
-                      <Calendar className="h-3 w-3 mr-1" />第{gameDay}/9天
-                    </Badge>
-                  </div>
+                  <InteractionPanelFooter gameDay={gameDay} />
                 </div>
               </div>
             </div>
           </Card>
         </div>
       </div>
+
+      {/* Hidden file input for background upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleBackgroundUpload}
+        accept="image/*"
+        className="hidden"
+      />
     </div>
   );
 }

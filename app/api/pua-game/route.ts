@@ -40,18 +40,18 @@ export async function POST(request: NextRequest) {
       system: systemPrompt || defaultSystemPrompt,
       messages: messages,
       tools: {
+        renderChoices: {
+          description:
+            "最重要, 最核心的工具, 没有之一, 每当用户需要做决策或选择行动时, 必须调用此工具。不要直接输出选项文本或让用户自由输入, 务必用此工具以按钮形式呈现明确选项, 这是游戏流程的关键。渲染一组可供用户选择的按钮。 最常出现在 '请选择你的行动：' 之后",
+          parameters: z.object({
+            choices: z.array(z.string()).describe("要渲染为交互按钮的选项列表"),
+          }),
+        },
         rollADice: {
           description: "掷骰子工具，用于指定面数的骰子。",
           parameters: z.object({
             sides: z.number().int().min(2).describe("骰子的面数"),
             rolls: z.number().int().min(1).default(1).describe("掷骰子的次数"),
-          }),
-        },
-        renderChoices: {
-          description:
-            "renderChoices工具：每当用户需要做决策或选择行动时，必须调用此工具。不要直接输出选项文本或让用户自由输入，务必用此工具以按钮形式呈现明确选项，这是游戏流程的关键。渲染一组可供用户选择的按钮。",
-          parameters: z.object({
-            choices: z.array(z.string()).describe("要渲染为交互按钮的选项列表"),
           }),
         },
         updateStats: {
@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
           }),
         },
       },
+      experimental_continueSteps: true,
       maxSteps: 100,
       toolCallStreaming: true,
     });
