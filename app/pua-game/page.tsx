@@ -485,8 +485,10 @@ export default function PuaGameDebug() {
         backgroundAttachment: "fixed",
       }}
     >
-      {/* 数值面板 - 固定在右上角 */}
-      <div className="fixed top-4 right-4 z-30 w-[340px] max-h-[60vh] overflow-y-auto">
+      {/* 数值面板 - 固定在右上角，移动端居中显示 */}
+      <div
+        className="fixed top-4 inset-x-0 px-4 sm:right-4 sm:left-auto z-30 w-full sm:w-[340px] max-h-[60vh] overflow-y-auto"
+      >
         <StatsPanel
           statsHistory={statsHistory}
           statsHighlight={statsHighlight}
@@ -516,7 +518,9 @@ export default function PuaGameDebug() {
       {/* 对话框部分 - 固定在底部 */}
       <div className="w-full">
         <div className="relative m-6">
-          <Card className="rounded-lg bg-background/80 backdrop-blur-sm border-background/30 h-[400px] relative z-10">
+          <Card
+            className="rounded-lg bg-background/80 backdrop-blur-sm border-background/30 h-[70vh] md:h-[400px] relative z-10"
+          >
             <div className="flex flex-col md:flex-row h-full">
               {/* 左侧对话区域 - 占2/3宽度 */}
               <div className="p-4 md:w-2/3 h-full">
