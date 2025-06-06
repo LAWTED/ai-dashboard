@@ -37,8 +37,7 @@ export async function POST(request: NextRequest) {
 
     const result = await streamText({
       model: openai("gpt-4.1"),
-      system:
-        systemPrompt || defaultSystemPrompt,
+      system: systemPrompt || defaultSystemPrompt,
       messages: messages,
       tools: {
         rollADice: {
@@ -56,22 +55,14 @@ export async function POST(request: NextRequest) {
               .default(1)
               .describe("Number of times to roll the dice"),
           }),
-          execute: async ({ sides, rolls }) => {
-            const results = Array.from(
-              { length: rolls },
-              () => Math.floor(Math.random() * sides) + 1
-            );
-            if (rolls === 1) {
-              return `${results[0]}`;
-            } else {
-              return results.join(", ");
-            }
-          },
         },
         renderChoices: {
-          description: "Render a list of choices for the user to select from. Always use this tool when offering choices instead of listing them in text.",
+          description:
+            "Render a list of choices for the user to select from. Always use this tool when offering choices instead of listing them in text.",
           parameters: z.object({
-            choices: z.array(z.string()).describe("The choices to render as interactive buttons"),
+            choices: z
+              .array(z.string())
+              .describe("The choices to render as interactive buttons"),
           }),
         },
       },

@@ -3,16 +3,16 @@
 import { useRef, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
-// import { ScrollArea } from "@/components/ui/scroll-area"; // 已不再使用
-import { SendIcon, Calendar, Upload, Info, X } from "lucide-react";
+import { Calendar, Upload, Info, X, PlayCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function PuaGameDebug() {
-  const [gameDay, setGameDay] = useState(1);
-  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [gameDay, setGameDay] = useState(0); // 开始时为0天，表示游戏未开始
+  const [backgroundImage, setBackgroundImage] = useState<string | null>("/default-pua-game.png");
   const [showInstructions, setShowInstructions] = useState(false);
+  const [isManualRolling, setIsManualRolling] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
 
   const systemPrompt = `你是学术PUA游戏中的郑凤教授角色。这是一个橙光风格的文字RPG游戏。
 
@@ -54,12 +54,32 @@ export default function PuaGameDebug() {
 
 记住，这是一个模拟游戏，目的是展示学术PUA的危害，帮助学生认识和应对此类情况。`;
 
+  // 游戏介绍文本
+  const introductionText = `# 学术PUA生存游戏
+
+在这个模拟游戏中，你将扮演一名研究生，面对导师郑凤教授的学术PUA行为。
+
+郑凤教授是学界知名学者，表面光鲜亮丽，实则对学生实施各种学术霸凌手段。作为她的新研究生，你将在接下来的7天内，体验并应对各种PUA情境。
+
+## 游戏机制
+
+1. 每天你将面对不同的学术PUA场景
+2. 你可以从多个选项中选择应对方式
+3. 系统会通过骰子决定你的行动成功与否
+4. 你的选择将影响游戏走向和最终结局
+
+## 可能的结局
+
+- 精神崩溃：心理值过低，无法完成学业
+- 实名举报成功：收集足够证据并成功举报
+- 双赢苟活：完成学业但心理受创
+- 权威崩塌：成功反抗PUA并让导师失去权威
+- 集体维权：联合其他学生共同对抗
+
+准备好开始这段艰难的学术之旅了吗？点击右侧的"开始游戏"按钮开始你的故事。`;
+
   const {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    status,
     append,
     addToolResult,
   } = useChat({
@@ -86,6 +106,14 @@ export default function PuaGameDebug() {
     },
   });
 
+  // 控制游戏初始消息的显示
+  useEffect(() => {
+    // 如果游戏刚开始，清除初始消息，等用户点击开始游戏后再显示
+    if (!gameStarted && messages.length > 0) {
+      // 这里不做任何操作，只在UI层面控制显示
+    }
+  }, [gameStarted, messages]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,6 +124,8 @@ export default function PuaGameDebug() {
 
   // 检测当前游戏天数
   useEffect(() => {
+    if (!gameStarted) return;
+
     const lastAssistantMessage = [...messages]
       .reverse()
       .find((m) => m.role === "assistant" && typeof m.content === "string");
@@ -112,7 +142,7 @@ export default function PuaGameDebug() {
         }
       }
     }
-  }, [messages, gameDay]);
+  }, [messages, gameDay, gameStarted]);
 
   const handleSendHelp = () => {
     append({
@@ -130,21 +160,21 @@ export default function PuaGameDebug() {
     });
   };
 
-  // 检查最后一条消息是否包含未处理的工具调用
-  const hasUnhandledToolCalls = () => {
-    if (messages.length === 0) return false;
+  // 处理骰子点击
+  const handleDiceClick = (toolCallId: string) => {
+    setIsManualRolling(true);
 
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage.role !== "assistant" || !lastMessage.parts) return false;
+    // 随机生成1-20的数字
+    const randomResult = Math.floor(Math.random() * 20) + 1;
 
-    return lastMessage.parts.some((part) => {
-      if (part.type !== "tool-invocation") return false;
-      const toolInvocation = part.toolInvocation;
-      return (
-        toolInvocation.state === "call" &&
-        toolInvocation.toolName === "renderChoices"
-      );
-    });
+    // 延迟一下，模拟骰子动画
+    setTimeout(() => {
+      addToolResult({
+        toolCallId: toolCallId,
+        result: randomResult.toString(),
+      });
+      setIsManualRolling(false);
+    }, 1500);
   };
 
   // 处理背景图片上传
@@ -163,10 +193,16 @@ export default function PuaGameDebug() {
 
   // 清除背景图片
   const clearBackgroundImage = () => {
-    if (backgroundImage) {
+    if (backgroundImage && backgroundImage !== "/default-pua-game.png") {
       URL.revokeObjectURL(backgroundImage);
-      setBackgroundImage(null);
+      setBackgroundImage("/default-pua-game.png");
     }
+  };
+
+  // 开始游戏
+  const startGame = () => {
+    setGameStarted(true);
+    setGameDay(1);
   };
 
   return (
@@ -184,7 +220,7 @@ export default function PuaGameDebug() {
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="bg-black/40 text-white flex items-center gap-1 px-3 py-1 text-sm">
             <Calendar className="h-4 w-4" />
-            <span>第{gameDay}天</span>
+            <span>第{gameDay}/7天</span>
           </Badge>
           <Button
             size="sm"
@@ -205,7 +241,7 @@ export default function PuaGameDebug() {
             <Upload className="h-4 w-4" />
             <span className="text-xs">背景图片</span>
           </Button>
-          {backgroundImage && (
+          {backgroundImage && backgroundImage !== "/default-pua-game.png" && (
             <Button
               variant="ghost"
               size="sm"
@@ -250,9 +286,11 @@ export default function PuaGameDebug() {
               <p className="text-sm">
                 游戏将持续7天，每一天的选择都会影响最终结局。
               </p>
-              <Button onClick={handleSendHelp} className="mt-4 w-full">
-                请求行动选项
-              </Button>
+              {gameStarted && (
+                <Button onClick={handleSendHelp} className="mt-4 w-full">
+                  请求行动选项
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -263,154 +301,279 @@ export default function PuaGameDebug() {
 
       {/* 对话框部分 - 固定在底部 */}
       <div className="w-full">
-        <Card className="rounded-b-none m-6 rounded-t-lg bg-background/80 backdrop-blur-sm border-background/30">
-          <div className="p-4">
-            <div className="max-h-[280px] overflow-y-auto mb-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`mb-3 ${
-                    message.role === "user" ? "pl-12" : ""
-                  }`}
-                >
-                  {message.role === "assistant" && (
-                    <div className="mb-1 text-xs text-muted-foreground">郑凤教授:</div>
-                  )}
+        <Card className="m-6 rounded-lg bg-background/80 backdrop-blur-sm border-background/30">
+          <div className="flex flex-col md:flex-row">
+            {/* 左侧对话区域 - 占2/3宽度 */}
+            <div className="p-4 md:w-2/3 border-r border-background/30">
+              <div className="max-h-[280px] overflow-y-auto mb-4 prose prose-sm dark:prose-invert">
+                {!gameStarted ? (
+                  // 显示游戏介绍
                   <div
-                    className={`rounded-lg p-3 ${
-                      message.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    {message.role === "assistant" && message.parts ? (
-                      <div>
-                        {message.parts.map((part, index) => {
-                          if (part.type === "text") {
-                            // 高亮显示天数标记
-                            const textWithDayHighlight = part.text.replace(
-                              /【第(\d+)天】/g,
-                              '<span class="font-bold text-amber-600 dark:text-amber-400">【第$1天】</span>'
-                            );
-
-                            return (
-                              <p
-                                key={index}
-                                className="text-sm whitespace-pre-wrap"
-                                dangerouslySetInnerHTML={{
-                                  __html: textWithDayHighlight,
-                                }}
-                              />
-                            );
-                          }
-
-                          if (part.type === "tool-invocation") {
-                            const toolInvocation = part.toolInvocation;
-
-                            if (toolInvocation.toolName === "renderChoices") {
-                              if (toolInvocation.state === "call") {
-                                const choices = toolInvocation.args
-                                  .choices as string[];
-                                return (
-                                  <div key={index} className="mt-3 space-y-2">
-                                    <p className="text-sm font-medium">
-                                      可选行动:
-                                    </p>
-                                    {choices.map((choice, choiceIndex) => (
-                                      <Button
-                                        key={choiceIndex}
-                                        variant="secondary"
-                                        size="sm"
-                                        className="w-full text-left justify-start text-sm"
-                                        onClick={() =>
-                                          handleSelectChoice(
-                                            choice,
-                                            toolInvocation.toolCallId
-                                          )
-                                        }
-                                      >
-                                        {choice}
-                                      </Button>
-                                    ))}
-                                  </div>
+                    className="whitespace-pre-wrap markdown"
+                    dangerouslySetInnerHTML={{
+                      __html: introductionText.replace(/\n\n/g, '<br/><br/>').replace(/\n/g, '<br/>').replace(/^## (.*?)$/gm, '<h3>$1</h3>').replace(/^# (.*?)$/gm, '<h2 class="text-xl font-bold mb-2">$1</h2>'),
+                    }}
+                  />
+                ) : (
+                  // 显示游戏内容
+                  messages.map((message, messageIndex) => {
+                    // 只显示助手（教授）的消息作为剧情
+                    if (message.role === "assistant") {
+                      if (message.parts) {
+                        // 处理带有parts的消息
+                        return (
+                          <div key={message.id} className="mb-4">
+                            {message.parts.map((part, partIndex) => {
+                              if (part.type === "text") {
+                                // 高亮显示天数标记
+                                const textWithDayHighlight = part.text.replace(
+                                  /【第(\d+)天】/g,
+                                  '<span class="font-bold text-amber-600 dark:text-amber-400">【第$1天】</span>'
                                 );
-                              } else if (toolInvocation.state === "result") {
+
                                 return (
                                   <div
-                                    key={index}
-                                    className="mt-2 text-sm text-green-600 dark:text-green-400"
-                                  >
-                                    选择了: {toolInvocation.result}
-                                  </div>
+                                    key={`${messageIndex}-${partIndex}`}
+                                    className="text-sm whitespace-pre-wrap"
+                                    dangerouslySetInnerHTML={{
+                                      __html: textWithDayHighlight,
+                                    }}
+                                  />
                                 );
                               }
-                            }
 
-                            if (toolInvocation.toolName === "rollADice") {
-                              if (toolInvocation.state === "result") {
-                                const result = parseInt(toolInvocation.result);
-                                const isSuccess = result > 10;
-                                return (
-                                  <div
-                                    key={index}
-                                    className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md"
-                                  >
-                                    <p className="text-sm">
-                                      🎲 掷骰结果:{" "}
-                                      <span className="font-bold">{result}</span>{" "}
-                                      ({isSuccess ? "成功!" : "失败!"})
-                                    </p>
-                                  </div>
-                                );
-                              } else if (toolInvocation.state === "call") {
-                                return (
-                                  <div
-                                    key={index}
-                                    className="mt-2 text-sm text-gray-500"
-                                  >
-                                    正在掷骰...
-                                  </div>
-                                );
+                              if (part.type === "tool-invocation") {
+                                const toolInvocation = part.toolInvocation;
+
+                                // 显示用户选择的结果，但不显示选项本身
+                                if (toolInvocation.toolName === "renderChoices" &&
+                                    toolInvocation.state === "result") {
+                                  return (
+                                    <div
+                                      key={`${messageIndex}-${partIndex}`}
+                                      className="my-2 text-sm italic text-muted-foreground border-l-2 border-primary pl-2"
+                                    >
+                                      你选择了: {toolInvocation.result}
+                                    </div>
+                                  );
+                                }
+
+                                // 显示骰子结果
+                                if (toolInvocation.toolName === "rollADice" &&
+                                    toolInvocation.state === "result") {
+                                  const result = parseInt(toolInvocation.result);
+                                  const isSuccess = result > 10;
+                                  return (
+                                    <div
+                                      key={`${messageIndex}-${partIndex}`}
+                                      className={`my-2 text-sm italic ${isSuccess ? "text-green-600" : "text-red-600"} border-l-2 border-primary pl-2`}
+                                    >
+                                      🎲 掷骰结果: {result} ({isSuccess ? "成功!" : "失败!"})
+                                    </div>
+                                  );
+                                }
                               }
-                            }
-                          }
+                              return null;
+                            })}
+                          </div>
+                        );
+                      } else if (typeof message.content === "string") {
+                        // 处理普通文本消息
+                        // 高亮显示天数标记
+                        const textWithDayHighlight = message.content.replace(
+                          /【第(\d+)天】/g,
+                          '<span class="font-bold text-amber-600 dark:text-amber-400">【第$1天】</span>'
+                        );
 
-                          return null;
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sm whitespace-pre-wrap">
-                        {message.content}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+                        return (
+                          <div
+                            key={message.id}
+                            className="mb-4 text-sm whitespace-pre-wrap"
+                            dangerouslySetInnerHTML={{
+                              __html: textWithDayHighlight,
+                            }}
+                          />
+                        );
+                      }
+                    } else if (message.role === "user" && typeof message.content === "string") {
+                      // 用户的消息显示为选择
+                      return (
+                        <div
+                          key={message.id}
+                          className="my-2 text-sm italic text-muted-foreground border-l-2 border-primary pl-2"
+                        >
+                          你说: {message.content}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <Input
-                value={input}
-                onChange={handleInputChange}
-                placeholder="输入你的回应或行动..."
-                disabled={status === "streaming" || hasUnhandledToolCalls()}
-                className="flex-1"
-              />
-              <Button
-                type="submit"
-                disabled={
-                  status === "streaming" ||
-                  !input.trim() ||
-                  hasUnhandledToolCalls()
-                }
-              >
-                <SendIcon className="h-4 w-4" />
-              </Button>
-            </form>
-            {hasUnhandledToolCalls() && (
-              <p className="text-xs text-amber-600 mt-1">请先选择一个行动选项</p>
-            )}
+            {/* 右侧选项区域 - 占1/3宽度 */}
+            <div className="p-4 md:w-1/3 bg-background/40 rounded-lg">
+              <div className="h-full flex flex-col">
+                <h3 className="text-sm font-medium mb-3 text-center">互动区域</h3>
+
+                {/* 显示当前可用选项或骰子 */}
+                <div className="flex-grow overflow-y-auto">
+                  {!gameStarted ? (
+                    // 游戏未开始，显示开始游戏按钮
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <Button
+                        onClick={startGame}
+                        variant="default"
+                        size="lg"
+                        className="flex items-center gap-2"
+                      >
+                        <PlayCircle className="h-5 w-5" />
+                        开始游戏
+                      </Button>
+                    </div>
+                  ) : messages.length > 0 && messages[messages.length - 1].parts ? (
+                    (() => {
+                      const lastMessage = messages[messages.length - 1];
+                      if (lastMessage.role !== "assistant" || !lastMessage.parts) {
+                        return (
+                          <div className="text-sm text-center text-muted-foreground py-4">
+                            等待教授的回应...
+                          </div>
+                        );
+                      }
+
+                      // 寻找最后一个renderChoices工具调用
+                      const choicesPart = lastMessage.parts.find(
+                        (part) =>
+                          part.type === "tool-invocation" &&
+                          part.toolInvocation.toolName === "renderChoices" &&
+                          part.toolInvocation.state === "call"
+                      );
+
+                      // 寻找最后一个rollADice工具调用
+                      const dicePart = lastMessage.parts.find(
+                        (part) =>
+                          part.type === "tool-invocation" &&
+                          part.toolInvocation.toolName === "rollADice" &&
+                          part.toolInvocation.state === "call"
+                      );
+
+                      // 优先显示选项，如果没有选项但有骰子，则显示骰子
+                      if (choicesPart && choicesPart.type === "tool-invocation") {
+                        const toolInvocation = choicesPart.toolInvocation;
+                        const choices = toolInvocation.args.choices as string[];
+
+                        return (
+                          <div className="space-y-2">
+                            <div className="text-center mb-3 text-sm text-muted-foreground">请选择你的行动:</div>
+                            {choices.map((choice, choiceIndex) => (
+                              <Button
+                                key={choiceIndex}
+                                variant="secondary"
+                                size="sm"
+                                className="w-full text-left justify-start text-sm"
+                                onClick={() =>
+                                  handleSelectChoice(
+                                    choice,
+                                    toolInvocation.toolCallId
+                                  )
+                                }
+                              >
+                                {choice}
+                              </Button>
+                            ))}
+                          </div>
+                        );
+                      } else if (dicePart && dicePart.type === "tool-invocation") {
+                        // 显示骰子界面
+                        return (
+                          <div className="flex flex-col items-center justify-center py-4">
+                            <div className="text-center mb-4 text-sm">
+                              点击骰子来决定你的行动结果
+                            </div>
+                            <button
+                              onClick={() => !isManualRolling && handleDiceClick(dicePart.toolInvocation.toolCallId)}
+                              disabled={isManualRolling}
+                              className="relative w-24 h-24 mb-4 cursor-pointer hover:scale-110 transition-transform disabled:cursor-not-allowed"
+                            >
+                              <div className={`absolute inset-0 flex items-center justify-center ${isManualRolling ? 'animate-spin' : ''}`}>
+                                <div className={`${isManualRolling ? 'rounded-full h-16 w-16 border-b-2 border-primary' : ''}`}></div>
+                              </div>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-4xl">🎲</span>
+                              </div>
+                            </button>
+                            <div className="text-sm text-muted-foreground text-center">
+                              {isManualRolling ? "骰子正在转动..." : "骰子结果将决定你的行动是否成功"}
+                              <br />
+                              <span className="text-xs">(1-10: 失败, 11-20: 成功)</span>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // 检查是否有已完成的骰子结果需要显示
+                      const diceResultPart = lastMessage.parts.find(
+                        (part) =>
+                          part.type === "tool-invocation" &&
+                          part.toolInvocation.toolName === "rollADice" &&
+                          part.toolInvocation.state === "result"
+                      );
+
+                      if (diceResultPart && diceResultPart.type === "tool-invocation" &&
+                          diceResultPart.toolInvocation.state === "result") {
+                        const result = parseInt(diceResultPart.toolInvocation.result);
+                        const isSuccess = result > 10;
+
+                        return (
+                          <div className="flex flex-col items-center justify-center py-4">
+                            <div className="text-center mb-4 text-sm font-medium">
+                              骰子结果已出:
+                            </div>
+                            <div className="w-24 h-24 mb-4 bg-background/60 rounded-lg flex items-center justify-center">
+                              <div className="text-4xl font-bold">{result}</div>
+                            </div>
+                            <div className={`text-center font-semibold ${isSuccess ? "text-green-600" : "text-red-600"}`}>
+                              {isSuccess ? "成功!" : "失败!"}
+                            </div>
+                            <div className="mt-3 text-sm text-muted-foreground text-center">
+                              等待教授的回应...
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="text-sm text-center text-muted-foreground py-4">
+                          <p className="mb-2">当前没有可用选项</p>
+                          <Button
+                            onClick={handleSendHelp}
+                            variant="outline"
+                            size="sm"
+                            className="mx-auto"
+                          >
+                            请求行动选项
+                          </Button>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="text-sm text-center text-muted-foreground py-4">
+                      等待对话开始...
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 text-xs text-center text-muted-foreground">
+                  <Badge variant="outline" className="bg-black/20">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    第{gameDay}/7天
+                  </Badge>
+                </div>
+              </div>
+            </div>
           </div>
         </Card>
       </div>

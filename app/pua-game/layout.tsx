@@ -5,7 +5,7 @@ export default function PuaGameLayout({
 }) {
   return (
     <main className="min-h-screen w-full">
-      {children}
+        {children}
     </main>
   );
 }
