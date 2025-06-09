@@ -7,10 +7,9 @@ import { toast } from "sonner";
 import {
   StatsPanel,
   InteractionPanel,
-  InteractionPanelFooter,
   GameHeader,
   InstructionsModal,
-  GameMessageDisplay
+  GameMessageDisplay,
 } from "@/components/pua-game";
 
 // 定义交互类型
@@ -218,13 +217,14 @@ export default function PuaGameDebug() {
 1. 用户永远无法回复你, 需要你使用工具提供选项。
 2. 每当需要用户做出选择, 选择行动时, 必须使用工具 renderChoices 工具, 绝不能只输出文本提示。
 3. 当输出像"请选择你的行动："这样的提示时, 后就要使用工具 renderChoices 工具提供选项。
+4. 每次场景描述必须以【第X天】开头，例如【第1天】、【第2天】等，这是识别游戏进度的关键。
 
 
 ---
 
 ## 游戏初始化
 
-简单介绍一下游戏背景,然后向玩家展示所有的学生卡片,让玩家选择一个角色开始游戏
+简单介绍一下游戏背景,然后向玩家展示所有的学生卡片,让玩家选择一个角色开始游戏。选择完角色后，以【第1天】早上 开始第一个场景。
 
 `;
 
@@ -486,9 +486,7 @@ export default function PuaGameDebug() {
       }}
     >
       {/* 数值面板 - 固定在右上角，移动端居中显示 */}
-      <div
-        className="fixed top-4 inset-x-0 px-4 sm:right-4 sm:left-auto z-30 w-full sm:w-[340px] max-h-[60vh] overflow-y-auto"
-      >
+      <div className="fixed top-4 inset-x-0 px-4 sm:right-4 sm:left-auto z-30 w-full sm:w-[340px] max-h-[60vh] overflow-y-auto">
         <StatsPanel
           statsHistory={statsHistory}
           statsHighlight={statsHighlight}
@@ -518,12 +516,10 @@ export default function PuaGameDebug() {
       {/* 对话框部分 - 固定在底部 */}
       <div className="w-full">
         <div className="relative m-6">
-          <Card
-            className="rounded-lg bg-background/80 backdrop-blur-sm border-background/30 h-[70vh] md:h-[400px] relative z-10"
-          >
+          <Card className="rounded-lg bg-background/80 backdrop-blur-sm border-background/30 h-[90vh] md:h-[400px] relative z-10">
             <div className="flex flex-col md:flex-row h-full">
               {/* 左侧对话区域 - 占2/3宽度 */}
-              <div className="p-4 md:w-2/3 h-full">
+              <div className="p-4 md:w-2/3 h-3/5 md:h-full">
                 <GameMessageDisplay
                   messages={messages}
                   status={status}
@@ -534,7 +530,7 @@ export default function PuaGameDebug() {
 
               {/* 右侧选项区域 - 占1/3宽度 */}
               <div
-                className={`p-4 md:w-1/3 bg-background/40 rounded-lg mr-4 h-full ${
+                className={`p-4 md:w-1/3 bg-background/40 rounded-lg mx-4 md:mx-0 md:mr-4 h-2/5 md:h-full shrink-0 ${
                   interactionMode === "choices" || interactionMode === "dice"
                     ? "bg-primary/10 border-primary/40"
                     : ""
@@ -560,7 +556,6 @@ export default function PuaGameDebug() {
                     />
                   </div>
 
-                  <InteractionPanelFooter gameDay={gameDay} />
                 </div>
               </div>
             </div>

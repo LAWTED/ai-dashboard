@@ -24,7 +24,7 @@ export function GameMessageDisplay({
   }, [messages]);
 
   return (
-    <div className="max-h-[40vh] md:max-h-[280px] overflow-y-auto mb-4 prose prose-sm dark:prose-invert">
+    <div className="h-full overflow-y-auto mb-4 prose prose-sm dark:prose-invert">
       {!gameStarted ? (
         // Game not started, show introduction
         <CustomMarkdown>{gameIntroduction}</CustomMarkdown>

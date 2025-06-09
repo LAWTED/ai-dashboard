@@ -77,9 +77,7 @@ export function InteractionPanel({
         <div className="flex flex-col items-center justify-center py-4">
           {diceValue === null ? (
             <>
-              <div className="text-center mb-4">
-                点击骰子来决定你的行动结果
-              </div>
+              <div className="text-center mb-4">点击骰子来决定你的行动结果</div>
               <button
                 onClick={() => !isManualRolling && onDiceClick()}
                 disabled={isManualRolling}
@@ -112,9 +110,7 @@ export function InteractionPanel({
             </>
           ) : (
             <>
-              <div className="text-center mb-4  font-medium">
-                骰子结果已出:
-              </div>
+              <div className="text-center mb-4  font-medium">骰子结果已出:</div>
               <div className="w-24 h-24 mb-4 bg-background/60 rounded-lg flex items-center justify-center">
                 <div className="text-4xl font-bold">{diceValue}</div>
               </div>
@@ -144,15 +140,4 @@ export function InteractionPanel({
         </div>
       );
   }
-}
-
-// Footer component for the interaction panel
-export function InteractionPanelFooter({ gameDay }: { gameDay: number }) {
-  return (
-    <div className="mt-4 text-xs text-center text-muted-foreground">
-      <Badge variant="outline" className="bg-black/20">
-        <Calendar className="h-3 w-3 mr-1" />第{gameDay}/9天
-      </Badge>
-    </div>
-  );
 }
