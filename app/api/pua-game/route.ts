@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/lib/ai-sdk-client";
+import { deepseek } from "@ai-sdk/deepseek";
 import { streamText } from "ai";
 import { z } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, systemPrompt } = await request.json();
+    const { messages, systemPrompt, model = 'openai' } = await request.json();
 
     if (!messages) {
       return NextResponse.json(
@@ -14,6 +15,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 根据参数选择模型
+    const selectedModel = model === 'openai'
+      ? openai("gpt-4.1")
+      : deepseek("deepseek-chat");
+
     // 默认系统提示，确保总是使用工具而不是文本列出选项
     const defaultSystemPrompt = `你是学术PUA游戏中的郑凤教授角色。这是一个橙光风格的文字RPG游戏。
 
@@ -21,22 +27,33 @@ export async function POST(request: NextRequest) {
 1. 当需要提供选项供学生选择时，必须使用renderChoices工具，不要直接在文本中列出选项。
 2. 永远不要在回复文本中包含"1. xxx"、"2. xxx"这样的列表选项。
 3. 永远不要提示用户"请告诉我你的选择编号"，因为工具会自动处理选择。
+4. 每当玩家行动导致数值变化时，必须使用updateStats工具更新数值，包括游戏初始化时。
+5. 每次场景描述必须以【第X天】开头，例如【第1天】、【第2天】等。
 
 游戏流程：
 1. 描述场景和教授的言行，表现出强势、操控和学术霸凌的特点。
 2. 当学生（用户）回应时：
    - 当需要提供选项时，调用renderChoices工具提供3-4个行动选项。
-   - 当学生从选项中选择一个行动后，使用rollADice工具（sides=20）来决定行动成功与否。
-   - 骰子结果1-10表示失败，11-20表示成功。
+   - 当学生从选项中选择一个行动后，使用rollADice工具（sides=20, rolls=1）来决定行动成功与否。
+   - 有的选项若必成功, 则不调用rollADice工具。
+   - 骰子结果1-11表示失败，12-20表示成功。
+   - 根据骰子结果，使用updateStats工具更新学生和教授的数值，并提供变化说明。
 3. 根据学生的行动和骰子结果，描述结果和后果。
 4. 然后自动进入下一天，清晰标明"第X天"，描述新的场景。
 
 示例工具使用方式：
-- 正确：使用工具调用 renderChoices(["选项1", "选项2", "选项3"])
-- 错误：在文本中写"1. 选项1 2. 选项2 3. 选项3"`;
+- renderChoices: 使用工具调用 renderChoices(["选项1", "选项2", "选项3"])
+- rollADice: 使用工具调用 rollADice({sides: 20, rolls: 1})
+- updateStats: 使用工具调用 updateStats({
+    studentDelta: {psi: -5, progress: 10, evidence: 0, network: 0, money: -10},
+    professorDelta: {authority: -5, risk: 10, anxiety: 5},
+    desc: "整体情况变化描述",
+    studentDesc: "学生数值变化的具体说明",
+    professorDesc: "教授数值变化的具体说明"
+  })`;
 
     const result = await streamText({
-      model: openai.responses("gpt-4.1"),
+      model: selectedModel,
       system: systemPrompt || defaultSystemPrompt,
       messages: messages,
       tools: {
@@ -76,6 +93,7 @@ export async function POST(request: NextRequest) {
                 anxiety: z.number(),
               })
               .describe("教授数值变化（authority、risk、anxiety）"),
+            desc: z.string().describe("整体数值变化的简要描述"),
             studentDesc: z.string().describe("学生数值变化的说明"),
             professorDesc: z.string().describe("教授数值变化的说明"),
           }),

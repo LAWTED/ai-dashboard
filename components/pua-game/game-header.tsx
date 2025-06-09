@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Upload, Info } from "lucide-react";
+import { Calendar, Upload, Info, Bot } from "lucide-react";
 
 interface GameHeaderProps {
   gameDay: number;
@@ -9,6 +9,8 @@ interface GameHeaderProps {
   onUploadClick: () => void;
   onClearBackground: () => void;
   showClearButton: boolean;
+  currentModel: 'deepseek' | 'openai';
+  onModelChange: (model: 'deepseek' | 'openai') => void;
 }
 
 export function GameHeader({
@@ -16,7 +18,9 @@ export function GameHeader({
   onShowInstructions,
   onUploadClick,
   onClearBackground,
-  showClearButton
+  showClearButton,
+  currentModel,
+  onModelChange
 }: GameHeaderProps) {
   return (
     <div className="absolute top-0 left-0 right-0 p-2 z-20 flex justify-between items-center">
@@ -28,10 +32,21 @@ export function GameHeader({
           <Calendar className="h-4 w-4" />
           <span>第{gameDay}/9天</span>
         </Badge>
+
         <Button
           size="sm"
           variant="ghost"
-          className="bg-black/40 text-white hover:bg-black/60"
+          className="bg-black/40 text-white hover:bg-black/60 hover:text-white flex items-center gap-1"
+          onClick={() => onModelChange(currentModel === 'deepseek' ? 'openai' : 'deepseek')}
+        >
+          <Bot className="h-4 w-4" />
+          <span className="text-xs">{currentModel === 'deepseek' ? 'DeepSeek' : 'OpenAI'}</span>
+        </Button>
+
+        <Button
+          size="sm"
+          variant="ghost"
+          className="bg-black/40 text-white hover:bg-black/60 hover:text-white"
           onClick={onShowInstructions}
         >
           <Info className="h-4 w-4" />
@@ -40,7 +55,7 @@ export function GameHeader({
         <Button
           variant="ghost"
           size="sm"
-          className="bg-black/40 text-white hover:bg-black/60 flex items-center gap-1"
+          className="bg-black/40 text-white hover:bg-black/60 hover:text-white flex items-center gap-1"
           onClick={onUploadClick}
         >
           <Upload className="h-4 w-4" />

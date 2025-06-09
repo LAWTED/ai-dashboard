@@ -104,7 +104,7 @@ export function InteractionPanel({
                   ? "骰子正在转动..."
                   : "骰子结果将决定你的行动是否成功"}
                 <br />
-                <span className="text-xs">(1-10: 失败, 11-20: 成功)</span>
+                <span className="text-xs">(1-11: 失败, 12-20: 成功)</span>
               </div>
             </>
           ) : (

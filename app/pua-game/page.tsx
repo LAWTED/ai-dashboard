@@ -3,7 +3,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useChat } from "@ai-sdk/react";
-import { toast } from "sonner";
 import {
   StatsPanel,
   InteractionPanel,
@@ -33,6 +32,7 @@ export default function PuaGameDebug() {
   const [showInstructions, setShowInstructions] = useState(false);
   const [isManualRolling, setIsManualRolling] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
+  const [currentModel, setCurrentModel] = useState<'deepseek' | 'openai'>('openai');
 
   // 交互状态管理
   const [interactionMode, setInteractionMode] =
@@ -140,13 +140,16 @@ export default function PuaGameDebug() {
 #### 骰点机制
 - 主持者掷 d20 + Talent 加成
 - 总值 ≥ 12 判定成功、按选项表结算
-- 调用工具 rollADice 掷骰子
+- 调用工具 rollADice 掷骰子，参数为 sides: 20, rolls: 1
 
 #### 每回合流程
 - 主持人描述场景 + 郑凤行为
-- 向玩家展示 3–4 个行动选项供选择,
-- 务必使用工具 renderChoices 工具提供选项。
-- 务必使用工具 renderChoices 工具提供选项。
+- 向玩家提供 3–4 个行动选项供选择
+- 务必使用工具 renderChoices 工具提供选项
+- 显示具体内容即可, 不要输出服从,周旋, 搜证, 自救等提示性内容
+- 玩家选择后使用 rollADice 工具进行判定, 有变数的行动才需要 rollADice
+- 根据判定结果使用 updateStats 工具更新数值
+- 回合结束后进入下一回合, 每天 3个回合
 
 #### 行动组
 
@@ -219,14 +222,18 @@ export default function PuaGameDebug() {
 2. 每当需要用户做出选择, 选择行动时, 必须使用工具 renderChoices 工具, 绝不能只输出文本提示。
 3. 当输出像"请选择你的行动："这样的提示时, 后就要使用工具 renderChoices 工具提供选项。
 4. 每次场景描述必须以【第X天】开头，例如【第1天】、【第2天】等，这是识别游戏进度的关键。
-5. 请使用 Markdown 格式输出文本信息。
-
+5. 请使用 Markdown 格式输出文本信息, 对话内容使用 > 引用。
+6. 每当玩家行动导致数值变化时，必须使用 updateStats 工具更新数值，包括游戏初始化时设置初始数值。
+7. 使用 updateStats 工具时，必须提供变化说明，包括学生和教授数值的变化原因。
+8. 使用 rollADice 工具时，必须设置 sides=20 和 rolls=1 参数。
 
 ---
 
 ## 游戏初始化
 
 简单介绍一下游戏背景,然后向玩家展示所有的学生卡片,让玩家选择一个角色开始游戏。选择完角色后，以【第1天】早上 开始第一个场景。
+
+在玩家选择角色后，立即使用 updateStats 工具设置初始数值，根据所选角色设定不同的初始值。
 
 `;
 
@@ -244,7 +251,7 @@ export default function PuaGameDebug() {
 - 游戏将持续9天、每一天你都需要面对不同的学术PUA场景
 - 你可以从多个选项中选择应对方式
 - 每次行动后、系统会自动掷骰子(1-20)决定你的行动成功与否
-- 根据你的选择和骰子结果、故事将向不同方向发展
+- 根据你的选择和骰子点数结果、故事将向不同方向发展
 - 游戏结束时、你将获得不同的结局
 
 ## 提示
@@ -260,6 +267,7 @@ export default function PuaGameDebug() {
     api: "/api/pua-game",
     body: {
       systemPrompt,
+      model: currentModel,
     },
     initialMessages: [],
     maxSteps: 100, // 允许多步工具调用
@@ -348,9 +356,9 @@ export default function PuaGameDebug() {
           ...prev,
         ]);
 
-        toast.info(studentDesc + "\n" + professorDesc, {
-          position: "top-center",
-        });
+        // toast.info(studentDesc + "\n" + professorDesc, {
+        //   position: "top-center",
+        // });
 
         await new Promise((resolve) => setTimeout(resolve, 2000));
         return "updateStats";
@@ -368,7 +376,7 @@ export default function PuaGameDebug() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 检测当前游戏天数
+  // 监听消息变化，检测游戏天数
   useEffect(() => {
     if (!gameStarted) return;
 
@@ -380,15 +388,27 @@ export default function PuaGameDebug() {
       lastAssistantMessage &&
       typeof lastAssistantMessage.content === "string"
     ) {
-      const dayMatch = lastAssistantMessage.content.match(/【第(\d+)天】/);
-      if (dayMatch && dayMatch[1]) {
-        const day = parseInt(dayMatch[1]);
-        if (!isNaN(day) && day > gameDay) {
-          setGameDay(day);
+      // 更全面的日期检测正则，支持多种格式
+      const dayMatches = [
+        lastAssistantMessage.content.match(/【第(\d+)天】/),
+        lastAssistantMessage.content.match(/第(\d+)天/),
+        lastAssistantMessage.content.match(/Day\s*(\d+)/i)
+      ];
+
+      for (const dayMatch of dayMatches) {
+        if (dayMatch && dayMatch[1]) {
+          const day = parseInt(dayMatch[1]);
+          console.log(`检测到天数标记: ${dayMatch[0]}, 解析天数: ${day}, 当前gameDay: ${gameDay}`);
+          if (!isNaN(day) && day > gameDay) {
+            console.log(`更新游戏天数: ${gameDay} -> ${day}`);
+            setGameDay(day);
+            break; // 找到第一个匹配就退出
+          }
         }
       }
+
     }
-  }, [messages, gameDay, gameStarted]);
+  }, [messages, gameStarted]); // 移除gameDay依赖，避免循环依赖
 
   // 监听 statsHistory 变化，高亮数值面板
   useEffect(() => {
@@ -488,7 +508,7 @@ export default function PuaGameDebug() {
       }}
     >
       {/* 数值面板 - 固定在右上角，移动端居中显示 */}
-      <div className="fixed top-4 inset-x-0 px-4 sm:right-4 sm:left-auto z-30 w-full sm:w-[340px] max-h-[60vh] overflow-y-auto">
+      <div className="fixed top-4 inset-x-0 px-4 py-2 sm:right-4 sm:left-auto z-30 w-full sm:w-[340px] md:w-1/3 max-h-[60vh] overflow-y-auto">
         <StatsPanel
           statsHistory={statsHistory}
           statsHighlight={statsHighlight}
@@ -502,6 +522,8 @@ export default function PuaGameDebug() {
         onUploadClick={handleUploadClick}
         onClearBackground={clearBackgroundImage}
         showClearButton={backgroundImage !== "/default-pua-game.png"}
+        currentModel={currentModel}
+        onModelChange={setCurrentModel}
       />
 
       {/* 游戏说明弹窗 */}
