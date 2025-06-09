@@ -540,7 +540,7 @@ export default function PuaGameDebug() {
       {/* 对话框部分 - 固定在底部 */}
       <div className="w-full">
         <div className="relative m-6">
-          <Card className="rounded-lg bg-background/80 backdrop-blur-sm border-background/30 h-[90vh] md:h-[400px] relative z-10">
+          <Card className="rounded-lg bg-background/80 backdrop-blur-sm border-background/30 h-[90dvh] md:h-[400px] relative z-10">
             <div className="flex flex-col md:flex-row h-full">
               {/* 左侧对话区域 - 占2/3宽度 */}
               <div className="p-4 md:w-2/3 h-3/5 md:h-full">
