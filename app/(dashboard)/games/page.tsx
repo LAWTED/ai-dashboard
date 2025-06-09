@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { WeChatChat, Message } from "@/components/ui/wechat-chat";
 import { Button } from "@/components/ui/button";
-import { gameConfigs } from "@/app/games/config";
+import { gameConfigs } from "@/app/(dashboard)/games/config";
 
 export default function GamesPage() {
   const [messages, setMessages] = useState<Message[]>([]);

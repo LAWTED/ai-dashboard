@@ -7,7 +7,7 @@ import {
   mbtiApiConfig,
   foodApiConfig,
   companyApiConfig
-} from "@/app/games/config";
+} from "@/app/(dashboard)/games/config";
 
 // Game configurations
 const gameConfigs: Record<string, ApiGameConfig> = {
