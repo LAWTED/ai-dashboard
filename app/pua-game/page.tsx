@@ -508,7 +508,7 @@ export default function PuaGameDebug() {
       }}
     >
       {/* 数值面板 - 固定在右上角，移动端居中显示 */}
-      <div className="fixed top-4 inset-x-0 px-4 py-2 sm:right-4 sm:left-auto z-30 w-full sm:w-[340px] md:w-1/3 max-h-[60vh] overflow-y-auto">
+      <div className="fixed top-4 inset-x-0 px-4 py-2 sm:right-4 sm:left-auto z-30 w-full sm:w-[340px] md:w-1/3 max-h-[60dvh] overflow-y-auto">
         <StatsPanel
           statsHistory={statsHistory}
           statsHighlight={statsHighlight}

@@ -125,3 +125,19 @@
     cursor: pointer;
   }
 }
+
+/* Safari safe area support */
+@supports (padding: max(0px)) {
+  .pt-safe-top {
+    padding-top: max(env(safe-area-inset-top), 1rem);
+  }
+  .pb-safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+  .pl-safe-left {
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+  .pr-safe-right {
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+}

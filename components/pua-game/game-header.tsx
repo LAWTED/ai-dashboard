@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Upload, Info, Bot } from "lucide-react";
@@ -9,8 +9,8 @@ interface GameHeaderProps {
   onUploadClick: () => void;
   onClearBackground: () => void;
   showClearButton: boolean;
-  currentModel: 'deepseek' | 'openai';
-  onModelChange: (model: 'deepseek' | 'openai') => void;
+  currentModel: "deepseek" | "openai";
+  onModelChange: (model: "deepseek" | "openai") => void;
 }
 
 export function GameHeader({
@@ -20,10 +20,10 @@ export function GameHeader({
   onClearBackground,
   showClearButton,
   currentModel,
-  onModelChange
+  onModelChange,
 }: GameHeaderProps) {
   return (
-    <div className="absolute top-0 left-0 right-0 p-2 z-20 flex justify-between items-center">
+    <div className="fixed top-0 left-0 right-0 p-2 z-20 flex justify-between items-center ">
       <div className="flex items-center gap-2">
         <Badge
           variant="outline"
@@ -37,10 +37,14 @@ export function GameHeader({
           size="sm"
           variant="ghost"
           className="bg-black/40 text-white hover:bg-black/60 hover:text-white flex items-center gap-1"
-          onClick={() => onModelChange(currentModel === 'deepseek' ? 'openai' : 'deepseek')}
+          onClick={() =>
+            onModelChange(currentModel === "deepseek" ? "openai" : "deepseek")
+          }
         >
           <Bot className="h-4 w-4" />
-          <span className="text-xs">{currentModel === 'deepseek' ? 'DeepSeek' : 'OpenAI'}</span>
+          <span className="text-xs">
+            {currentModel === "deepseek" ? "DeepSeek" : "OpenAI"}
+          </span>
         </Button>
 
         <Button
