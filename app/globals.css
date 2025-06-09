@@ -160,7 +160,7 @@
   box-shadow:
     0 0 0 4px #fff,
     0 0 0 8px #000,
-    8px 8px 0 8px rgba(0,0,0,0.2);
+    8px 8px 0 4px rgba(0,0,0,0.2);
   image-rendering: pixelated;
 }
 

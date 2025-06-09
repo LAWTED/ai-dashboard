@@ -492,9 +492,9 @@ export default function PuaGameMobile() {
       {/* 交互区 - 使用 Vaul Drawer */}
       <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-40" />
           <Drawer.Content
-            className="bg-white flex flex-col fixed bottom-0 left-0 right-0 h-[50vh] rounded-t-[10px]"
+            className="bg-white flex flex-col fixed bottom-0 left-0 right-0 rounded-t-[10px]"
             style={{ zIndex: 50 }}
           >
             <Drawer.Title className="sr-only">交互区</Drawer.Title>
