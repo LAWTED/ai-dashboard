@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 - 错误：在文本中写"1. 选项1 2. 选项2 3. 选项3"`;
 
     const result = await streamText({
-      model: openai("gpt-4.1"),
+      model: openai.responses("gpt-4.1"),
       system: systemPrompt || defaultSystemPrompt,
       messages: messages,
       tools: {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
           description: "掷骰子工具，用于指定面数的骰子。",
           parameters: z.object({
             sides: z.number().int().min(2).describe("骰子的面数"),
-            rolls: z.number().int().min(1).default(1).describe("掷骰子的次数"),
+            rolls: z.number().int().min(1).describe("掷骰子的次数"),
           }),
         },
         updateStats: {

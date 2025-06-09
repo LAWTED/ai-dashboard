@@ -24,7 +24,7 @@ export function GameMessageDisplay({
   }, [messages]);
 
   return (
-    <div className="max-h-[280px] overflow-y-auto mb-4 prose prose-sm dark:prose-invert">
+    <div className="h-full overflow-y-auto mb-4 prose prose-sm dark:prose-invert">
       {!gameStarted ? (
         // Game not started, show introduction
         <CustomMarkdown>{gameIntroduction}</CustomMarkdown>
@@ -39,16 +39,9 @@ export function GameMessageDisplay({
                 <div key={message.id} className="mb-4">
                   {message.parts.map((part, partIndex) => {
                     if (part.type === "text") {
-                      // Highlight day markers
-                      const textWithDayHighlight = part.text.replace(
-                        /【第(\d+)天】/g,
-                        '<span class="font-bold text-amber-600 dark:text-amber-400">【第$1天】</span>'
-                      );
                       return (
                         <div key={`${messageIndex}-${partIndex}`}>
-                          <CustomMarkdown>
-                            {textWithDayHighlight}
-                          </CustomMarkdown>
+                          <CustomMarkdown>{part.text}</CustomMarkdown>
                         </div>
                       );
                     }
@@ -97,17 +90,12 @@ export function GameMessageDisplay({
               );
             } else if (typeof message.content === "string") {
               // Handle regular text messages
-              // Highlight day markers
-              const textWithDayHighlight = message.content.replace(
-                /【第(\d+)天】/g,
-                '<span class="font-bold text-amber-600 dark:text-amber-400">【第$1天】</span>'
-              );
               return (
                 <div
                   key={message.id}
                   className="mb-4 text-sm whitespace-pre-wrap"
                 >
-                  <CustomMarkdown>{textWithDayHighlight}</CustomMarkdown>
+                  <CustomMarkdown>{message.content}</CustomMarkdown>
                 </div>
               );
             }
