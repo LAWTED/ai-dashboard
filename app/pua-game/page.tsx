@@ -140,6 +140,7 @@ export default function PuaGameDebug() {
 #### 骰点机制
 - 主持者掷 d20 + Talent 加成
 - 总值 ≥ 12 判定成功、按选项表结算
+- 调用工具 rollADice 掷骰子
 
 #### 每回合流程
 - 主持人描述场景 + 郑凤行为
