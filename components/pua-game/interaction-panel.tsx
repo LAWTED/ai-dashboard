@@ -1,7 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Play } from "lucide-react";
+import { Play } from "lucide-react";
 
 // Define types
 type InteractionMode = "idle" | "choices" | "dice";
