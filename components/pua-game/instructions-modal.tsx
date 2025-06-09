@@ -40,7 +40,7 @@ export function InstructionsModal({
             你可以选择不同的行动来应对、系统会自动掷骰子判断成功与否。
           </p>
           <p className="text-sm">
-            游戏将持续9天、每一天的选择都会影响最终结局。
+            游戏将持续5天、每一天的选择都会影响最终结局。
           </p>
           {gameStarted && (
             <Button onClick={onRequestHelp} className="mt-4 w-full">

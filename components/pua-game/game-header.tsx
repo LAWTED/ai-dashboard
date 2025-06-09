@@ -30,7 +30,7 @@ export function GameHeader({
           className="bg-black/40 text-white flex items-center gap-1 px-3 py-1 text-sm"
         >
           <Calendar className="h-4 w-4" />
-          <span>第{gameDay}/9天</span>
+          <span>第{gameDay}/5天</span>
         </Badge>
 
         <Button
