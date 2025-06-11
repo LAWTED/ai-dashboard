@@ -498,9 +498,9 @@ export default function PuaGameMobile() {
             style={{ zIndex: 50 }}
           >
             <Drawer.Title className="sr-only">交互区</Drawer.Title>
-            <div className="flex-shrink-0 mx-auto w-12 h-1.5 rounded-full bg-zinc-300 mt-4 mb-4" />
             <div className="flex-1 p-4">
-              <div className="pixel-panel p-4">
+              <div className="pixel-panel p-4 pt-0">
+                <div className="flex-shrink-0 mx-auto w-12 h-1.5 rounded-full bg-zinc-300 mt-4 mb-4" />
                 <PixelInteractionPanel
                   interactionMode={interactionMode}
                   currentChoices={currentChoices}
