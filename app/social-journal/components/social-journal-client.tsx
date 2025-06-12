@@ -99,15 +99,15 @@ export default function SocialJournalClient() {
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-transparent" />
           <Drawer.Content className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex flex-col rounded-t-[10px] h-full mt-20 max-h-[96%] fixed bottom-0 left-0 right-0">
-            <div className="p-6 flex-1">
+            <div className="p-6 flex-1 overflow-y-auto">
               <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/30 mb-6" />
-              <Drawer.Title className="sr-only">社交日记</Drawer.Title>
+              <Drawer.Title className="sr-only">Social Journal</Drawer.Title>
 
               <div className="w-full max-w-2xl mx-auto">
                 {/* 用户信息 */}
                 <div className="mb-6 text-center">
                   <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    社交日记
+                    Social Journal
                   </h1>
                   <p className="text-sm text-gray-700">
                     你好, {currentUser.name} (#{currentUser.invite_code})
@@ -137,7 +137,7 @@ export default function SocialJournalClient() {
                   ) : letters.length === 0 ? (
                     <EmptyEnvelope type="no-letters" />
                   ) : (
-                    <div className="max-h-[calc(60vh-200px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70 pr-2 -mr-2">
+                    <div className=" pr-2 -mr-2">
                       <div className="space-y-3 pb-4">
                         {letters.map((letter) => (
                           <div
