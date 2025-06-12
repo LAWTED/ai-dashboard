@@ -97,6 +97,7 @@ export default function LoginDrawer() {
         );
 
         closeLogin();
+        triggerSplineObject(SPLINE_OBJECTS.LETTER_COVER_CLOSE);
         router.push("/social-journal");
       } else {
         // 注册逻辑
