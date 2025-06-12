@@ -2,6 +2,7 @@ import "../globals.css";
 import type { Metadata } from "next";
 import SplineScene from "@/app/social-journal/components/spline-scene";
 import LogoutDrawer from "@/app/social-journal/components/logout-drawer";
+import LoginDrawer from "@/app/social-journal/components/login-drawer";
 
 export const metadata: Metadata = {
   title: "社交日记",
@@ -26,7 +27,7 @@ export default function RootLayout({
     <html lang="zh-CN">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#2563eb" />
+        <meta name="theme-color" content="transparent" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="社交日记" />
@@ -40,6 +41,7 @@ export default function RootLayout({
 
         {/* 登出 Drawer */}
         <LogoutDrawer />
+        <LoginDrawer />
       </body>
     </html>
   );

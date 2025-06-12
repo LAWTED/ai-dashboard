@@ -20,6 +20,12 @@ interface SocialJournalStore {
   closeSendLetter: () => void;
   setSendLetterOpen: (open: boolean) => void;
 
+  // 登录 drawer 状态
+  loginOpen: boolean;
+  openLogin: () => void;
+  closeLogin: () => void;
+  setLoginOpen: (open: boolean) => void;
+
   // 登出 drawer 状态
   logoutOpen: boolean;
   openLogout: () => void;
@@ -55,6 +61,12 @@ export const useSocialJournalStore = create<SocialJournalStore>((set) => ({
   openSendLetter: () => set({ sendLetterOpen: true }),
   closeSendLetter: () => set({ sendLetterOpen: false }),
   setSendLetterOpen: (open: boolean) => set({ sendLetterOpen: open }),
+
+  // 登录 drawer
+  loginOpen: false,
+  openLogin: () => set({ loginOpen: true }),
+  closeLogin: () => set({ loginOpen: false }),
+  setLoginOpen: (open: boolean) => set({ loginOpen: open }),
 
   // 登出 drawer
   logoutOpen: false,

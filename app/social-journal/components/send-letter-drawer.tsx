@@ -99,6 +99,7 @@ export default function SendLetterDrawer() {
     <Drawer.NestedRoot open={sendLetterOpen} onOpenChange={setSendLetterOpen}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-transparent" />
+        <Drawer.Title className="sr-only">发送问题</Drawer.Title>
         <Drawer.Content className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex flex-col rounded-t-[10px] h-full mt-24 max-h-[94%] fixed bottom-0 left-0 right-0">
           <div className="p-6 flex-1 max-h-[85vh] overflow-y-auto">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/30 mb-6" />

@@ -7,6 +7,7 @@ import { LogOut, User, Settings } from "lucide-react";
 import { getUserFromLocal } from "@/lib/social-journal";
 import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
+import { triggerSplineObject, SPLINE_OBJECTS } from "@/lib/spline-utils";
 
 export default function LogoutDrawer() {
   const router = useRouter();
@@ -15,13 +16,14 @@ export default function LogoutDrawer() {
 
   const handleLogout = () => {
     // 清除本地存储的用户信息
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('social_journal_user');
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("currentUser");
     }
 
     // 关闭 drawer 并跳转到登录页
     closeLogout();
-    router.push('/social-journal/login');
+    router.push("/social-journal/login");
+    router.refresh();
   };
 
   if (!logoutOpen) return null;
@@ -81,7 +83,10 @@ export default function LogoutDrawer() {
                 </Button>
 
                 <Button
-                  onClick={closeLogout}
+                  onClick={() => {
+                    closeLogout();
+                    triggerSplineObject(SPLINE_OBJECTS.MAIL_TO_HOUSE_ANIMATION);
+                  }}
                   variant="ghost"
                   className="w-full text-gray-700 hover:bg-white/20 hover:text-gray-900"
                 >

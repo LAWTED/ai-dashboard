@@ -4,22 +4,30 @@ import Spline from "@splinetool/react-spline";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 
 export default function SplineScene() {
-  const { openJournal, openLogout } = useSocialJournalStore();
+  const { openJournal, openLogout, openLogin } = useSocialJournalStore();
 
   function onLoad(spline: unknown) {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       (window as Window & { splineApp?: unknown }).splineApp = spline;
     }
   }
 
   function onSplineMouseDown(e: { target: { name: string } }) {
-    console.log('Spline mouse down', e.target.name);
-    if (e.target.name === 'Books' || e.target.name === 'plant') {
-      console.log('Plant has been clicked! Opening social journal...');
-      openJournal();
-    } else if (e.target.name === 'Towel') {
-      console.log('Towel has been clicked! Opening logout drawer...');
-      openLogout();
+    if (e.target.name === "Chair") {
+      setTimeout(() => {
+        openJournal();
+      }, 1000);
+    } else if (e.target.name === "Towel") {
+      setTimeout(() => {
+        openLogout();
+      }, 1500);
+    } else if (e.target.name === "Letter Cover") {
+      console.log(
+        "Letter Cover has been clicked! Opening login drawer in 1 second..."
+      );
+      setTimeout(() => {
+        openLogin();
+      }, 1500);
     }
   }
 

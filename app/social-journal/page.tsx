@@ -15,6 +15,7 @@ import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 import LetterDetailDrawer from "./components/letter-detail-drawer";
 import SendLetterDrawer from "./components/send-letter-drawer";
+import { triggerSplineObjectWithRetry, triggerSplineObject, SPLINE_OBJECTS } from "@/lib/spline-utils";
 
 export default function SocialJournalPage() {
   const router = useRouter();
@@ -23,7 +24,8 @@ export default function SocialJournalPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // 使用 Zustand store 控制社交日记状态
-  const { isOpen, setOpen, openLetterDetail, openSendLetter } = useSocialJournalStore();
+  const { isOpen, setOpen, openLetterDetail, openSendLetter } =
+    useSocialJournalStore();
 
   useEffect(() => {
     // 检查用户登录状态
@@ -43,55 +45,16 @@ export default function SocialJournalPage() {
       }
     };
 
-    window.addEventListener('refreshLetters', handleRefreshLetters);
+    window.addEventListener("refreshLetters", handleRefreshLetters);
 
     return () => {
-      window.removeEventListener('refreshLetters', handleRefreshLetters);
+      window.removeEventListener("refreshLetters", handleRefreshLetters);
     };
   }, [router]);
 
   // 页面挂载时自动触发 Spline 动画
   useEffect(() => {
-    let retryCount = 0;
-    function triggerSplineAnimation() {
-      if (
-        typeof window !== "undefined" &&
-        (
-          window as Window & {
-            splineApp?: {
-              findObjectById: (
-                id: string
-              ) => { emitEvent: (event: string) => void } | undefined;
-            };
-          }
-        ).splineApp
-      ) {
-        const spline = (
-          window as Window & {
-            splineApp?: {
-              findObjectById: (
-                id: string
-              ) => { emitEvent: (event: string) => void } | undefined;
-            };
-          }
-        ).splineApp;
-        if (spline) {
-          const obj = spline.findObjectById(
-            "750b513d-499e-475d-8834-6b2471bf76c0"
-          );
-          if (obj) {
-            obj.emitEvent("mouseDown");
-            return;
-          }
-        }
-      }
-      // 如果未加载，最多重试10次，每次间隔200ms
-      if (retryCount < 10) {
-        retryCount++;
-        setTimeout(triggerSplineAnimation, 200);
-      }
-    }
-    triggerSplineAnimation();
+    triggerSplineObjectWithRetry(SPLINE_OBJECTS.MAIL_TO_HOUSE_ANIMATION);
   }, []);
 
   const loadLetters = async (inviteCode: string) => {
@@ -120,7 +83,15 @@ export default function SocialJournalPage() {
 
   return (
     <div className="min-h-screen bg-transparent flex flex-col items-center justify-center py-8 px-2 pointer-events-none">
-      <Drawer.Root open={isOpen} onOpenChange={setOpen}>
+      <Drawer.Root
+        open={isOpen}
+        onOpenChange={(open) => {
+          setOpen(open);
+          if (!open) {
+            triggerSplineObject(SPLINE_OBJECTS.JOURNAL_CLOSE);
+          }
+        }}
+      >
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-transparent" />
           <Drawer.Content className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex flex-col rounded-t-[10px] h-full mt-20 max-h-[96%] fixed bottom-0 left-0 right-0">
@@ -162,16 +133,21 @@ export default function SocialJournalPage() {
                   ) : letters.length === 0 ? (
                     <EmptyEnvelope type="no-letters" />
                   ) : (
-                    <div className="space-y-3">
-                      {letters.map((letter) => (
-                        <div key={letter.id} onClick={() => handleLetterClick(letter.id)}>
-                          <Envelope
-                            letter={letter}
-                            currentUser={currentUser}
+                    <div className="max-h-[calc(60vh-200px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70 pr-2 -mr-2">
+                      <div className="space-y-3 pb-4">
+                        {letters.map((letter) => (
+                          <div
+                            key={letter.id}
                             onClick={() => handleLetterClick(letter.id)}
-                          />
-                        </div>
-                      ))}
+                          >
+                            <Envelope
+                              letter={letter}
+                              currentUser={currentUser}
+                              onClick={() => handleLetterClick(letter.id)}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -4,6 +4,7 @@ export type User = {
   id: string;
   invite_code: string;
   name: string;
+  phone: string;
   created_at: string;
 };
 
@@ -34,9 +35,10 @@ export const QUESTIONS = [
 export async function checkInviteCode(code: string): Promise<User | null> {
   try {
     const { data, error } = await supabase
-      .from('users')
+      .from('custom_users')
       .select('*')
       .eq('invite_code', code)
+      .eq('is_active', true)
       .single();
 
     if (error) {
@@ -51,11 +53,11 @@ export async function checkInviteCode(code: string): Promise<User | null> {
   }
 }
 
-export async function createUser(inviteCode: string, name: string): Promise<User | null> {
+export async function createUser(inviteCode: string, name: string, phone: string): Promise<User | null> {
   try {
     const { data, error } = await supabase
-      .from('users')
-      .insert({ invite_code: inviteCode, name })
+      .from('custom_users')
+      .insert({ invite_code: inviteCode, name, phone })
       .select()
       .single();
 
@@ -166,14 +168,14 @@ export async function answerLetter(letterId: string, answer: string): Promise<bo
   }
 }
 
-// 本地存储操作
+// 本地存储操作 - 统一使用 currentUser 键名
 export function saveUserToLocal(user: User): void {
-  localStorage.setItem('social_journal_user', JSON.stringify(user));
+  localStorage.setItem('currentUser', JSON.stringify(user));
 }
 
 export function getUserFromLocal(): User | null {
   try {
-    const userStr = localStorage.getItem('social_journal_user');
+    const userStr = localStorage.getItem('currentUser');
     if (!userStr) return null;
     return JSON.parse(userStr);
   } catch (e) {
@@ -183,10 +185,10 @@ export function getUserFromLocal(): User | null {
 }
 
 export function clearUserFromLocal(): void {
-  localStorage.removeItem('social_journal_user');
+  localStorage.removeItem('currentUser');
 }
 
-// 生成随机4位邀请码
+// 生成随机6位邀请码（大写字母和数字）
 export function generateInviteCode(): string {
-  return Math.floor(1000 + Math.random() * 9000).toString();
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
