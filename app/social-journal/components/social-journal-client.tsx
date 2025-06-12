@@ -86,7 +86,7 @@ export default function SocialJournalClient() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent flex flex-col items-center justify-center py-8 px-2 pointer-events-none">
+    <div className="min-h-[100dvh] bg-transparent flex flex-col items-center justify-center py-8 px-2 pointer-events-none">
       <Drawer.Root
         open={isOpen}
         onOpenChange={(open) => {

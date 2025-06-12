@@ -34,7 +34,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/social-journal.png" />
       </head>
       <body>
-        <div className="!h-screen fixed top-0 left-0 right-0 bottom-0 z-0">
+        <div className="!h-[100dvh] fixed top-0 left-0 right-0 bottom-0 z-0">
           <SplineScene />
         </div>
         <div className="z-10 relative pointer-events-none">{children}</div>
