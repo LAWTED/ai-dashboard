@@ -45,8 +45,8 @@ export default function SendLetterDrawer() {
       return;
     }
 
-    if (!friendCode || friendCode.length !== 4) {
-      setError("请输入好友的4位邀请码");
+    if (!friendCode || friendCode.length !== 6) {
+      setError("请输入好友的6位邀请码");
       return;
     }
 
@@ -153,17 +153,17 @@ export default function SendLetterDrawer() {
                   </h3>
                   <div className="space-y-3">
                     <Label htmlFor="friendCode" className="text-gray-700">
-                      好友的4位邀请码
+                      好友的6位邀请码
                     </Label>
                     <Input
                       id="friendCode"
                       type="text"
-                      placeholder="请输入4位数字"
+                      placeholder="请输入6位数字"
                       value={friendCode}
                       onChange={(e) => {
                         const value = e.target.value
                           .replace(/\D/g, "")
-                          .slice(0, 4);
+                          .slice(0, 6);
                         setFriendCode(value);
                       }}
                       maxLength={4}
