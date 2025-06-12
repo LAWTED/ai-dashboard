@@ -8,7 +8,6 @@ export const metadata: Metadata = {
   title: "社交日记",
   description: "与朋友分享日常问题和回答的社交应用",
   manifest: "/manifest.json",
-  themeColor: "#2563eb",
   viewport:
     "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   appleWebApp: {
@@ -17,6 +16,8 @@ export const metadata: Metadata = {
     title: "社交日记",
   },
 };
+
+
 
 export default function RootLayout({
   children,
@@ -27,7 +28,6 @@ export default function RootLayout({
     <html lang="zh-CN">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="transparent" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="社交日记" />
