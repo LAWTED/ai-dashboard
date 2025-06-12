@@ -4,7 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Settings } from "lucide-react";
-import { getUserFromLocal, checkInviteCode, type User as SocialUser } from "@/lib/social-journal";
+import {
+  getUserFromLocal,
+  checkInviteCode,
+  type User as SocialUser,
+} from "@/lib/social-journal";
 import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 import { triggerSplineObject, SPLINE_OBJECTS } from "@/lib/spline-utils";
@@ -62,7 +66,15 @@ export default function LogoutDrawer() {
   if (!logoutOpen) return null;
 
   return (
-    <Drawer.Root open={logoutOpen} onOpenChange={setLogoutOpen}>
+    <Drawer.Root
+      open={logoutOpen}
+      onOpenChange={(open) => {
+        setLogoutOpen(open);
+        if (!open) {
+          triggerSplineObject(SPLINE_OBJECTS.MAIL_TO_HOUSE_ANIMATION);
+        }
+      }}
+    >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-transparent" />
         <Drawer.Title className="sr-only">登出</Drawer.Title>
@@ -106,9 +118,7 @@ export default function LogoutDrawer() {
                       <h3 className="text-lg font-medium text-gray-900">
                         用户未找到
                       </h3>
-                      <p className="text-sm text-gray-600">
-                        请重新登录
-                      </p>
+                      <p className="text-sm text-gray-600">请重新登录</p>
                     </div>
                   </div>
                 )}
@@ -137,17 +147,6 @@ export default function LogoutDrawer() {
                 >
                   <LogOut className="w-5 h-5 mr-2" />
                   登出账户
-                </Button>
-
-                <Button
-                  onClick={() => {
-                    closeLogout();
-                    triggerSplineObject(SPLINE_OBJECTS.MAIL_TO_HOUSE_ANIMATION);
-                  }}
-                  variant="ghost"
-                  className="w-full text-gray-700 hover:bg-white/20 hover:text-gray-900"
-                >
-                  取消
                 </Button>
               </div>
             </div>
