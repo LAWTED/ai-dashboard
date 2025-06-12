@@ -46,7 +46,7 @@ export default function SendLetterDrawer() {
     }
 
     if (!friendCode || friendCode.length !== 6) {
-      setError("请输入好友的6位邀请码");
+      setError("请输入好友的6位邀请码（字母+数字）");
       return;
     }
 
@@ -158,19 +158,20 @@ export default function SendLetterDrawer() {
                     <Input
                       id="friendCode"
                       type="text"
-                      placeholder="请输入6位数字"
+                      placeholder="请输入6位邀请码"
                       value={friendCode}
                       onChange={(e) => {
                         const value = e.target.value
-                          .replace(/\D/g, "")
+                          .toUpperCase()
+                          .replace(/[^A-Z0-9]/g, "")
                           .slice(0, 6);
                         setFriendCode(value);
                       }}
-                      maxLength={4}
+                      maxLength={6}
                       className="text-center text-lg font-mono tracking-wider bg-white/10 backdrop-blur-sm border-white/30 text-gray-800 placeholder:text-gray-500"
                     />
                     <p className="text-xs text-gray-600">
-                      请确认好友的邀请码，发送后好友将收到你的问题
+                      请确认好友的6位邀请码，发送后好友将收到你的问题
                     </p>
                   </div>
                 </div>
