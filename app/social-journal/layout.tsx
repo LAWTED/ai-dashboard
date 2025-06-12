@@ -31,7 +31,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="社交日记" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/social-journal.png" />
       </head>
       <body>
         <div className="!h-screen fixed top-0 left-0 right-0 bottom-0 z-0">
