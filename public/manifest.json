@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/apple-touch-icon.png",
+      "src": "/social-journal.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/Favicon64x64.png",
+      "src": "/social-journal.png",
       "sizes": "64x64",
       "type": "image/png"
     }
