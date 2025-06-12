@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/social-journal";
 import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SendLetterDrawer() {
   const { sendLetterOpen, setSendLetterOpen, closeSendLetter } =
@@ -21,15 +22,59 @@ export default function SendLetterDrawer() {
 
   const [selectedQuestion, setSelectedQuestion] = useState("");
   const [friendCode, setFriendCode] = useState("");
+  const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [currentUser] = useState(getUserFromLocal());
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const refreshLetters = () => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('refreshLetters'));
     }
+  };
+
+  // 处理OTP输入
+  const handleOtpChange = (index: number, value: string) => {
+    const newValue = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (newValue.length <= 1) {
+      const newOtpValues = [...otpValues];
+      newOtpValues[index] = newValue;
+      setOtpValues(newOtpValues);
+      setFriendCode(newOtpValues.join(""));
+
+      // 自动跳转到下一个输入框
+      if (newValue && index < 5) {
+        inputRefs.current[index + 1]?.focus();
+      }
+    }
+  };
+
+  // 处理退格键
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !otpValues[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // 处理粘贴
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    const newOtpValues = [...otpValues];
+
+    for (let i = 0; i < 6; i++) {
+      newOtpValues[i] = pastedData[i] || "";
+    }
+
+    setOtpValues(newOtpValues);
+    setFriendCode(newOtpValues.join(""));
+
+    // 聚焦到最后一个有值的输入框或第一个空输入框
+    const lastFilledIndex = newOtpValues.findIndex(val => !val);
+    const focusIndex = lastFilledIndex === -1 ? 5 : Math.max(0, lastFilledIndex - 1);
+    inputRefs.current[focusIndex]?.focus();
   };
 
   const handleSend = async () => {
@@ -80,6 +125,7 @@ export default function SendLetterDrawer() {
           setSuccess(false);
           setSelectedQuestion("");
           setFriendCode("");
+          setOtpValues(["", "", "", "", "", ""]);
           refreshLetters();
         }, 2000);
       } else {
@@ -151,26 +197,56 @@ export default function SendLetterDrawer() {
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     输入好友邀请码
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <Label htmlFor="friendCode" className="text-gray-700">
                       好友的6位邀请码
                     </Label>
-                    <Input
-                      id="friendCode"
-                      type="text"
-                      placeholder="请输入6位邀请码"
-                      value={friendCode}
-                      onChange={(e) => {
-                        const value = e.target.value
-                          .toUpperCase()
-                          .replace(/[^A-Z0-9]/g, "")
-                          .slice(0, 6);
-                        setFriendCode(value);
-                      }}
-                      maxLength={6}
-                      className="text-center text-lg font-mono tracking-wider bg-white/10 backdrop-blur-sm border-white/30 text-gray-800 placeholder:text-gray-500"
-                    />
-                    <p className="text-xs text-gray-600">
+
+                    {/* OTP 输入框 */}
+                    <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+                      {otpValues.map((value, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: index * 0.1, duration: 0.3 }}
+                          whileFocus={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Input
+                            ref={(el) => {
+                              inputRefs.current[index] = el;
+                            }}
+                            type="text"
+                            maxLength={1}
+                            value={value}
+                            onChange={(e) => handleOtpChange(index, e.target.value)}
+                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                            className="w-12 h-12 text-center text-lg font-mono font-bold bg-white/10 backdrop-blur-sm border-white/30 text-gray-800 focus:border-blue-400/50 focus:bg-blue-50/20 transition-all duration-200"
+                            placeholder=""
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <AnimatePresence>
+                      {friendCode.length === 6 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="text-center"
+                        >
+                          <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 border border-green-400/30">
+                            <span className="text-sm text-green-700 font-medium">
+                              邀请码已完整输入
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <p className="text-xs text-gray-600 text-center">
                       请确认好友的6位邀请码，发送后好友将收到你的问题
                     </p>
                   </div>
