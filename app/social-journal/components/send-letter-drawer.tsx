@@ -37,12 +37,6 @@ export default function SendLetterDrawer() {
   const [questionsLoading, setQuestionsLoading] = useState(true);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const refreshLetters = () => {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("refreshLetters"));
-    }
-  };
-
   // Load random questions from database
   useEffect(() => {
     const loadQuestions = async () => {
@@ -245,7 +239,6 @@ export default function SendLetterDrawer() {
           setOtpValues(["", "", "", "", "", ""]);
           setIsRandomSend(false);
           setRandomUser(null);
-          refreshLetters();
         }, 2000);
       } else {
         setError(t("sendFailed"));

@@ -7,9 +7,7 @@ import { Plus } from "lucide-react";
 import { Envelope, EmptyEnvelope } from "./envelope";
 import {
   getUserFromLocal,
-  getMyLetters,
   type User,
-  type Letter,
 } from "@/lib/social-journal";
 import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
@@ -21,13 +19,15 @@ import {
   SPLINE_OBJECTS,
 } from "@/lib/spline-utils";
 import { useTranslation } from "@/lib/i18n/social-journal";
+import { useLettersRealtime } from "@/lib/hooks/use-letters-realtime";
 
 export default function SocialJournalClient() {
   const router = useRouter();
   const { t } = useTranslation();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [letters, setLetters] = useState<Letter[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // 使用 Realtime Hook 来管理信件
+  const { letters, isLoading } = useLettersRealtime(currentUser?.invite_code || null);
 
   // 使用 Zustand store 控制社交日记状态
   const { isOpen, setOpen, openLetterDetail, openSendLetter } =
@@ -42,38 +42,10 @@ export default function SocialJournalClient() {
     }
 
     setCurrentUser(user);
-    loadLetters(user.invite_code);
 
-    // 添加刷新信件列表的事件监听器
-    const handleRefreshLetters = () => {
-      if (user) {
-        loadLetters(user.invite_code);
-      }
-    };
-
-    window.addEventListener("refreshLetters", handleRefreshLetters);
-
-    return () => {
-      window.removeEventListener("refreshLetters", handleRefreshLetters);
-    };
-  }, [router]);
-
-  // 页面挂载时自动触发 Spline 动画
-  useEffect(() => {
+    // 只有在用户登录后才触发 Spline 动画
     triggerSplineObjectWithRetry(SPLINE_OBJECTS.MAIL_TO_HOUSE_ANIMATION);
-  }, []);
-
-  const loadLetters = async (inviteCode: string) => {
-    setIsLoading(true);
-    try {
-      const userLetters = await getMyLetters(inviteCode);
-      setLetters(userLetters);
-    } catch (error) {
-      console.error("Error loading letters:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [router]);
 
   const handleLetterClick = (letterId: string) => {
     openLetterDetail(letterId);
@@ -133,6 +105,12 @@ export default function SocialJournalClient() {
                 <div className="space-y-4">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
                     {t("myLetters")} ({letters.length})
+                    {/* 实时状态指示器 */}
+                    <span className="ml-2 inline-flex items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"
+                           title="Real-time updates enabled"
+                      />
+                    </span>
                   </h2>
 
                   {isLoading ? (
