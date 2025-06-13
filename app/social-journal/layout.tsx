@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import SplineScene from "@/app/social-journal/components/spline-scene";
 import LogoutDrawer from "@/app/social-journal/components/logout-drawer";
 import LoginDrawer from "@/app/social-journal/components/login-drawer";
+import LanguageSwitcher from "@/app/social-journal/components/language-switcher";
 import { Comic_Neue } from "next/font/google";
 
 const comicNeue = Comic_Neue({
@@ -43,6 +44,12 @@ export default function RootLayout({
         <div className="!h-[100dvh] fixed top-0 left-0 right-0 bottom-0 z-0">
           <SplineScene />
         </div>
+
+        {/* Language Switcher - Fixed position */}
+        <div className="fixed top-4 right-4 z-50">
+          <LanguageSwitcher />
+        </div>
+
         <div className="z-10 relative pointer-events-none ">{children}</div>
 
         {/* 登出 Drawer */}

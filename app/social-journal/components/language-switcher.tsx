@@ -21,7 +21,7 @@ export default function LanguageSwitcher({
     setLang(newLang);
   };
 
-  // 显示当前语言
+  // 显示当前语言 - Show the target language name
   const getCurrentLanguageDisplay = () => {
     if (!isInitialized) return "";
     return lang === "zh" ? "English" : "中文";

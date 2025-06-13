@@ -16,7 +16,7 @@ import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 import { useTranslation } from "@/lib/i18n/social-journal";
 
 export default function LetterDetailDrawer() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const {
     letterDetailOpen,
     selectedLetterId,
@@ -175,7 +175,7 @@ export default function LetterDetailDrawer() {
                       <div className="flex items-center">
                         <Mail className="w-5 h-5 mr-2 text-blue-600" />
                         <span className="text-lg font-medium text-gray-900">
-                          信件详情
+                          {t('letterDetailsTitle')}
                         </span>
                       </div>
                       <span
@@ -185,7 +185,7 @@ export default function LetterDetailDrawer() {
                             : "bg-yellow-500/20 text-yellow-800 backdrop-blur-sm"
                         }`}
                       >
-                        {isAnswered ? "已回答" : "待回答"}
+                        {isAnswered ? t('answered') : t('pending')}
                       </span>
                     </div>
 
@@ -195,15 +195,15 @@ export default function LetterDetailDrawer() {
                         <User className="w-4 h-4 mr-1" />
                         <span>
                           {isReceived
-                            ? `发件人: #${letter.sender_code}`
-                            : `收件人: #${letter.receiver_code}`}
+                            ? `${t('senderLabel')}: #${letter.sender_code}`
+                            : `${t('recipientLabel')}: #${letter.receiver_code}`}
                         </span>
                       </div>
                       <div className="flex items-center">
                         <Clock className="w-4 h-4 mr-1" />
                         <span>
                           {new Date(letter.created_at).toLocaleDateString(
-                            "zh-CN",
+                            lang === 'zh' ? "zh-CN" : "en-US",
                             {
                               year: "numeric",
                               month: "long",
@@ -218,7 +218,7 @@ export default function LetterDetailDrawer() {
 
                     {/* 问题内容 */}
                     <div className="bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-lg p-4">
-                      <h3 className="font-medium text-blue-900 mb-2">问题</h3>
+                      <h3 className="font-medium text-blue-900 mb-2">{t('questionLabel')}</h3>
                       <p className="text-blue-800 leading-relaxed">
                         {letter.question}
                       </p>
@@ -230,14 +230,14 @@ export default function LetterDetailDrawer() {
                     <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-4">
                       <div className="flex items-center justify-between mb-4">
                         <span className="text-lg font-medium text-green-700">
-                          回答
+                          {t('answerLabel')}
                         </span>
                         {letter.answered_at && (
                           <p className="text-sm text-gray-500 flex items-center">
                             <Clock className="w-4 h-4 mr-1" />
-                            回答于{" "}
+                            {t('answeredAt')}{" "}
                             {new Date(letter.answered_at).toLocaleDateString(
-                              "zh-CN",
+                              lang === 'zh' ? "zh-CN" : "en-US",
                               {
                                 month: "long",
                                 day: "numeric",
@@ -260,11 +260,11 @@ export default function LetterDetailDrawer() {
                   {canAnswer && (
                     <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-4">
                       <h3 className="text-lg font-medium text-gray-900 mb-4">
-                        你的回答
+                        {t('enterYourAnswer')}
                       </h3>
                       <div className="space-y-4">
                         <Textarea
-                          placeholder="请输入你的回答..."
+                          placeholder={t('pleaseEnterAnswer')}
                           value={answer}
                           onChange={(e) => setAnswer(e.target.value)}
                           rows={4}
@@ -273,7 +273,7 @@ export default function LetterDetailDrawer() {
                         />
                         <div className="flex items-center justify-between">
                           <p className="text-xs text-gray-500">
-                            {answer.length}/500 字符
+                            {answer.length}/500 {t('characters')}
                           </p>
                         </div>
 
@@ -296,11 +296,11 @@ export default function LetterDetailDrawer() {
                           size="lg"
                         >
                           {isSubmitting ? (
-                            "提交中..."
+                            t('submitting')
                           ) : (
                             <>
                               <Send className="w-5 h-5 mr-2" />
-                              提交回答
+                              {t('submitAnswer')}
                             </>
                           )}
                         </Button>
@@ -312,7 +312,7 @@ export default function LetterDetailDrawer() {
                   {isSent && !isAnswered && (
                     <div className="bg-yellow-500/20 backdrop-blur-sm border border-yellow-400/30 rounded-2xl p-4">
                       <p className="text-sm text-yellow-800 text-center">
-                        问题已发送，等待好友回答
+                        {t('questionSentWaitingReply')}
                       </p>
                     </div>
                   )}

@@ -191,7 +191,7 @@ export default function LoginDrawer() {
     <Drawer.Root open={loginOpen} onOpenChange={handleOpenChange}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-transparent " />
-        <Drawer.Title className="sr-only">登录</Drawer.Title>
+        <Drawer.Title className="sr-only">{t('login')}</Drawer.Title>
         <Drawer.Content className="bg-black/10  backdrop-blur-md border-t border-white/20 flex flex-col rounded-t-[20px] h-fit mt-24 fixed bottom-0 left-0 right-0">
           <div className="p-4 bg-transparent relative rounded-t-[20px] flex-1">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/30 mb-8" />

@@ -12,9 +12,11 @@ import {
 import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 import { triggerSplineObject, SPLINE_OBJECTS } from "@/lib/spline-utils";
+import { useTranslation } from "@/lib/i18n/social-journal";
 
 export default function LogoutDrawer() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { logoutOpen, setLogoutOpen, closeLogout } = useSocialJournalStore();
   const [currentUser, setCurrentUser] = useState<SocialUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,7 +79,7 @@ export default function LogoutDrawer() {
     >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-transparent" />
-        <Drawer.Title className="sr-only">登出</Drawer.Title>
+        <Drawer.Title className="sr-only">{t('logout')}</Drawer.Title>
         <Drawer.Content className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex flex-col rounded-t-[10px] h-auto max-h-[50%] fixed bottom-0 left-0 right-0">
           <div className="p-6">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/30 mb-6" />
@@ -105,7 +107,7 @@ export default function LogoutDrawer() {
                         {currentUser.name}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        邀请码: #{currentUser.invite_code}
+                        {t('inviteCode')}: #{currentUser.invite_code}
                       </p>
                     </div>
                   </div>
@@ -116,9 +118,9 @@ export default function LogoutDrawer() {
                     </div>
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">
-                        用户未找到
+                        {t('userNotFound')}
                       </h3>
-                      <p className="text-sm text-gray-600">请重新登录</p>
+                      <p className="text-sm text-gray-600">{t('pleaseLogin')}</p>
                     </div>
                   </div>
                 )}
@@ -126,14 +128,14 @@ export default function LogoutDrawer() {
 
               {/* 设置选项 */}
               <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">设置</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">{t('settings')}</h3>
                 <div className="space-y-2">
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-gray-700 hover:bg-white/20 hover:text-gray-900"
                   >
                     <Settings className="w-5 h-5 mr-3" />
-                    账户设置
+                    {t('accountSettings')}
                   </Button>
                 </div>
               </div>
@@ -146,7 +148,7 @@ export default function LogoutDrawer() {
                   size="lg"
                 >
                   <LogOut className="w-5 h-5 mr-2" />
-                  登出账户
+                  {t('logoutAccount')}
                 </Button>
               </div>
             </div>

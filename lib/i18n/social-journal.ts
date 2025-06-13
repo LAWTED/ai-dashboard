@@ -118,6 +118,18 @@ export interface Translations {
   confirmInviteCode: string;
   userNotFound: string;
   pleaseLogin: string;
+
+  // Additional missing translations
+  logoutAccount: string;
+  submitting: string;
+  senderLabel: string;
+  recipientLabel: string;
+  questionLabel: string;
+  answerLabel: string;
+  enterYourAnswer: string;
+  pleaseEnterAnswer: string;
+  questionSentWaitingReply: string;
+  letterDetailsTitle: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -243,7 +255,19 @@ export const translations: Record<Language, Translations> = {
     inviteCodeComplete: '邀请码已完整输入',
     confirmInviteCode: '请确认好友的6位邀请码，发送后好友将收到你的问题',
     userNotFound: '用户未找到',
-    pleaseLogin: '请重新登录'
+    pleaseLogin: '请重新登录',
+
+    // Additional missing translations
+    logoutAccount: '登出账户',
+    submitting: '提交中...',
+    senderLabel: '发件人',
+    recipientLabel: '收件人',
+    questionLabel: '问题',
+    answerLabel: '回答',
+    enterYourAnswer: '你的回答',
+    pleaseEnterAnswer: '请输入你的回答...',
+    questionSentWaitingReply: '问题已发送，等待好友回答',
+    letterDetailsTitle: '信件详情'
   },
 
   en: {
@@ -368,7 +392,19 @@ export const translations: Record<Language, Translations> = {
     inviteCodeComplete: 'Invite code completely entered',
     confirmInviteCode: 'Please confirm friend\'s 6-digit invite code, friend will receive your question after sending',
     userNotFound: 'User not found',
-    pleaseLogin: 'Please login again'
+    pleaseLogin: 'Please login again',
+
+    // Additional missing translations
+    logoutAccount: 'Logout Account',
+    submitting: 'Submitting...',
+    senderLabel: 'Sender',
+    recipientLabel: 'Recipient',
+    questionLabel: 'Question',
+    answerLabel: 'Answer',
+    enterYourAnswer: 'Your Answer',
+    pleaseEnterAnswer: 'Please enter your answer...',
+    questionSentWaitingReply: 'Question sent, waiting for friend\'s reply',
+    letterDetailsTitle: 'Letter Details'
   }
 };
 
