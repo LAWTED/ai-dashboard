@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Send, AlertCircle, Mail, Shuffle, RefreshCw } from "lucide-react";
 import {
-  getQuestions,
   getRandomQuestionsFromDB,
   sendLetter,
   checkInviteCode,
@@ -53,11 +52,8 @@ export default function SendLetterDrawer() {
         setQuestions(randomQuestions);
       } catch (error) {
         console.error("Failed to load questions from database:", error);
-        // Fallback to default questions
-        const defaultQuestions = getQuestions();
-        // 从默认问题中随机选择4个
-        const shuffled = [...defaultQuestions].sort(() => Math.random() - 0.5);
-        setQuestions(shuffled.slice(0, 4));
+        // 如果数据库查询失败，设置为空数组
+        setQuestions([]);
       } finally {
         setQuestionsLoading(false);
       }
@@ -77,10 +73,8 @@ export default function SendLetterDrawer() {
       setSelectedQuestion("");
     } catch (error) {
       console.error("Failed to refresh questions:", error);
-      // Fallback to default questions
-      const defaultQuestions = getQuestions();
-      const shuffled = [...defaultQuestions].sort(() => Math.random() - 0.5);
-      setQuestions(shuffled.slice(0, 4));
+      // 如果数据库查询失败，设置为空数组
+      setQuestions([]);
       setSelectedQuestion("");
     }
   };

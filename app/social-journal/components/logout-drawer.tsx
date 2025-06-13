@@ -7,6 +7,7 @@ import { LogOut, User, Settings } from "lucide-react";
 import {
   getUserFromLocal,
   checkInviteCode,
+  clearUserFromLocal,
   type User as SocialUser,
 } from "@/lib/social-journal";
 import { Drawer } from "vaul";
@@ -36,7 +37,7 @@ export default function LogoutDrawer() {
             setCurrentUser(dbUser);
           } else {
             // 如果数据库中找不到用户，清除本地存储
-            localStorage.removeItem("currentUser");
+            clearUserFromLocal();
             setCurrentUser(null);
           }
         } else {
@@ -55,9 +56,7 @@ export default function LogoutDrawer() {
 
   const handleLogout = () => {
     // 清除本地存储的用户信息
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("currentUser");
-    }
+    clearUserFromLocal();
 
     // 关闭 drawer 并跳转到登录页
     closeLogout();

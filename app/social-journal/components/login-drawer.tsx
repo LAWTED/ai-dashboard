@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Drawer } from "vaul";
 import { createClient } from "@/lib/supabase/client";
+import { saveUserToLocal } from "@/lib/social-journal";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 import { triggerSplineObject, SPLINE_OBJECTS } from "@/lib/spline-utils";
 import { useTranslation } from "@/lib/i18n/social-journal";
@@ -89,15 +90,14 @@ export default function LoginDrawer() {
         }
 
         // 登录成功，可以在这里设置会话状态
-        localStorage.setItem(
-          "currentUser",
-          JSON.stringify({
-            id: users.id,
-            phone: users.phone,
-            name: users.name,
-            invite_code: users.invite_code,
-          })
-        );
+        const userToSave = {
+          id: users.id,
+          phone: users.phone,
+          name: users.name,
+          invite_code: users.invite_code,
+          created_at: users.created_at,
+        };
+        saveUserToLocal(userToSave);
 
         closeLogin();
         triggerSplineObject(SPLINE_OBJECTS.LETTER_COVER_CLOSE);
@@ -147,15 +147,14 @@ export default function LoginDrawer() {
 
         if (newUser) {
           // 注册成功，设置会话状态
-          localStorage.setItem(
-            "currentUser",
-            JSON.stringify({
-              id: newUser.id,
-              phone: newUser.phone,
-              name: newUser.name,
-              invite_code: newUser.invite_code,
-            })
-          );
+          const userToSave = {
+            id: newUser.id,
+            phone: newUser.phone,
+            name: newUser.name,
+            invite_code: newUser.invite_code,
+            created_at: newUser.created_at,
+          };
+          saveUserToLocal(userToSave);
 
           closeLogin();
           router.push("/social-journal");

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { getTranslations, getLanguage } from './i18n/social-journal';
+import { getLanguage } from './i18n/social-journal';
 
 export type User = {
   id: string;
@@ -42,13 +42,12 @@ export async function getQuestionsFromDB(): Promise<string[]> {
 
     if (error) {
       console.error('Error fetching questions from database:', error);
-      // 如果数据库查询失败，返回默认问题
-      return getDefaultQuestions();
+      return [];
     }
 
     if (!data || data.length === 0) {
-      console.log('No questions found in database, using default questions');
-      return getDefaultQuestions();
+      console.log('No questions found in database');
+      return [];
     }
 
     const currentLang = getLanguage();
@@ -57,7 +56,7 @@ export async function getQuestionsFromDB(): Promise<string[]> {
     );
   } catch (e) {
     console.error('Error fetching questions from database:', e);
-    return getDefaultQuestions();
+    return [];
   }
 }
 
@@ -71,13 +70,12 @@ export async function getRandomQuestionsFromDB(count: number = 4): Promise<strin
 
     if (error) {
       console.error('Error fetching questions from database:', error);
-      // 如果数据库查询失败，返回默认问题的随机选择
-      return getRandomDefaultQuestions(count);
+      return [];
     }
 
     if (!data || data.length === 0) {
-      console.log('No questions found in database, using default questions');
-      return getRandomDefaultQuestions(count);
+      console.log('No questions found in database');
+      return [];
     }
 
     // 随机打乱数组并取前count个
@@ -90,27 +88,8 @@ export async function getRandomQuestionsFromDB(count: number = 4): Promise<strin
     );
   } catch (e) {
     console.error('Error fetching random questions from database:', e);
-    return getRandomDefaultQuestions(count);
+    return [];
   }
-}
-
-// 从默认问题中随机选择（后备方案）
-function getRandomDefaultQuestions(count: number = 4): string[] {
-  const defaultQuestions = getDefaultQuestions();
-  const shuffled = [...defaultQuestions].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(count, defaultQuestions.length));
-}
-
-// 获取当前语言的问题库（保持向后兼容）
-export function getQuestions(): string[] {
-  const translations = getTranslations();
-  return translations.questions;
-}
-
-// 获取默认问题（作为后备方案）
-function getDefaultQuestions(): string[] {
-  const translations = getTranslations();
-  return translations.questions;
 }
 
 // 获取问题使用统计（可选功能）
