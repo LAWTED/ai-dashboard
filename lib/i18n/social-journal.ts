@@ -68,6 +68,10 @@ export interface Translations {
   sending: string;
   sendSuccess: string;
   questionSentTo: string;
+  randomSend: string;
+  randomSendDesc: string;
+  sendingToRandom: string;
+  noOtherUsersFound: string;
 
   // Empty states
   noLetters: string;
@@ -197,6 +201,10 @@ export const translations: Record<Language, Translations> = {
     sending: '发送中...',
     sendSuccess: '发送成功！',
     questionSentTo: '问题已发送给好友',
+    randomSend: '随机发送',
+    randomSendDesc: '随机发送给一个人',
+    sendingToRandom: '正在随机选择用户...',
+    noOtherUsersFound: '未找到其他用户',
 
     // Empty states
     noLetters: '还没有信件',
@@ -334,6 +342,10 @@ export const translations: Record<Language, Translations> = {
     sending: 'Sending...',
     sendSuccess: 'Send Success!',
     questionSentTo: 'Question sent to friend',
+    randomSend: 'Random Send',
+    randomSendDesc: 'Send to a random person',
+    sendingToRandom: 'Randomly selecting user...',
+    noOtherUsersFound: 'No other users found',
 
     // Empty states
     noLetters: 'No letters yet',

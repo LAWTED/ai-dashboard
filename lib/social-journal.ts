@@ -80,6 +80,34 @@ export async function createUser(inviteCode: string, name: string, phone: string
   }
 }
 
+// 获取随机用户（排除自己）
+export async function getRandomUser(excludeCode: string): Promise<User | null> {
+  try {
+    const { data, error } = await supabase
+      .from('custom_users')
+      .select('*')
+      .eq('is_active', true)
+      .neq('invite_code', excludeCode);
+
+    if (error) {
+      console.error('Error fetching random user:', error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No other users found');
+      return null;
+    }
+
+    // 随机选择一个用户
+    const randomIndex = Math.floor(Math.random() * data.length);
+    return data[randomIndex];
+  } catch (e) {
+    console.error('Error getting random user:', e);
+    return null;
+  }
+}
+
 // 信件相关操作
 export async function getMyLetters(myCode: string): Promise<Letter[]> {
   try {

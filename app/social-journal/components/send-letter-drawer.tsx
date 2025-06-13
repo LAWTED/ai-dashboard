@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, AlertCircle, Mail } from "lucide-react";
+import { Send, AlertCircle, Mail, Shuffle } from "lucide-react";
 import {
   getQuestions,
   sendLetter,
   checkInviteCode,
   getUserFromLocal,
+  getRandomUser,
+  type User,
 } from "@/lib/social-journal";
 import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
@@ -29,6 +31,8 @@ export default function SendLetterDrawer() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [currentUser] = useState(getUserFromLocal());
+  const [isRandomSend, setIsRandomSend] = useState(false);
+  const [randomUser, setRandomUser] = useState<User | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const questions = getQuestions();
 
@@ -85,6 +89,59 @@ export default function SendLetterDrawer() {
     inputRefs.current[focusIndex]?.focus();
   };
 
+  // 处理随机选择用户
+  const handleRandomSelect = async () => {
+    if (!currentUser) return;
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const user = await getRandomUser(currentUser.invite_code);
+      if (user) {
+        setRandomUser(user);
+        setFriendCode(user.invite_code);
+
+        // 使用动画效果逐个填入邀请码
+        const codeArray = user.invite_code.split("");
+        setOtpValues(["", "", "", "", "", ""]); // 先清空
+
+        // 逐个填入，每个字符间隔200ms
+        for (let i = 0; i < codeArray.length; i++) {
+          setTimeout(() => {
+            setOtpValues((prev) => {
+              const newValues = [...prev];
+              newValues[i] = codeArray[i];
+              return newValues;
+            });
+          }, i * 200);
+        }
+      } else {
+        setError(t("noOtherUsersFound"));
+      }
+    } catch (e) {
+      console.error("Error getting random user:", e);
+      setError(t("sendFailed"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 切换发送模式
+  const toggleSendMode = async () => {
+    const newIsRandomSend = !isRandomSend;
+    setIsRandomSend(newIsRandomSend);
+    setRandomUser(null);
+    setFriendCode("");
+    setOtpValues(["", "", "", "", "", ""]);
+    setError("");
+
+    // 如果切换到随机发送模式，自动获取随机用户
+    if (newIsRandomSend) {
+      await handleRandomSelect();
+    }
+  };
+
   const handleSend = async () => {
     setError("");
 
@@ -98,12 +155,25 @@ export default function SendLetterDrawer() {
       return;
     }
 
-    if (!friendCode || friendCode.length !== 6) {
-      setError(t("inviteCodeRequired"));
+    // 如果是随机发送模式，先选择随机用户
+    if (isRandomSend && !randomUser) {
+      await handleRandomSelect();
       return;
     }
 
-    if (friendCode === currentUser.invite_code) {
+    // 如果是手动输入模式或已经有随机用户，检查邀请码
+    const targetCode = isRandomSend ? randomUser?.invite_code : friendCode;
+
+    if (!targetCode || targetCode.length !== 6) {
+      if (isRandomSend) {
+        setError(t("noOtherUsersFound"));
+      } else {
+        setError(t("inviteCodeRequired"));
+      }
+      return;
+    }
+
+    if (targetCode === currentUser.invite_code) {
       setError(t("cannotSendToSelf"));
       return;
     }
@@ -111,18 +181,20 @@ export default function SendLetterDrawer() {
     setIsLoading(true);
 
     try {
-      // 检查好友邀请码是否存在
-      const friendExists = await checkInviteCode(friendCode);
-      if (!friendExists) {
-        setError(t("friendCodeNotFound"));
-        setIsLoading(false);
-        return;
+      // 如果是手动输入模式，检查好友邀请码是否存在
+      if (!isRandomSend) {
+        const friendExists = await checkInviteCode(targetCode);
+        if (!friendExists) {
+          setError(t("friendCodeNotFound"));
+          setIsLoading(false);
+          return;
+        }
       }
 
       // 发送信件
       const success = await sendLetter(
         currentUser.invite_code,
-        friendCode,
+        targetCode,
         selectedQuestion
       );
 
@@ -134,6 +206,8 @@ export default function SendLetterDrawer() {
           setSelectedQuestion("");
           setFriendCode("");
           setOtpValues(["", "", "", "", "", ""]);
+          setIsRandomSend(false);
+          setRandomUser(null);
           refreshLetters();
         }, 2000);
       } else {
@@ -167,7 +241,10 @@ export default function SendLetterDrawer() {
                   {t("sendSuccess")}
                 </h2>
                 <p className="text-gray-600 mb-4">
-                  {t("questionSentTo")} #{friendCode}
+                  {t("questionSentTo")}{" "}
+                  {isRandomSend && randomUser
+                    ? `#${randomUser.invite_code}`
+                    : `#${friendCode}`}
                 </p>
                 <p className="text-sm text-gray-500">{t("closingSoon")}</p>
               </div>
@@ -202,87 +279,160 @@ export default function SendLetterDrawer() {
                   </div>
                 </div>
 
-                {/* 输入好友邀请码 */}
+                {/* 发送模式选择 */}
                 <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-4">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     {t("enterFriendCode")}
                   </h3>
-                  <div className="space-y-4">
-                    <Label htmlFor="friendCode" className="text-gray-700">
-                      {t("friendInviteCode")}
-                    </Label>
 
-                    {/* OTP 输入框 */}
-                    <div
-                      className="flex justify-center gap-2"
-                      onPaste={handleOtpPaste}
+                  {/* 模式切换按钮 */}
+                  <div className="flex gap-2 mb-4">
+                    <Button
+                      type="button"
+                      onClick={() => toggleSendMode()}
+                      variant={!isRandomSend ? "default" : "outline"}
+                      size="sm"
+                      className={`flex-1 ${
+                        !isRandomSend
+                          ? "bg-blue-600/80 text-white border-blue-500/30"
+                          : "bg-white/10 text-gray-700 border-white/30"
+                      }`}
                     >
-                      {otpValues.map((value, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: index * 0.1, duration: 0.3 }}
-                          whileFocus={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Input
-                            ref={(el) => {
-                              inputRefs.current[index] = el;
-                            }}
-                            type="text"
-                            maxLength={1}
-                            value={value}
-                            onChange={(e) =>
-                              handleOtpChange(index, e.target.value)
-                            }
-                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                            className="w-12 h-12 text-center text-lg font-mono font-bold bg-white/10 backdrop-blur-sm border-white/30 text-gray-800 focus:border-blue-400/50 focus:bg-blue-50/20 transition-all duration-200"
-                            placeholder=""
-                          />
-                        </motion.div>
-                      ))}
-                    </div>
+                      <Mail className="w-4 h-4 mr-2" />
+                      {t("friendInviteCode")}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => toggleSendMode()}
+                      variant={isRandomSend ? "default" : "outline"}
+                      size="sm"
+                      className={`flex-1 ${
+                        isRandomSend
+                          ? "bg-blue-600/80 text-white border-blue-500/30"
+                          : "bg-white/10 text-gray-700 border-white/30"
+                      }`}
+                    >
+                      <Shuffle className="w-4 h-4 mr-2" />
+                      {t("randomSend")}
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {isRandomSend ? (
+                      <>
+                        <Label className="text-gray-700">
+                          {t("randomSendDesc")}
+                        </Label>
 
-                    <AnimatePresence>
-                      {friendCode.length === 6 && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="text-center"
-                        >
-                          <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 border border-green-400/30">
-                            <span className="text-sm text-green-700 font-medium">
-                              {t("inviteCodeComplete")}
-                            </span>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        {/* 随机发送模式下的OTP输入框 */}
+                        <div className="flex justify-center gap-2">
+                          {otpValues.map((value, index) => (
+                            <motion.div
+                              key={`random-${index}`}
+                              initial={{ scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ delay: index * 0.1, duration: 0.3 }}
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              <Input
+                                type="text"
+                                maxLength={1}
+                                value={value}
+                                readOnly
+                                className="w-12 h-12 text-center text-lg font-mono font-bold bg-purple-100/20 backdrop-blur-sm border-purple-300/30 text-purple-800 cursor-default"
+                                placeholder=""
+                              />
+                            </motion.div>
+                          ))}
+                        </div>
 
-                    <p className="text-xs text-gray-600 text-center">
-                      {t("confirmInviteCode")}
-                    </p>
+
+                        <p className="text-xs text-gray-600 text-center">
+                          {t("randomSendDesc")}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Label htmlFor="friendCode" className="text-gray-700">
+                          {t("friendInviteCode")}
+                        </Label>
+
+                        {/* OTP 输入框 */}
+                        <div
+                          className="flex justify-center gap-2"
+                          onPaste={handleOtpPaste}
+                        >
+                          {otpValues.map((value, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ delay: index * 0.1, duration: 0.3 }}
+                              whileFocus={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Input
+                                ref={(el) => {
+                                  inputRefs.current[index] = el;
+                                }}
+                                type="text"
+                                maxLength={1}
+                                value={value}
+                                onChange={(e) =>
+                                  handleOtpChange(index, e.target.value)
+                                }
+                                onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                className="w-12 h-12 text-center text-lg font-mono font-bold bg-white/10 backdrop-blur-sm border-white/30 text-gray-800 focus:border-blue-400/50 focus:bg-blue-50/20 transition-all duration-200"
+                                placeholder=""
+                              />
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        <AnimatePresence>
+                          {friendCode.length === 6 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="text-center"
+                            >
+                              <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 border border-green-400/30">
+                                <span className="text-sm text-green-700 font-medium">
+                                  {t("inviteCodeComplete")}
+                                </span>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        <p className="text-xs text-gray-600 text-center">
+                          {t("confirmInviteCode")}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 {/* 预览 */}
-                {selectedQuestion && friendCode && (
-                  <div className="bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-2xl p-4">
-                    <h3 className="text-base font-medium text-blue-900 mb-3">
-                      {t("sendPreview")}
-                    </h3>
-                    <div className="space-y-2">
-                      <p className="text-sm text-blue-800">
-                        <strong>{t("question")}:</strong> {selectedQuestion}
-                      </p>
-                      <p className="text-sm text-blue-800">
-                        <strong>{t("sendTo")}:</strong> #{friendCode}
-                      </p>
+                {selectedQuestion &&
+                  (isRandomSend ? randomUser : friendCode) && (
+                    <div className="bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-2xl p-4">
+                      <h3 className="text-base font-medium text-blue-900 mb-3">
+                        {t("sendPreview")}
+                      </h3>
+                      <div className="space-y-2">
+                        <p className="text-sm text-blue-800">
+                          <strong>{t("question")}:</strong> {selectedQuestion}
+                        </p>
+                        <p className="text-sm text-blue-800">
+                          <strong>{t("sendTo")}:</strong>{" "}
+                          {isRandomSend && randomUser
+                            ? `#${randomUser.invite_code}`
+                            : `#${friendCode}`}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* 错误提示 */}
                 {error && (
@@ -300,16 +450,26 @@ export default function SendLetterDrawer() {
                 {/* 发送按钮 */}
                 <Button
                   onClick={handleSend}
-                  disabled={isLoading || !selectedQuestion || !friendCode}
+                  disabled={
+                    isLoading ||
+                    !selectedQuestion ||
+                    (isRandomSend ? false : !friendCode)
+                  }
                   className="w-full bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/80 text-white py-3 border border-blue-500/30"
                   size="lg"
                 >
                   {isLoading ? (
-                    t("sending")
+                    isRandomSend && !randomUser ? (
+                      t("sendingToRandom")
+                    ) : (
+                      t("sending")
+                    )
                   ) : (
                     <>
                       <Send className="w-5 h-5 mr-2" />
-                      {t("sendQuestion")}
+                      {isRandomSend && !randomUser
+                        ? t("randomSend")
+                        : t("sendQuestion")}
                     </>
                   )}
                 </Button>
