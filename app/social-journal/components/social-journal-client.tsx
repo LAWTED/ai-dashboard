@@ -15,7 +15,6 @@ import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 import LetterDetailDrawer from "./letter-detail-drawer";
 import SendLetterDrawer from "./send-letter-drawer";
-import LanguageSwitcher from "./language-switcher";
 import {
   triggerSplineObjectWithRetry,
   triggerSplineObject,
