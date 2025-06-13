@@ -61,6 +61,8 @@ export interface Translations {
   // Send letter
   sendQuestion: string;
   selectQuestion: string;
+  refreshQuestions: string;
+  refreshingQuestions: string;
   enterFriendCode: string;
   friendInviteCode: string;
   sendPreview: string;
@@ -194,6 +196,8 @@ export const translations: Record<Language, Translations> = {
     // Send letter
     sendQuestion: '发送问题',
     selectQuestion: '选择一个问题',
+    refreshQuestions: '换一批',
+    refreshingQuestions: '正在换一批问题...',
     enterFriendCode: '输入好友邀请码',
     friendInviteCode: '好友的6位邀请码',
     sendPreview: '发送预览',
@@ -335,6 +339,8 @@ export const translations: Record<Language, Translations> = {
     // Send letter
     sendQuestion: 'Send Question',
     selectQuestion: 'Select a Question',
+    refreshQuestions: 'Refresh',
+    refreshingQuestions: 'Refreshing questions...',
     enterFriendCode: 'Enter Friend Code',
     friendInviteCode: "Friend's 6-digit invite code",
     sendPreview: 'Send Preview',

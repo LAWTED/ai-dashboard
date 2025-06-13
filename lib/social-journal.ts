@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { getTranslations } from './i18n/social-journal';
+import { getTranslations, getLanguage } from './i18n/social-journal';
 
 export type User = {
   id: string;
@@ -14,16 +14,189 @@ export type Letter = {
   sender_code: string;
   receiver_code: string;
   question: string;
+  question_id: string | null;
   answer: string | null;
   status: 'sent' | 'answered';
   created_at: string;
   answered_at: string | null;
 };
 
-// 获取当前语言的问题库
+export type Question = {
+  id: string;
+  question_text: string;
+  question_text_en: string;
+  order_index: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+// 从数据库获取问题库
+export async function getQuestionsFromDB(): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('is_active', true)
+      .order('order_index', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching questions from database:', error);
+      // 如果数据库查询失败，返回默认问题
+      return getDefaultQuestions();
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No questions found in database, using default questions');
+      return getDefaultQuestions();
+    }
+
+    const currentLang = getLanguage();
+    return data.map((q: Question) =>
+      currentLang === 'en' ? q.question_text_en : q.question_text
+    );
+  } catch (e) {
+    console.error('Error fetching questions from database:', e);
+    return getDefaultQuestions();
+  }
+}
+
+// 从数据库随机获取4个问题
+export async function getRandomQuestionsFromDB(count: number = 4): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching questions from database:', error);
+      // 如果数据库查询失败，返回默认问题的随机选择
+      return getRandomDefaultQuestions(count);
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No questions found in database, using default questions');
+      return getRandomDefaultQuestions(count);
+    }
+
+    // 随机打乱数组并取前count个
+    const shuffled = [...data].sort(() => Math.random() - 0.5);
+    const selectedQuestions = shuffled.slice(0, Math.min(count, data.length));
+
+    const currentLang = getLanguage();
+    return selectedQuestions.map((q: Question) =>
+      currentLang === 'en' ? q.question_text_en : q.question_text
+    );
+  } catch (e) {
+    console.error('Error fetching random questions from database:', e);
+    return getRandomDefaultQuestions(count);
+  }
+}
+
+// 从默认问题中随机选择（后备方案）
+function getRandomDefaultQuestions(count: number = 4): string[] {
+  const defaultQuestions = getDefaultQuestions();
+  const shuffled = [...defaultQuestions].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, defaultQuestions.length));
+}
+
+// 获取当前语言的问题库（保持向后兼容）
 export function getQuestions(): string[] {
   const translations = getTranslations();
   return translations.questions;
+}
+
+// 获取默认问题（作为后备方案）
+function getDefaultQuestions(): string[] {
+  const translations = getTranslations();
+  return translations.questions;
+}
+
+// 获取问题使用统计（可选功能）
+export async function getQuestionStats(): Promise<Array<{question_text: string, question_text_en: string, usage_count: number}>> {
+  try {
+    const { data, error } = await supabase
+      .from('questions')
+      .select(`
+        question_text,
+        question_text_en,
+        letters!inner(question_id)
+      `)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching question stats:', error);
+      return [];
+    }
+
+    // Count usage for each question
+    const stats = data?.map(q => ({
+      question_text: q.question_text,
+      question_text_en: q.question_text_en,
+      usage_count: q.letters?.length || 0
+    })) || [];
+
+    return stats.sort((a, b) => b.usage_count - a.usage_count);
+  } catch (e) {
+    console.error('Error fetching question stats:', e);
+    return [];
+  }
+}
+
+// 管理员功能：添加新问题
+export async function addQuestion(questionTextEn: string, questionTextZh: string, orderIndex?: number): Promise<boolean> {
+  try {
+    // If no order index provided, get the next available one
+    if (!orderIndex) {
+      const { data: maxOrder } = await supabase
+        .from('questions')
+        .select('order_index')
+        .order('order_index', { ascending: false })
+        .limit(1);
+
+      orderIndex = (maxOrder?.[0]?.order_index || 0) + 1;
+    }
+
+    const { error } = await supabase
+      .from('questions')
+      .insert({
+        question_text_en: questionTextEn,
+        question_text: questionTextZh,
+        order_index: orderIndex,
+        is_active: true
+      });
+
+    if (error) {
+      console.error('Error adding question:', error);
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    console.error('Error adding question:', e);
+    return false;
+  }
+}
+
+// 管理员功能：停用问题
+export async function deactivateQuestion(questionId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('questions')
+      .update({ is_active: false })
+      .eq('id', questionId);
+
+    if (error) {
+      console.error('Error deactivating question:', error);
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    console.error('Error deactivating question:', e);
+    return false;
+  }
 }
 
 // 保持向后兼容的问题库 (默认中文)
@@ -139,12 +312,21 @@ export async function getMyLetters(myCode: string): Promise<Letter[]> {
 
 export async function sendLetter(senderCode: string, receiverCode: string, question: string): Promise<boolean> {
   try {
+    // Get question_id for the question text
+    const { data: questionData, error: questionError } = await supabase
+      .rpc('get_question_id_by_text', { question_text_param: question });
+
+    if (questionError) {
+      console.warn('Could not find question_id for question:', question, questionError);
+    }
+
     const { error } = await supabase
       .from('letters')
       .insert({
         sender_code: senderCode,
         receiver_code: receiverCode,
         question,
+        question_id: questionData || null,
         status: 'sent'
       });
 

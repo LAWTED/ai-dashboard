@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, AlertCircle, Mail, Shuffle } from "lucide-react";
+import { Send, AlertCircle, Mail, Shuffle, RefreshCw } from "lucide-react";
 import {
   getQuestions,
+  getRandomQuestionsFromDB,
   sendLetter,
   checkInviteCode,
   getUserFromLocal,
@@ -16,7 +17,7 @@ import {
 } from "@/lib/social-journal";
 import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n/social-journal";
 
 export default function SendLetterDrawer() {
@@ -33,12 +34,54 @@ export default function SendLetterDrawer() {
   const [currentUser] = useState(getUserFromLocal());
   const [isRandomSend, setIsRandomSend] = useState(false);
   const [randomUser, setRandomUser] = useState<User | null>(null);
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const questions = getQuestions();
 
   const refreshLetters = () => {
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("refreshLetters"));
+    }
+  };
+
+  // Load random questions from database
+  useEffect(() => {
+    const loadQuestions = async () => {
+      setQuestionsLoading(true);
+      try {
+        const randomQuestions = await getRandomQuestionsFromDB(4);
+        setQuestions(randomQuestions);
+      } catch (error) {
+        console.error("Failed to load questions from database:", error);
+        // Fallback to default questions
+        const defaultQuestions = getQuestions();
+        // 从默认问题中随机选择4个
+        const shuffled = [...defaultQuestions].sort(() => Math.random() - 0.5);
+        setQuestions(shuffled.slice(0, 4));
+      } finally {
+        setQuestionsLoading(false);
+      }
+    };
+
+    if (sendLetterOpen) {
+      loadQuestions();
+    }
+  }, [sendLetterOpen]);
+
+  // 刷新问题列表
+  const refreshQuestions = async () => {
+    try {
+      const randomQuestions = await getRandomQuestionsFromDB(4);
+      setQuestions(randomQuestions);
+      // 清除当前选中的问题，因为新的问题列表可能不包含之前选中的问题
+      setSelectedQuestion("");
+    } catch (error) {
+      console.error("Failed to refresh questions:", error);
+      // Fallback to default questions
+      const defaultQuestions = getQuestions();
+      const shuffled = [...defaultQuestions].sort(() => Math.random() - 0.5);
+      setQuestions(shuffled.slice(0, 4));
+      setSelectedQuestion("");
     }
   };
 
@@ -259,23 +302,43 @@ export default function SendLetterDrawer() {
 
                 {/* 选择问题 */}
                 <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    {t("selectQuestion")}
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {t("selectQuestion")}
+                    </h3>
+                    <Button
+                      type="button"
+                      onClick={refreshQuestions}
+                      disabled={questionsLoading}
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/10 hover:bg-white/20 text-gray-700 border-white/30"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      {t("refreshQuestions")}
+                    </Button>
+                  </div>
                   <div className="grid gap-3">
-                    {questions.map((question: string, index: number) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedQuestion(question)}
-                        className={`p-4 text-left rounded-lg border transition-all ${
-                          selectedQuestion === question
-                            ? "border-blue-500/50 bg-blue-500/20 text-blue-900 backdrop-blur-sm"
-                            : "border-white/30 hover:border-white/40 bg-white/10 backdrop-blur-sm text-gray-800 hover:bg-white/20"
-                        }`}
-                      >
-                        <p className="text-sm leading-relaxed">{question}</p>
-                      </button>
-                    ))}
+                    {questionsLoading ? (
+                      <div className="text-center py-8">
+                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-600">{t("loading")}</p>
+                      </div>
+                    ) : (
+                      questions.map((question: string, index: number) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedQuestion(question)}
+                          className={`p-4 text-left rounded-lg border transition-all ${
+                            selectedQuestion === question
+                              ? "border-blue-500/50 bg-blue-500/20 text-blue-900 backdrop-blur-sm"
+                              : "border-white/30 hover:border-white/40 bg-white/10 backdrop-blur-sm text-gray-800 hover:bg-white/20"
+                          }`}
+                        >
+                          <p className="text-sm leading-relaxed">{question}</p>
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -345,7 +408,6 @@ export default function SendLetterDrawer() {
                           ))}
                         </div>
 
-
                         <p className="text-xs text-gray-600 text-center">
                           {t("randomSendDesc")}
                         </p>
@@ -387,23 +449,6 @@ export default function SendLetterDrawer() {
                             </motion.div>
                           ))}
                         </div>
-
-                        <AnimatePresence>
-                          {friendCode.length === 6 && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              className="text-center"
-                            >
-                              <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 border border-green-400/30">
-                                <span className="text-sm text-green-700 font-medium">
-                                  {t("inviteCodeComplete")}
-                                </span>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
 
                         <p className="text-xs text-gray-600 text-center">
                           {t("confirmInviteCode")}
