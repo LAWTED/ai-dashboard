@@ -12,6 +12,8 @@ import { Drawer } from "vaul";
 import { createClient } from "@/lib/supabase/client";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 import { triggerSplineObject, SPLINE_OBJECTS } from "@/lib/spline-utils";
+import { useTranslation } from "@/lib/i18n/social-journal";
+import LanguageSwitcher from "./language-switcher";
 
 // 简单的密码哈希函数（生产环境应使用更安全的方法）
 async function hashPassword(password: string): Promise<string> {
@@ -24,6 +26,7 @@ async function hashPassword(password: string): Promise<string> {
 
 export default function LoginDrawer() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { loginOpen, setLoginOpen, closeLogin } = useSocialJournalStore();
   const [isLogin, setIsLogin] = useState(true);
   const [phone, setPhone] = useState("");
@@ -41,27 +44,27 @@ export default function LoginDrawer() {
     setError("");
 
     if (!phone.trim()) {
-      setError("请输入手机号");
+      setError(t("phoneRequired"));
       return;
     }
 
     if (!password.trim()) {
-      setError("请输入密码");
+      setError(t("passwordRequired"));
       return;
     }
 
     if (!isLogin && !name.trim()) {
-      setError("请输入姓名");
+      setError(t("nameRequired"));
       return;
     }
 
     if (!isLogin && password !== confirmPassword) {
-      setError("密码确认不匹配");
+      setError(t("passwordMismatch"));
       return;
     }
 
     if (!isLogin && password.length < 6) {
-      setError("密码长度至少6位");
+      setError(t("passwordTooShort"));
       return;
     }
 
@@ -81,7 +84,7 @@ export default function LoginDrawer() {
           .single();
 
         if (error || !users) {
-          setError("手机号或密码错误");
+          setError(t("phoneOrPasswordWrong"));
           return;
         }
 
@@ -109,7 +112,7 @@ export default function LoginDrawer() {
           .single();
 
         if (existingUser) {
-          setError("手机号已存在，请尝试登录");
+          setError(t("phoneExists"));
           return;
         }
 
@@ -138,7 +141,7 @@ export default function LoginDrawer() {
 
         if (error) {
           console.error("Registration error:", error);
-          setError(`注册失败: ${error.message}`);
+          setError(`${t("registrationFailed")}: ${error.message}`);
           return;
         }
 
@@ -160,7 +163,7 @@ export default function LoginDrawer() {
       }
     } catch (e) {
       console.error("Auth error:", e);
-      setError("认证过程中出现错误，请稍后重试");
+      setError(t("authError"));
     } finally {
       setIsLoading(false);
     }
@@ -189,14 +192,16 @@ export default function LoginDrawer() {
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-transparent " />
         <Drawer.Title className="sr-only">登录</Drawer.Title>
-        <Drawer.Content className="bg-black/10 backdrop-blur-md border-t border-white/20 flex flex-col rounded-t-[20px] h-fit mt-24 fixed bottom-0 left-0 right-0">
-          <div className="p-4 bg-transparent rounded-t-[20px] flex-1">
+        <Drawer.Content className="bg-black/10  backdrop-blur-md border-t border-white/20 flex flex-col rounded-t-[20px] h-fit mt-24 fixed bottom-0 left-0 right-0">
+          <div className="p-4 bg-transparent relative rounded-t-[20px] flex-1">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/30 mb-8" />
-
+            <div className="absolute top-5 left-5 z-10">
+              <LanguageSwitcher />
+            </div>
             <Card className="bg-transparent border-none shadow-none">
               <CardHeader className="text-center pb-4">
                 <CardTitle className="text-2xl font-bold text-gray-800">
-                  {isLogin ? "登录" : "注册"}
+                  {isLogin ? t("loginTitle") : t("registerTitle")}
                 </CardTitle>
               </CardHeader>
 
@@ -208,12 +213,12 @@ export default function LoginDrawer() {
                         htmlFor="name"
                         className="text-gray-800 font-medium"
                       >
-                        姓名
+                        {t("name")}
                       </Label>
                       <Input
                         id="name"
                         type="text"
-                        placeholder="请输入姓名"
+                        placeholder={t("nameRequired")}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         maxLength={20}
@@ -227,12 +232,12 @@ export default function LoginDrawer() {
                       htmlFor="phone"
                       className="text-gray-800 font-medium"
                     >
-                      手机号
+                      {t("phone")}
                     </Label>
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="请输入手机号"
+                      placeholder={t("phoneRequired")}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       maxLength={11}
@@ -245,13 +250,13 @@ export default function LoginDrawer() {
                       htmlFor="password"
                       className="text-gray-800 font-medium"
                     >
-                      密码
+                      {t("password")}
                     </Label>
                     <div className="relative">
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="请输入密码"
+                        placeholder={t("passwordRequired")}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="bg-white/20 backdrop-blur-sm border-white/30 text-gray-800 placeholder:text-gray-500 focus:bg-white/30 focus:border-white/50 h-12 pr-12"
@@ -278,13 +283,13 @@ export default function LoginDrawer() {
                         htmlFor="confirmPassword"
                         className="text-gray-800 font-medium"
                       >
-                        确认密码
+                        {t("confirmPassword")}
                       </Label>
                       <div className="relative">
                         <Input
                           id="confirmPassword"
                           type={showConfirmPassword ? "text" : "password"}
-                          placeholder="请再次输入密码"
+                          placeholder={t("confirmPassword")}
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           className="bg-white/20 backdrop-blur-sm border-white/30 text-gray-800 placeholder:text-gray-500 focus:bg-white/30 focus:border-white/50 h-12 pr-12"
@@ -331,7 +336,11 @@ export default function LoginDrawer() {
                       (!isLogin && password !== confirmPassword)
                     }
                   >
-                    {isLoading ? "处理中..." : isLogin ? "登录" : "注册"}
+                    {isLoading
+                      ? t("loading")
+                      : isLogin
+                      ? t("loginButton")
+                      : t("registerButton")}
                   </Button>
                 </form>
 
@@ -345,7 +354,7 @@ export default function LoginDrawer() {
                     }}
                     className="text-gray-700 hover:text-gray-800 hover:bg-white/10"
                   >
-                    {isLogin ? "没有账号？立即注册" : "已有账号？立即登录"}
+                    {isLogin ? t("noAccount") : t("hasAccount")}
                   </Button>
                 </div>
               </CardContent>

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { getTranslations } from './i18n/social-journal';
 
 export type User = {
   id: string;
@@ -19,7 +20,13 @@ export type Letter = {
   answered_at: string | null;
 };
 
-// 问题库 (前端写死)
+// 获取当前语言的问题库
+export function getQuestions(): string[] {
+  const translations = getTranslations();
+  return translations.questions;
+}
+
+// 保持向后兼容的问题库 (默认中文)
 export const QUESTIONS = [
   "今天最让你开心的事情是什么？",
   "你最近在思考什么问题？",

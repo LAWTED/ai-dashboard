@@ -20,6 +20,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        'comic-neue': ['var(--font-comic-neue)', 'cursive'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

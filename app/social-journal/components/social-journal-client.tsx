@@ -15,14 +15,17 @@ import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 import LetterDetailDrawer from "./letter-detail-drawer";
 import SendLetterDrawer from "./send-letter-drawer";
+import LanguageSwitcher from "./language-switcher";
 import {
   triggerSplineObjectWithRetry,
   triggerSplineObject,
   SPLINE_OBJECTS,
 } from "@/lib/spline-utils";
+import { useTranslation } from "@/lib/i18n/social-journal";
 
 export default function SocialJournalClient() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [letters, setLetters] = useState<Letter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,7 +89,7 @@ export default function SocialJournalClient() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-transparent flex flex-col items-center justify-center py-8 px-2 pointer-events-none">
+    <div className="min-h-[100dvh] bg-transparent flex flex-col items-center justify-center py-8 px-2 pointer-events-none font-comic-neue">
       <Drawer.Root
         open={isOpen}
         onOpenChange={(open) => {
@@ -104,13 +107,14 @@ export default function SocialJournalClient() {
               <Drawer.Title className="sr-only">Social Journal</Drawer.Title>
 
               <div className="w-full max-w-2xl mx-auto">
-                {/* 用户信息 */}
+                {/* 用户信息和语言切换 */}
                 <div className="mb-6 text-center">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    Social Journal
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {t("appName")}
                   </h1>
                   <p className="text-sm text-gray-700">
-                    你好, {currentUser.name} (#{currentUser.invite_code})
+                    {t("hello")}, {currentUser.name} (#{currentUser.invite_code}
+                    )
                   </p>
                 </div>
 
@@ -122,14 +126,14 @@ export default function SocialJournalClient() {
                     size="lg"
                   >
                     <Plus className="w-5 h-5 mr-2" />
-                    发送新问题给朋友
+                    {t("sendNewQuestion")}
                   </Button>
                 </div>
 
                 {/* 信件列表 */}
                 <div className="space-y-4">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    我的信件 ({letters.length})
+                    {t("myLetters")} ({letters.length})
                   </h2>
 
                   {isLoading ? (
@@ -159,9 +163,9 @@ export default function SocialJournalClient() {
                 {/* 页脚说明 */}
                 <div className="mt-8 text-center">
                   <p className="text-xs text-gray-600">
-                    与朋友分享你的邀请码 #{currentUser.invite_code}
+                    {t("shareInviteCode")} #{currentUser.invite_code}
                     <br />
-                    他们就可以发送问题给你了
+                    {t("friendsCanSendQuestions")}
                   </p>
                 </div>
               </div>

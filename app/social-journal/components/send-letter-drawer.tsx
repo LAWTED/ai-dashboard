@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Send, AlertCircle, Mail } from "lucide-react";
 import {
-  QUESTIONS,
+  getQuestions,
   sendLetter,
   checkInviteCode,
   getUserFromLocal,
@@ -15,8 +15,10 @@ import {
 import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "@/lib/i18n/social-journal";
 
 export default function SendLetterDrawer() {
+  const { t } = useTranslation();
   const { sendLetterOpen, setSendLetterOpen, closeSendLetter } =
     useSocialJournalStore();
 
@@ -28,10 +30,11 @@ export default function SendLetterDrawer() {
   const [success, setSuccess] = useState(false);
   const [currentUser] = useState(getUserFromLocal());
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const questions = getQuestions();
 
   const refreshLetters = () => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('refreshLetters'));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("refreshLetters"));
     }
   };
 
@@ -61,7 +64,11 @@ export default function SendLetterDrawer() {
   // 处理粘贴
   const handleOtpPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    const pastedData = e.clipboardData
+      .getData("text")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 6);
     const newOtpValues = [...otpValues];
 
     for (let i = 0; i < 6; i++) {
@@ -72,8 +79,9 @@ export default function SendLetterDrawer() {
     setFriendCode(newOtpValues.join(""));
 
     // 聚焦到最后一个有值的输入框或第一个空输入框
-    const lastFilledIndex = newOtpValues.findIndex(val => !val);
-    const focusIndex = lastFilledIndex === -1 ? 5 : Math.max(0, lastFilledIndex - 1);
+    const lastFilledIndex = newOtpValues.findIndex((val) => !val);
+    const focusIndex =
+      lastFilledIndex === -1 ? 5 : Math.max(0, lastFilledIndex - 1);
     inputRefs.current[focusIndex]?.focus();
   };
 
@@ -81,22 +89,22 @@ export default function SendLetterDrawer() {
     setError("");
 
     if (!currentUser) {
-      setError("用户未登录");
+      setError(t("userNotFound"));
       return;
     }
 
     if (!selectedQuestion) {
-      setError("请选择一个问题");
+      setError(t("questionRequired"));
       return;
     }
 
     if (!friendCode || friendCode.length !== 6) {
-      setError("请输入好友的6位邀请码（字母+数字）");
+      setError(t("inviteCodeRequired"));
       return;
     }
 
     if (friendCode === currentUser.invite_code) {
-      setError("不能发送给自己");
+      setError(t("cannotSendToSelf"));
       return;
     }
 
@@ -106,7 +114,7 @@ export default function SendLetterDrawer() {
       // 检查好友邀请码是否存在
       const friendExists = await checkInviteCode(friendCode);
       if (!friendExists) {
-        setError("好友邀请码不存在，请确认后重试");
+        setError(t("friendCodeNotFound"));
         setIsLoading(false);
         return;
       }
@@ -129,11 +137,11 @@ export default function SendLetterDrawer() {
           refreshLetters();
         }, 2000);
       } else {
-        setError("发送失败，请稍后重试");
+        setError(t("sendFailed"));
       }
     } catch (e) {
       console.error("Send error:", e);
-      setError("发送过程中出现错误，请稍后重试");
+      setError(t("sendFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -145,7 +153,7 @@ export default function SendLetterDrawer() {
     <Drawer.NestedRoot open={sendLetterOpen} onOpenChange={setSendLetterOpen}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-transparent" />
-        <Drawer.Title className="sr-only">发送问题</Drawer.Title>
+        <Drawer.Title className="sr-only">{t("sendQuestion")}</Drawer.Title>
         <Drawer.Content className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex flex-col rounded-t-[10px] h-full mt-24 max-h-[94%] fixed bottom-0 left-0 right-0">
           <div className="p-6 flex-1 max-h-[85vh] overflow-y-auto">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/30 mb-6" />
@@ -156,27 +164,29 @@ export default function SendLetterDrawer() {
                   <Mail className="w-8 h-8 text-green-600" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 mb-2">
-                  发送成功！
+                  {t("sendSuccess")}
                 </h2>
                 <p className="text-gray-600 mb-4">
-                  问题已发送给好友 #{friendCode}
+                  {t("questionSentTo")} #{friendCode}
                 </p>
-                <p className="text-sm text-gray-500">即将关闭...</p>
+                <p className="text-sm text-gray-500">{t("closingSoon")}</p>
               </div>
             ) : (
               <div className="space-y-6">
                 {/* 头部 */}
                 <div className="flex items-center mb-6">
-                  <h1 className="text-xl font-bold text-gray-900">发送问题</h1>
+                  <h1 className="text-xl font-bold text-gray-900">
+                    {t("sendQuestion")}
+                  </h1>
                 </div>
 
                 {/* 选择问题 */}
                 <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-4">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    选择一个问题
+                    {t("selectQuestion")}
                   </h3>
                   <div className="grid gap-3">
-                    {QUESTIONS.map((question, index) => (
+                    {questions.map((question: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setSelectedQuestion(question)}
@@ -195,15 +205,18 @@ export default function SendLetterDrawer() {
                 {/* 输入好友邀请码 */}
                 <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-4">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    输入好友邀请码
+                    {t("enterFriendCode")}
                   </h3>
                   <div className="space-y-4">
                     <Label htmlFor="friendCode" className="text-gray-700">
-                      好友的6位邀请码
+                      {t("friendInviteCode")}
                     </Label>
 
                     {/* OTP 输入框 */}
-                    <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+                    <div
+                      className="flex justify-center gap-2"
+                      onPaste={handleOtpPaste}
+                    >
                       {otpValues.map((value, index) => (
                         <motion.div
                           key={index}
@@ -220,7 +233,9 @@ export default function SendLetterDrawer() {
                             type="text"
                             maxLength={1}
                             value={value}
-                            onChange={(e) => handleOtpChange(index, e.target.value)}
+                            onChange={(e) =>
+                              handleOtpChange(index, e.target.value)
+                            }
                             onKeyDown={(e) => handleOtpKeyDown(index, e)}
                             className="w-12 h-12 text-center text-lg font-mono font-bold bg-white/10 backdrop-blur-sm border-white/30 text-gray-800 focus:border-blue-400/50 focus:bg-blue-50/20 transition-all duration-200"
                             placeholder=""
@@ -239,7 +254,7 @@ export default function SendLetterDrawer() {
                         >
                           <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 border border-green-400/30">
                             <span className="text-sm text-green-700 font-medium">
-                              邀请码已完整输入
+                              {t("inviteCodeComplete")}
                             </span>
                           </div>
                         </motion.div>
@@ -247,7 +262,7 @@ export default function SendLetterDrawer() {
                     </AnimatePresence>
 
                     <p className="text-xs text-gray-600 text-center">
-                      请确认好友的6位邀请码，发送后好友将收到你的问题
+                      {t("confirmInviteCode")}
                     </p>
                   </div>
                 </div>
@@ -256,14 +271,14 @@ export default function SendLetterDrawer() {
                 {selectedQuestion && friendCode && (
                   <div className="bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-2xl p-4">
                     <h3 className="text-base font-medium text-blue-900 mb-3">
-                      发送预览
+                      {t("sendPreview")}
                     </h3>
                     <div className="space-y-2">
                       <p className="text-sm text-blue-800">
-                        <strong>问题:</strong> {selectedQuestion}
+                        <strong>{t("question")}:</strong> {selectedQuestion}
                       </p>
                       <p className="text-sm text-blue-800">
-                        <strong>发送给:</strong> 好友 #{friendCode}
+                        <strong>{t("sendTo")}:</strong> #{friendCode}
                       </p>
                     </div>
                   </div>
@@ -290,11 +305,11 @@ export default function SendLetterDrawer() {
                   size="lg"
                 >
                   {isLoading ? (
-                    "发送中..."
+                    t("sending")
                   ) : (
                     <>
                       <Send className="w-5 h-5 mr-2" />
-                      发送问题
+                      {t("sendQuestion")}
                     </>
                   )}
                 </Button>

@@ -3,6 +3,7 @@
 import { Mail, MailOpen, Send, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Letter, User } from '@/lib/social-journal';
+import { useTranslation } from '@/lib/i18n/social-journal';
 
 interface EnvelopeProps {
   letter: Letter;
@@ -12,12 +13,13 @@ interface EnvelopeProps {
 }
 
 export function Envelope({ letter, currentUser, onClick, className }: EnvelopeProps) {
+  const { t } = useTranslation();
   const isReceived = letter.receiver_code === currentUser.invite_code;
   const isSent = letter.sender_code === currentUser.invite_code;
   const isAnswered = letter.status === 'answered';
 
   // 确定显示的名称
-  const displayName = isReceived ? `发件人: ${letter.sender_code}` : `收件人: ${letter.receiver_code}`;
+  const displayName = isReceived ? `${t('sender')}: ${letter.sender_code}` : `${t('receiver')}: ${letter.receiver_code}`;
 
   // 确定信封状态
   const getEnvelopeIcon = () => {
@@ -34,13 +36,13 @@ export function Envelope({ letter, currentUser, onClick, className }: EnvelopePr
 
   const getStatusText = () => {
     if (isReceived && !isAnswered) {
-      return "待回答";
+      return t('pending');
     } else if (isReceived && isAnswered) {
-      return "已回答";
+      return t('answered');
     } else if (isSent && isAnswered) {
-      return "已收到回复";
+      return t('receivedReply');
     } else {
-      return "等待回复";
+      return t('waitingReply');
     }
   };
 
@@ -111,18 +113,20 @@ interface EmptyEnvelopeProps {
 }
 
 export function EmptyEnvelope({ type, className }: EmptyEnvelopeProps) {
+  const { t } = useTranslation();
+
   return (
     <div className={cn("text-center py-12", className)}>
       <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
         <Mail className="w-8 h-8 text-gray-400" />
       </div>
       <h3 className="text-lg font-medium text-gray-900 mb-2">
-        {type === 'loading' ? '加载中...' : '还没有信件'}
+        {type === 'loading' ? t('loading') : t('noLetters')}
       </h3>
       <p className="text-gray-500">
         {type === 'loading'
-          ? '正在获取你的信件'
-          : '发送你的第一个问题给朋友吧！'
+          ? t('loading')
+          : t('sendFirstQuestion')
         }
       </p>
     </div>

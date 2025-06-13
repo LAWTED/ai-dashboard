@@ -13,8 +13,10 @@ import {
 } from "@/lib/social-journal";
 import { Drawer } from "vaul";
 import { useSocialJournalStore } from "@/lib/store/social-journal-store";
+import { useTranslation } from "@/lib/i18n/social-journal";
 
 export default function LetterDetailDrawer() {
+  const { t } = useTranslation();
   const {
     letterDetailOpen,
     selectedLetterId,
@@ -44,7 +46,7 @@ export default function LetterDetailDrawer() {
     try {
       const letterData = await getLetter(selectedLetterId);
       if (!letterData) {
-        setError("信件不存在或无法访问");
+        setError(t('letterNotFound'));
         return;
       }
 
@@ -53,14 +55,14 @@ export default function LetterDetailDrawer() {
         letterData.sender_code !== currentUser.invite_code &&
         letterData.receiver_code !== currentUser.invite_code
       ) {
-        setError("您没有权限查看此信件");
+        setError(t('noPermission'));
         return;
       }
 
       setLetter(letterData);
     } catch (e) {
       console.error("Error loading letter:", e);
-      setError("加载信件时出现错误");
+      setError(t('loadError'));
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +70,7 @@ export default function LetterDetailDrawer() {
 
   const handleSubmitAnswer = async () => {
     if (!answer.trim() || !selectedLetterId) {
-      setError("请输入回答内容");
+      setError(t('answerRequired'));
       return;
     }
 
@@ -88,11 +90,11 @@ export default function LetterDetailDrawer() {
           setAnswer("");
         }, 2000);
       } else {
-        setError("提交回答失败，请稍后重试");
+        setError(t('submitFailed'));
       }
     } catch (e) {
       console.error("Error submitting answer:", e);
-      setError("提交过程中出现错误，请稍后重试");
+      setError(t('submitFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -117,20 +119,20 @@ export default function LetterDetailDrawer() {
         <Drawer.Content className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex flex-col rounded-t-[10px] h-full mt-24 max-h-[94%] fixed bottom-0 left-0 right-0">
           <div className="p-6 flex-1 max-h-[85vh] overflow-y-auto">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/30 mb-6" />
-            <Drawer.Title className="sr-only">信件详情</Drawer.Title>
+            <Drawer.Title className="sr-only">{t('letterDetails')}</Drawer.Title>
 
             <div className="w-full max-w-2xl mx-auto">
               {/* 头部 */}
               <div className="flex items-center mb-6">
                 <h1 className="text-xl font-bold text-gray-900">
-                  {isReceived ? "收到的问题" : "发出的问题"}
+                  {isReceived ? t('receivedQuestion') : t('sentQuestion')}
                 </h1>
               </div>
 
               {isLoading && (
                 <div className="text-center py-8">
                   <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">加载中...</p>
+                  <p className="text-gray-600">{t('loading')}</p>
                 </div>
               )}
 
@@ -138,14 +140,14 @@ export default function LetterDetailDrawer() {
                 <div className="text-center py-8">
                   <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
                   <h2 className="text-xl font-bold text-gray-900 mb-2">
-                    出错了
+                    {t('loadError')}
                   </h2>
                   <p className="text-gray-600 mb-4">{error}</p>
                   <Button
                     onClick={closeLetterDetail}
                     className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-gray-900 border border-white/30"
                   >
-                    返回
+                    {t('back')}
                   </Button>
                 </div>
               )}
@@ -156,12 +158,12 @@ export default function LetterDetailDrawer() {
                     <Mail className="w-8 h-8 text-green-600" />
                   </div>
                   <h2 className="text-xl font-bold text-gray-900 mb-2">
-                    回答成功！
+                    {t('answerSuccessMessage')}
                   </h2>
                   <p className="text-gray-600 mb-4">
-                    你的回答已发送给 #{letter?.sender_code}
+                    {t('answerSentTo')} #{letter?.sender_code}
                   </p>
-                  <p className="text-sm text-gray-500">即将关闭...</p>
+                  <p className="text-sm text-gray-500">{t('closingSoon')}</p>
                 </div>
               )}
 

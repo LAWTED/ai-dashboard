@@ -1,7 +1,7 @@
 {
-  "name": "社交日记",
+  "name": "社交日记 | Social Journal",
   "short_name": "社交日记",
-  "description": "与朋友分享日常问题和回答的社交应用",
+  "description": "与朋友分享日常问题和回答的社交应用 | A social app for sharing daily questions and answers with friends",
   "start_url": "/social-journal",
   "display": "standalone",
   "background_color": "#ffffff",
