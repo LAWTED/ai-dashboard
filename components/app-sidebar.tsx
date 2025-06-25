@@ -14,6 +14,7 @@ import {
   Users,
   Coffee,
   Heart,
+  Sparkles,
 } from "lucide-react";
 import {
   Sidebar,
@@ -56,6 +57,11 @@ const items = [
     title: "PUA Game",
     url: "/pua-game",
     icon: Heart,
+  },
+  {
+    title: "Manifestation",
+    url: "/manifestation",
+    icon: Sparkles,
   },
 ];
 

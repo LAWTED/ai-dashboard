@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     // 重定向到 /readme
-    router.push('/social-journal');
+    router.push('/manifestation');
   }, [router]);
 
   return (
