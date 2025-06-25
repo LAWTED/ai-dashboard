@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useChat } from "@ai-sdk/react";
-import { Loader2, Sparkles, Clock, Tag, Users, Lightbulb, Settings, Eye, EyeOff } from "lucide-react";
+import { Loader2, Sparkles, Clock, Tag, Users, Lightbulb, Settings, Eye, EyeOff, Monitor, Smartphone, Watch } from "lucide-react";
 import { VoiceInput } from "@/components/voice-input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -16,6 +16,8 @@ interface OrganizedTask {
   priority: "high" | "medium" | "low";
   estimatedTime: string;
   category: string;
+  device: "mac" | "ios" | "watch";
+  deviceReason: string;
   dependencies?: string[];
   tips?: string;
 }
@@ -26,7 +28,7 @@ interface ManifestationResult {
   suggestions: string[];
 }
 
-const DEFAULT_PROMPT = `你是一个专业的任务管理助手，擅长分析和重新组织用户的待办事项。你的职责是：
+const DEFAULT_PROMPT = `你是一个专业的任务管理助手，擅长分析和重新组织用户的待办事项，并根据任务特性智能分发到最适合的 Apple 设备上。你的职责是：
 
 1. 分析用户输入的任务内容（可能是结构化的待办事项列表，也可能是一段描述性文字）
 2. 识别任务的重要性和紧急程度
@@ -34,19 +36,48 @@ const DEFAULT_PROMPT = `你是一个专业的任务管理助手，擅长分析�
 4. 为模糊的任务提供更具体的描述
 5. 识别任务之间的依赖关系
 6. 提供时间估算建议
+7. **根据任务特性将每个任务分配到最适合的设备上**
 
 请使用 organizeTodos 工具来输出重新整理后的任务列表。
 
-分析原则：
+## 分析原则：
 - 重要性：对目标达成影响程度
 - 紧急性：时间敏感程度
 - 可行性：当前条件下完成难度
 - 依赖性：与其他任务的关联程度
 
-优先级分类：
+## 优先级分类：
 - 高优先级：重要且紧急
 - 中优先级：重要但不紧急，或紧急但不重要
 - 低优先级：既不重要也不紧急
+
+## 设备分配策略：
+
+### Mac 设备适合的任务：
+- 需要长时间专注工作的任务（写报告、编程、设计等）
+- 需要使用键盘大量输入的任务
+- 复杂的创作性任务（写作、视频编辑、数据分析等）
+- 需要多应用协作的任务
+- 研究和学习任务（看教程、做笔记等）
+- 需要大屏幕显示的任务
+
+### iOS 设备适合的任务：
+- 移动中可以完成的任务
+- 社交和沟通相关任务（发消息、打电话、发邮件等）
+- 拍照和记录任务
+- 轻量级的阅读和浏览任务
+- 购物和生活服务任务
+- 地点相关的任务（导航、预订等）
+- 娱乐和消费类任务
+
+### Apple Watch 适合的任务：
+- 快速提醒和检查类任务
+- 健康和运动相关任务
+- 时间敏感的简短任务
+- 需要及时通知的任务
+- 简单的确认和回复任务
+- 计时和监控类任务
+- 日程和约会提醒
 
 请用中文回复。`;
 
@@ -115,6 +146,45 @@ export default function ManifestationPage() {
         return "低优先级";
       default:
         return priority;
+    }
+  };
+
+  const getDeviceIcon = (device: string) => {
+    switch (device) {
+      case "mac":
+        return Monitor;
+      case "ios":
+        return Smartphone;
+      case "watch":
+        return Watch;
+      default:
+        return Monitor;
+    }
+  };
+
+  const getDeviceName = (device: string) => {
+    switch (device) {
+      case "mac":
+        return "Mac";
+      case "ios":
+        return "iPhone/iPad";
+      case "watch":
+        return "Apple Watch";
+      default:
+        return device;
+    }
+  };
+
+  const getDeviceColor = (device: string) => {
+    switch (device) {
+      case "mac":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "ios":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "watch":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
@@ -251,64 +321,91 @@ export default function ManifestationPage() {
             </CardContent>
           </Card>
 
-          {/* 整理后的任务列表 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>整理后的任务列表</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {result.organizedTasks.map((task, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{task.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {task.description}
-                      </p>
-                    </div>
-                    <Badge className={getPriorityColor(task.priority)}>
-                      {getPriorityText(task.priority)}
+          {/* 按设备分组的任务列表 */}
+          {["mac", "ios", "watch"].map((deviceType) => {
+            const deviceTasks = result.organizedTasks.filter(task => task.device === deviceType);
+            if (deviceTasks.length === 0) return null;
+
+            const DeviceIcon = getDeviceIcon(deviceType);
+            
+            return (
+              <Card key={deviceType}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DeviceIcon className="w-5 h-5" />
+                    {getDeviceName(deviceType)} 任务
+                    <Badge variant="outline" className="ml-auto">
+                      {deviceTasks.length} 个任务
                     </Badge>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      {task.estimatedTime}
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Tag className="w-3 h-3" />
-                      {task.category}
-                    </div>
-                  </div>
-
-                  {task.dependencies && task.dependencies.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Users className="w-3 h-3" />
-                        依赖任务：
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {task.dependencies.map((dep, depIndex) => (
-                          <Badge key={depIndex} variant="outline" className="text-xs">
-                            {dep}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {deviceTasks.map((task, index) => (
+                    <div key={index} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{task.title}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {task.description}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Badge className={getPriorityColor(task.priority)}>
+                            {getPriorityText(task.priority)}
                           </Badge>
-                        ))}
+                          <Badge className={getDeviceColor(task.device)}>
+                            {getDeviceName(task.device)}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  )}
 
-                  {task.tips && (
-                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                      <p className="text-xs text-blue-800">
-                        <strong>💡 完成建议：</strong> {task.tips}
-                      </p>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          {task.estimatedTime}
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Tag className="w-3 h-3" />
+                          {task.category}
+                        </div>
+                      </div>
+
+                      {/* 设备选择原因 */}
+                      <div className="bg-gray-50 border border-gray-200 rounded p-2">
+                        <p className="text-xs text-gray-700">
+                          <strong>📱 设备推荐：</strong> {task.deviceReason}
+                        </p>
+                      </div>
+
+                      {task.dependencies && task.dependencies.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Users className="w-3 h-3" />
+                            依赖任务：
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {task.dependencies.map((dep, depIndex) => (
+                              <Badge key={depIndex} variant="outline" className="text-xs">
+                                {dep}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {task.tips && (
+                        <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                          <p className="text-xs text-blue-800">
+                            <strong>💡 完成建议：</strong> {task.tips}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                  ))}
+                </CardContent>
+              </Card>
+            );
+          })}
 
           {/* 额外建议 */}
           {result.suggestions.length > 0 && (

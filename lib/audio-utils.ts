@@ -23,7 +23,7 @@ export function isAudioSupported(): boolean {
   return (
     typeof navigator !== 'undefined' && 
     navigator.mediaDevices && 
-    navigator.mediaDevices.getUserMedia &&
+    typeof navigator.mediaDevices.getUserMedia === 'function' &&
     typeof MediaRecorder !== 'undefined'
   );
 }
