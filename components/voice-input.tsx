@@ -140,23 +140,24 @@ export function VoiceInput({ onTranscriptionComplete, disabled = false }: VoiceI
   }
 
   return (
-    <Button
+    <button
       onClick={handleToggleRecording}
       disabled={disabled || isProcessing}
-      variant={isRecording ? "destructive" : "outline"}
-      size="sm"
-      className={`transition-all duration-200 ${
-        isRecording ? "animate-pulse" : ""
+      className={`px-4 py-2 rounded-lg bg-transparent text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center whitespace-nowrap h-8 ${
+        isRecording ? "animate-pulse text-red-500" : "text-black"
       }`}
+      style={{ border: '1px solid rgba(0, 0, 0, 0.15)' }}
     >
       {isProcessing ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
+        <>
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="ml-2 text-xs">处理中...</span>
+        </>
       ) : isRecording ? (
         <MicOff className="w-4 h-4" />
       ) : (
         <Mic className="w-4 h-4" />
       )}
-      {isProcessing && <span className="ml-2 text-xs">处理中...</span>}
-    </Button>
+    </button>
   );
 }
