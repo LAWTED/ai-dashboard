@@ -151,7 +151,7 @@ export function VoiceInput({ onTranscriptionComplete, disabled = false }: VoiceI
       {isProcessing ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="ml-2 text-xs">处理中...</span>
+          <span className="ml-2 text-xs hidden sm:inline">Processing...</span>
         </>
       ) : isRecording ? (
         <MicOff className="w-4 h-4" />
