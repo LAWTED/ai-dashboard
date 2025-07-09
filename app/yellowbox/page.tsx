@@ -1,9 +1,12 @@
 "use client";
 
-import { Youtube, Apple, AirplayIcon as Spotify } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { VoiceInput } from "@/components/voice-input";
 import { motion, AnimatePresence } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type DiaryStep = "answer" | "response";
 
@@ -19,6 +22,8 @@ export default function Component() {
   const [userAnswer, setUserAnswer] = useState<string>("");
   const [aiResponse, setAiResponse] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
 
   // Initialize with a random question
   useEffect(() => {
@@ -71,6 +76,17 @@ export default function Component() {
 
   const handleVoiceTranscription = (text: string) => {
     setUserAnswer(text);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      router.push("/yellowbox/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Error signing out");
+    }
   };
 
   const getCurrentDate = () => {
@@ -183,11 +199,15 @@ export default function Component() {
         </div>
       </div>
 
-      {/* Right Side Social Icons */}
-      <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4 space-y-3">
-        <Youtube className="w-5 h-5 text-black cursor-pointer hover:opacity-70" />
-        <Apple className="w-5 h-5 text-black cursor-pointer hover:opacity-70" />
-        <Spotify className="w-5 h-5 text-black cursor-pointer hover:opacity-70" />
+      {/* Right Side Logout Button */}
+      <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4">
+        <button
+          onClick={handleLogout}
+          className="text-black hover:opacity-70 transition-opacity"
+          title="Logout"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

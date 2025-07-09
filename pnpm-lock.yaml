@@ -62,12 +62,6 @@ importers:
       '@splinetool/runtime':
         specifier: ^1.10.2
         version: 1.10.3
-      '@stagewise-plugins/react':
-        specifier: ^0.4.7
-        version: 0.4.7(@stagewise/toolbar@0.4.6)
-      '@stagewise/toolbar-next':
-        specifier: ^0.4.6
-        version: 0.4.6(@types/react@19.1.8)(next@15.2.4(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       '@supabase/auth-helpers-nextjs':
         specifier: ^0.10.0
         version: 0.10.0(@supabase/supabase-js@2.50.0)
@@ -165,9 +159,6 @@ importers:
       '@eslint/eslintrc':
         specifier: ^3
         version: 3.3.1
-      '@stagewise/toolbar':
-        specifier: ^0.4.6
-        version: 0.4.6
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.10
@@ -972,27 +963,6 @@ packages:
 
   '@splinetool/runtime@1.10.3':
     resolution: {integrity: sha512-X12MJvvigvVri02LCWaf0cBHnRzwxm1ypaJ+XuxkCtDMByHvTU80D/PA09jvD3Im8iTkSJy5/WYcya5aAmIgdQ==}
-
-  '@stagewise-plugins/react@0.4.7':
-    resolution: {integrity: sha512-o3pa/2Tc/Lo+e7OEEDx45vx2NczPgDyGYQHfCZzN0IHLVDm/mj5uSmi5Ldo2NjJdThK4hSQNA5MLc4zBhkUlNg==}
-    peerDependencies:
-      '@stagewise/toolbar': 0.4.7
-
-  '@stagewise/toolbar-next@0.4.6':
-    resolution: {integrity: sha512-jwD32VT65bHgIeH3AgqoAvWw3z4HGAt7SOxMJn88axCQtOkc1LXGc7wEdyWIcOOSzebErrLsU38KlziNxXHj4A==}
-    peerDependencies:
-      '@types/react': '>=18.0.0'
-      next: '>=14.0.0'
-      react: '>=18.0.0'
-
-  '@stagewise/toolbar-react@0.4.6':
-    resolution: {integrity: sha512-/CY7yNEireBCm7U36kWSGwKcWJp8i0IWsI8kA55jiA0sL4vBrVYcNb44afgCJk0s9LVo04aqjiYlcXnFZcEn6g==}
-    peerDependencies:
-      '@types/react': '>=18.0.0'
-      react: '>=18.0.0'
-
-  '@stagewise/toolbar@0.4.6':
-    resolution: {integrity: sha512-XMPTuj7yhqjwnr7ap4OHJHA132fRgTf7uU936anlW6eINJcFRx2hWOiHXnc7d4ZssBXiuwJv6mMY3K7UJDaAwg==}
 
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
@@ -4037,25 +4007,6 @@ snapshots:
     dependencies:
       on-change: 4.0.2
       semver-compare: 1.0.0
-
-  '@stagewise-plugins/react@0.4.7(@stagewise/toolbar@0.4.6)':
-    dependencies:
-      '@stagewise/toolbar': 0.4.6
-
-  '@stagewise/toolbar-next@0.4.6(@types/react@19.1.8)(next@15.2.4(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)':
-    dependencies:
-      '@stagewise/toolbar-react': 0.4.6(@types/react@19.1.8)(react@19.1.0)
-      '@types/react': 19.1.8
-      next: 15.2.4(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      react: 19.1.0
-
-  '@stagewise/toolbar-react@0.4.6(@types/react@19.1.8)(react@19.1.0)':
-    dependencies:
-      '@stagewise/toolbar': 0.4.6
-      '@types/react': 19.1.8
-      react: 19.1.0
-
-  '@stagewise/toolbar@0.4.6': {}
 
   '@standard-schema/utils@0.3.0': {}
 

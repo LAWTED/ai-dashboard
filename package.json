@@ -27,8 +27,6 @@
     "@radix-ui/react-visually-hidden": "^1.2.3",
     "@splinetool/react-spline": "^4.0.0",
     "@splinetool/runtime": "^1.10.2",
-    "@stagewise-plugins/react": "^0.4.7",
-    "@stagewise/toolbar-next": "^0.4.6",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
@@ -63,7 +61,6 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@stagewise/toolbar": "^0.4.6",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
