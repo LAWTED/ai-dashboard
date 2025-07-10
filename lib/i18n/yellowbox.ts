@@ -24,6 +24,22 @@ export interface YellowboxTranslations {
   // Questions
   questions: string[];
   
+  // Auth
+  email: string;
+  password: string;
+  signUpButton: string;
+  signInButton: string;
+  signingIn: string;
+  emailPlaceholder: string;
+  passwordPlaceholder: string;
+  noAccount: string;
+  hasAccount: string;
+  loginSuccess: string;
+  checkEmail: string;
+  anErrorOccurred: string;
+  access: string;
+  login: string;
+  
   // Errors and messages
   somethingWentWrong: string;
   logoutSuccess: string;
@@ -55,6 +71,22 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
       '今天的亮点是什么？'
     ],
     
+    // Auth
+    email: '邮箱',
+    password: '密码',
+    signUpButton: '注册',
+    signInButton: '登录',
+    signingIn: '登录中...',
+    emailPlaceholder: '你的邮箱@email.com',
+    passwordPlaceholder: '••••••••',
+    noAccount: '没有账号？立即注册',
+    hasAccount: '已有账号？立即登录',
+    loginSuccess: '登录成功',
+    checkEmail: '请查看您的邮箱以获取确认链接',
+    anErrorOccurred: '发生错误',
+    access: '访问',
+    login: '登录',
+    
     // Errors and messages
     somethingWentWrong: '出了点问题，请重试。',
     logoutSuccess: '已成功退出',
@@ -84,6 +116,22 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
       "What's one positive thing that happened today?",
       "What was the highlight of your day?"
     ],
+    
+    // Auth
+    email: 'Email',
+    password: 'Password',
+    signUpButton: 'Sign Up',
+    signInButton: 'Sign In',
+    signingIn: 'Signing in...',
+    emailPlaceholder: 'your@email.com',
+    passwordPlaceholder: '••••••••',
+    noAccount: "Don't have an account? Sign up",
+    hasAccount: 'Already have an account? Sign in',
+    loginSuccess: 'Login successful',
+    checkEmail: 'Check your email for the confirmation link',
+    anErrorOccurred: 'An error occurred',
+    access: 'Access',
+    login: 'Login',
     
     // Errors and messages
     somethingWentWrong: 'Something went wrong. Please try again.',

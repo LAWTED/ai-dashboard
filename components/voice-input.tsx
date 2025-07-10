@@ -18,45 +18,50 @@ interface VoiceInputProps {
   disabled?: boolean;
 }
 
-export function VoiceInput({ onTranscriptionComplete, disabled = false }: VoiceInputProps) {
+export function VoiceInput({
+  onTranscriptionComplete,
+  disabled = false,
+}: VoiceInputProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  const processAudio = useCallback(async (audioBlob: Blob) => {
-    try {
-      // Create FormData for API request
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
+  const processAudio = useCallback(
+    async (audioBlob: Blob) => {
+      try {
+        // Create FormData for API request
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "recording.webm");
 
-      // Send to transcription API
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
+        // Send to transcription API
+        const response = await fetch("/api/transcribe", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Transcription failed');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Transcription failed");
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.transcription) {
+          onTranscriptionComplete(data.transcription);
+          toast.success("语音识别完成");
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (error) {
+        console.error("Error processing audio:", error);
+        toast.error("语音识别失败，请重试");
+      } finally {
+        setIsProcessing(false);
       }
-
-      const data = await response.json();
-
-      if (data.success && data.transcription) {
-        onTranscriptionComplete(data.transcription);
-        toast.success("语音识别完成");
-      } else {
-        throw new Error('Invalid response format');
-      }
-
-    } catch (error) {
-      console.error("Error processing audio:", error);
-      toast.error("语音识别失败，请重试");
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [onTranscriptionComplete]);
+    },
+    [onTranscriptionComplete]
+  );
 
   const startRecording = useCallback(async () => {
     try {
@@ -105,7 +110,6 @@ export function VoiceInput({ onTranscriptionComplete, disabled = false }: VoiceI
       mediaRecorder.start();
       setIsRecording(true);
       toast.info("录音开始，点击停止按钮结束录音");
-
     } catch (error) {
       console.error("Error starting recording:", error);
       toast.error("无法访问麦克风，请检查权限设置");
@@ -133,9 +137,9 @@ export function VoiceInput({ onTranscriptionComplete, disabled = false }: VoiceI
 
   if (!isSupported) {
     return (
-      <Button disabled variant="outline" size="sm">
+      <button disabled size="sm">
         <MicOff className="w-4 h-4" />
-      </Button>
+      </button>
     );
   }
 
@@ -144,7 +148,9 @@ export function VoiceInput({ onTranscriptionComplete, disabled = false }: VoiceI
       onClick={handleToggleRecording}
       disabled={disabled || isProcessing}
       className={`disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center ${
-        isRecording ? "animate-pulse text-red-500" : "text-black hover:opacity-70"
+        isRecording
+          ? "animate-pulse text-red-500"
+          : "text-black hover:opacity-70"
       }`}
     >
       {isProcessing ? (

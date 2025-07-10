@@ -1,11 +1,18 @@
 "use client";
 
-import { Youtube, Apple, AirplayIcon as Spotify } from "lucide-react";
+import {
+  Youtube,
+  Apple,
+  AirplayIcon as Spotify,
+  Type,
+  Languages,
+} from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useYellowboxTranslation } from "@/lib/i18n/yellowbox";
 
 export default function YellowboxLoginPage() {
   const [email, setEmail] = useState("");
@@ -13,8 +20,10 @@ export default function YellowboxLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [currentFont, setCurrentFont] = useState<"ibm" | "geist">("ibm");
   const router = useRouter();
   const supabase = createClient();
+  const { t, translations, lang, setLang } = useYellowboxTranslation();
 
   const getCurrentDate = () => {
     const now = new Date();
@@ -23,6 +32,23 @@ export default function YellowboxLoginPage() {
       day: "numeric",
       year: "numeric",
     });
+  };
+
+  const handleFontToggle = () => {
+    setCurrentFont(currentFont === "ibm" ? "geist" : "ibm");
+  };
+
+  const getFontClass = () => {
+    return currentFont === "ibm" ? "font-['IBM_Plex_Serif']" : "font-sans";
+  };
+
+  const handleLanguageToggle = () => {
+    const newLang = lang === "zh" ? "en" : "zh";
+    setLang(newLang);
+  };
+
+  const getLanguageTooltip = () => {
+    return lang === "zh" ? "Switch to English" : "切换到中文";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +69,7 @@ export default function YellowboxLoginPage() {
         });
 
         if (error) throw error;
-        toast.success("Check your email for the confirmation link");
+        toast.success(t("checkEmail") as string);
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -52,11 +78,15 @@ export default function YellowboxLoginPage() {
 
         if (error) throw error;
 
-        toast.success("Login successful");
+        toast.success(t("loginSuccess") as string);
         router.push("/yellowbox");
       }
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(
+        error instanceof Error
+          ? error.message
+          : (t("anErrorOccurred") as string)
+      );
     } finally {
       setIsLoading(false);
     }
@@ -65,32 +95,70 @@ export default function YellowboxLoginPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Image */}
-      <div
+      <motion.div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage:
-            "url('https://freight.cargo.site/w/2689/h/2000/q/75/i/H2267809419218707714982209727068/Forest-Visitation.jpg')",
+          backgroundImage: "url('/room.png')",
         }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
       />
 
       {/* Yellow Rounded Box */}
-      <div className="absolute left-4 top-4 w-[520px] h-[500px] bg-yellow-400 rounded-2xl p-4 font-mono">
+      <div
+        className={`absolute left-4 top-4 w-[540px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
+      >
         <div className="flex items-center mb-1">
-          <h1 className="text-5xl font-bold text-[#3B3109] leading-tight font-['IBM_Plex_Serif'] mr-3">
-            Sign
-          </h1>
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={isSignUp ? "up" : "in"}
-              initial={{ y: isSignUp ? -20 : 20, opacity: 0, filter: "blur(4px)" }}
-              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-              exit={{ y: isSignUp ? -20 : 20, opacity: 0, filter: "blur(4px)" }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="text-5xl  font-bold text-[#3B3109] leading-tight font-['IBM_Plex_Serif']"
-            >
-              {isSignUp ? "up" : "in"}
-            </motion.span>
-          </AnimatePresence>
+          {lang === "zh" ? (
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.h1
+                key={isSignUp ? "注册" : "登入"}
+                initial={{
+                  y: isSignUp ? -20 : 20,
+                  opacity: 0,
+                  filter: "blur(4px)",
+                }}
+                animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                exit={{
+                  y: isSignUp ? -20 : 20,
+                  opacity: 0,
+                  filter: "blur(4px)",
+                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="text-5xl font-bold text-[#3B3109] leading-tight"
+              >
+                {isSignUp ? "注册" : "登入"}
+              </motion.h1>
+            </AnimatePresence>
+          ) : (
+            <>
+              <h1 className="text-5xl font-bold text-[#3B3109] leading-tight mr-3">
+                Sign
+              </h1>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={isSignUp ? "up" : "in"}
+                  initial={{
+                    y: isSignUp ? -20 : 20,
+                    opacity: 0,
+                    filter: "blur(4px)",
+                  }}
+                  animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                  exit={{
+                    y: isSignUp ? -20 : 20,
+                    opacity: 0,
+                    filter: "blur(4px)",
+                  }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="text-5xl font-bold text-[#3B3109] leading-tight"
+                >
+                  {isSignUp ? "up" : "in"}
+                </motion.span>
+              </AnimatePresence>
+            </>
+          )}
         </div>
 
         {/* Top divider line */}
@@ -101,12 +169,12 @@ export default function YellowboxLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Input */}
             <div className="space-y-2">
-              <div className="text-black text-sm">Email</div>
+              <div className="text-black text-sm">{t("email")}</div>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={t("emailPlaceholder") as string}
                 className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
                 style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
                 required
@@ -115,12 +183,12 @@ export default function YellowboxLoginPage() {
 
             {/* Password Input */}
             <div className="space-y-2">
-              <div className="text-black text-sm">Password</div>
+              <div className="text-black text-sm">{t("password")}</div>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={t("passwordPlaceholder") as string}
                 className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
                 style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
                 required
@@ -132,7 +200,7 @@ export default function YellowboxLoginPage() {
 
             {/* Submit Button */}
             <div className="flex gap-2 items-center h-10">
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {email.trim() && password.trim() && (
                   <motion.button
                     initial={{
@@ -160,10 +228,10 @@ export default function YellowboxLoginPage() {
                     style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
                   >
                     {isLoading
-                      ? "Signing in..."
+                      ? t("signingIn")
                       : isSignUp
-                      ? "Sign Up"
-                      : "Sign In"}
+                      ? t("signUpButton")
+                      : t("signInButton")}
                   </motion.button>
                 )}
               </AnimatePresence>
@@ -177,9 +245,7 @@ export default function YellowboxLoginPage() {
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-black text-sm hover:underline"
             >
-              {isSignUp
-                ? "Already have an account? Sign in"
-                : "Don't have an account? Sign up"}
+              {isSignUp ? t("hasAccount") : t("noAccount")}
             </button>
           </div>
         </div>
@@ -190,19 +256,35 @@ export default function YellowboxLoginPage() {
         {/* Bottom Navigation */}
         <div className="flex justify-between items-center gap-2">
           <div className="text-black text-sm cursor-pointer hover:underline">
-            Login
+            {t("login")}
           </div>
           <div className="text-black text-sm cursor-pointer hover:underline">
-            Access
+            {t("access")}
           </div>
         </div>
       </div>
 
-      {/* Right Side Social Icons */}
+      {/* Right Side Controls */}
       <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4 space-y-3">
-        <Youtube className="w-5 h-5 text-black cursor-pointer hover:opacity-70" />
-        <Apple className="w-5 h-5 text-black cursor-pointer hover:opacity-70" />
-        <Spotify className="w-5 h-5 text-black cursor-pointer hover:opacity-70" />
+        {/* Font Switcher */}
+        <button
+          onClick={handleFontToggle}
+          className="text-black hover:opacity-70 transition-opacity"
+          title={`Switch to ${
+            currentFont === "ibm" ? "Sans" : "IBM Plex Serif"
+          } font`}
+        >
+          <Type className="w-5 h-5" />
+        </button>
+
+        {/* Language Switcher */}
+        <button
+          onClick={handleLanguageToggle}
+          className="text-black hover:opacity-70 transition-opacity"
+          title={getLanguageTooltip()}
+        >
+          <Languages className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

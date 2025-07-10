@@ -52,12 +52,21 @@
     "registerTitle": "注册",
     "loginButton": "登录",
     "registerButton": "注册",
+    "signUpButton": "注册",
+    "signInButton": "登录",
+    "signingIn": "登录中...",
+    "emailPlaceholder": "你的邮箱@email.com",
+    "passwordPlaceholder": "••••••••",
     "forgotPassword": "忘记密码？",
     "noAccount": "没有账号？立即注册",
     "hasAccount": "已有账号？立即登录",
     "logoutSuccess": "已成功退出",
+    "loginSuccess": "登录成功",
+    "checkEmail": "请查看您的邮箱以获取确认链接",
     "loginError": "登录错误",
-    "registerError": "注册错误"
+    "registerError": "注册错误",
+    "anErrorOccurred": "发生错误",
+    "access": "访问"
   },
   "Errors": {
     "required": "此字段为必填项",

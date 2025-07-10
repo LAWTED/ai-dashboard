@@ -8,7 +8,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useYellowboxTranslation } from "@/lib/i18n/yellowbox";
 import { TextEffect } from "@/components/ui/text-effect";
+import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Button } from "@/components/ui/button";
+import useMeasure from "react-use-measure";
+import { AnimatePresence, motion } from "framer-motion";
 
 type DiaryStep = "answer" | "response";
 
@@ -20,6 +23,7 @@ export default function Component() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentFont, setCurrentFont] = useState<"ibm" | "geist">("ibm");
   const [isComposing, setIsComposing] = useState(false);
+  const [contentRef, bounds] = useMeasure();
   const router = useRouter();
   const supabase = createClient();
   const { t, translations, lang, setLang } = useYellowboxTranslation();
@@ -139,17 +143,23 @@ export default function Component() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Image */}
-      <div
+      <motion.div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: "url('/room.png')",
         }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
       />
 
       {/* Yellow Rounded Box */}
-      <div
+      <motion.div
         className={`absolute left-4 top-4 w-[540px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
+        animate={{ height: bounds.height ? bounds.height + 32 : undefined }}
       >
+        <div ref={contentRef}>
           {/* New entry indicator */}
           <div className="flex items-center gap-2 mb-4">
             <ArrowLeft className="w-3 h-3 text-black" />
@@ -171,24 +181,28 @@ export default function Component() {
             {/* Answer Input Step */}
             {currentStep === "answer" && (
               <div className="space-y-4">
-                <div className="text-black  text-sm mb-2">{}</div>
-                <div className="relative">
-                  <textarea
-                    value={userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    onCompositionStart={handleCompositionStart}
-                    onCompositionEnd={handleCompositionEnd}
-                    placeholder={selectedQuestion}
-                    className="w-full h-96 p-1 rounded-lg bg-yellow-400 text-black text-base resize-none focus:outline-none"
-                  />
-                </div>
-                <div className="flex gap-2 items-center h-10">
+                <motion.textarea
+                  initial={{ opacity: 0, x: -20, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  value={userAnswer}
+                  onChange={(e) => setUserAnswer(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onCompositionStart={handleCompositionStart}
+                  onCompositionEnd={handleCompositionEnd}
+                  placeholder={selectedQuestion}
+                  className="w-full h-96 p-1 rounded-lg bg-yellow-400 text-black text-base resize-none focus:outline-none"
+                />
+
+                <motion.div
+                  initial={{ opacity: 0, x: -20, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  className="flex gap-2 items-center h-10"
+                >
                   <VoiceInput
                     onTranscriptionComplete={handleVoiceTranscription}
                     disabled={isLoading}
                   />
-                </div>
+                </motion.div>
               </div>
             )}
 
@@ -197,8 +211,10 @@ export default function Component() {
               <div className="space-y-4">
                 <div className="text-black text-base mb-3">{userAnswer}</div>
                 <TextEffect
-                  per="word"
-                  preset="fade"
+                  // per="word"
+                  preset="fade-in-blur"
+                  speedReveal={1.1}
+                  speedSegment={0.3}
                   className="text-black text-base whitespace-pre-wrap"
                 >
                   {aiResponse}
@@ -208,10 +224,13 @@ export default function Component() {
           </div>
 
           {/* Bottom divider line */}
-          <div className="w-full h-px bg-[#E4BE10] my-2"></div>
+          <motion.div
+            layout
+            className="w-full h-px bg-[#E4BE10] my-2"
+          ></motion.div>
 
           {/* Bottom Navigation */}
-          <div className="flex items-center gap-2">
+          <motion.div layout className="flex items-center gap-2">
             <Button
               onClick={handleAnswerSubmit}
               disabled={isLoading || !userAnswer.trim()}
@@ -219,7 +238,13 @@ export default function Component() {
               variant="ghost"
               size="sm"
             >
-              {isLoading ? t("thinking") : t("sparkButton")}
+              {isLoading ? (
+                <TextShimmer className="font-medium text-base" duration={1.5}>
+                  {t("thinking") as string}
+                </TextShimmer>
+              ) : (
+                t("sparkButton")
+              )}
             </Button>
             <Button
               onClick={currentStep === "response" ? resetDiary : undefined}
@@ -229,8 +254,9 @@ export default function Component() {
             >
               {t("doneButton")}
             </Button>
-          </div>
-      </div>
+          </motion.div>
+        </div>
+      </motion.div>
 
       {/* Right Side Scroll Indicator */}
       <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4">
