@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { VoiceInput } from "@/components/voice-input";
 import { motion, AnimatePresence } from "framer-motion";
@@ -104,29 +104,40 @@ export default function Component() {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage:
-            "url('https://freight.cargo.site/w/2689/h/2000/q/75/i/H2267809419218707714982209727068/Forest-Visitation.jpg')",
+          backgroundImage: "url('/room.png')",
         }}
       />
 
       {/* Yellow Rounded Box */}
-      <div className="absolute left-4 top-4 w-[460px] bg-yellow-400 rounded-2xl p-8 font-mono">
-        <h1 className="text-7xl font-black text-black mb-8 leading-none">
-          {getCurrentDate()}
+      <div className="absolute left-4 top-4 w-[520px] bg-yellow-400 rounded-2xl p-4 font-mono">
+        {/* New entry indicator */}
+        <div className="flex items-center gap-2 mb-4">
+          <ArrowLeft className="w-3 h-3 text-black" />
+          <span className="text-[#3B3109] text-xs font-medium">New entry</span>
+        </div>
+
+        <h1 className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight font-['IBM_Plex_Serif']">
+          What&apos;s on{" "}
+          <span className="italic font-semibold font-['IBM_Plex_Serif']">
+            your
+          </span>{" "}
+          mind?
         </h1>
+
+        {/* Top divider line */}
+        <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
 
         <div className="space-y-6">
           {/* Answer Input Step */}
           {currentStep === "answer" && (
             <div className="space-y-4">
-              <div className="text-black  text-sm mb-2">{selectedQuestion}</div>
+              <div className="text-black  text-sm mb-2">{}</div>
               <div className="relative">
                 <textarea
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  placeholder="Share your thoughts..."
-                  className="w-full h-32 p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none"
-                  style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
+                  placeholder={`Write... ${selectedQuestion}`}
+                  className="w-full h-96 p-0 rounded-lg font-['IBM_Plex_Serif'] bg-yellow-400 text-black text-sm resize-none focus:outline-none  "
                 />
               </div>
               <div className="flex gap-2 items-center h-10">
@@ -134,37 +145,6 @@ export default function Component() {
                   onTranscriptionComplete={handleVoiceTranscription}
                   disabled={isLoading}
                 />
-                <AnimatePresence>
-                  {userAnswer.trim() && (
-                    <motion.button
-                      initial={{
-                        opacity: 0,
-                        filter: "blur(4px)",
-                        x: -20,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        filter: "blur(0px)",
-                        x: 0,
-                      }}
-                      exit={{
-                        opacity: 0,
-                        filter: "blur(4px)",
-                        x: -20,
-                      }}
-                      transition={{
-                        duration: 0.3,
-                        ease: "easeOut",
-                      }}
-                      onClick={handleAnswerSubmit}
-                      disabled={isLoading}
-                      className="px-4 rounded-lg bg-transparent text-black text-sm disabled:opacity-50 disabled:cursor-not-allowed h-8"
-                      style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
-                    >
-                      {isLoading ? "Thinking..." : "Send"}
-                    </motion.button>
-                  )}
-                </AnimatePresence>
               </div>
             </div>
           )}
@@ -188,19 +168,34 @@ export default function Component() {
           )}
         </div>
 
+        {/* Bottom divider line */}
+        <div className="w-full h-px bg-[#E4BE10] my-2"></div>
+
         {/* Bottom Navigation */}
-        <div className="flex justify-between items-center mt-12 pt-4">
-          <div className="text-black  text-sm cursor-pointer hover:underline">
-            Diary
-          </div>
-          <div className="text-black  text-sm cursor-pointer hover:underline">
-            Reflect
+        <div className="flex justify-between items-center gap-2">
+          <button
+            onClick={handleAnswerSubmit}
+            disabled={isLoading || !userAnswer.trim()}
+            className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-xs font-medium cursor-pointer hover:bg-yellow-300 w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Thinking..." : "Spark"}
+          </button>
+          <div className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-xs font-medium cursor-pointer hover:bg-yellow-300 w-full">
+            Done
           </div>
         </div>
       </div>
 
-      {/* Right Side Logout Button */}
+      {/* Right Side Scroll Indicator */}
       <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4">
+        {/* Scroll indicator dots */}
+        <div className="flex flex-col items-center space-y-2 mb-4">
+          <div className="w-1 h-1 bg-black rounded-full"></div>
+          <div className="w-1 h-12 bg-black rounded-full"></div>
+          <div className="w-1 h-1 bg-black rounded-full"></div>
+        </div>
+
+        {/* Logout button */}
         <button
           onClick={handleLogout}
           className="text-black hover:opacity-70 transition-opacity"
