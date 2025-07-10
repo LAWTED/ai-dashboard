@@ -51,7 +51,7 @@ export default function YellowboxLoginPage() {
         });
 
         if (error) throw error;
-        
+
         toast.success("Login successful");
         router.push("/yellowbox");
       }
@@ -74,17 +74,29 @@ export default function YellowboxLoginPage() {
       />
 
       {/* Yellow Rounded Box */}
-      <div className="absolute left-4 top-4 w-[460px] bg-yellow-400 rounded-2xl p-8 font-mono">
-        <h1 className="text-7xl font-black text-black mb-8 leading-none">
-          {getCurrentDate()}
-        </h1>
+      <div className="absolute left-4 top-4 w-[520px] h-[500px] bg-yellow-400 rounded-2xl p-4 font-mono">
+        <div className="flex items-center mb-1">
+          <h1 className="text-5xl font-bold text-[#3B3109] leading-tight font-['IBM_Plex_Serif'] mr-3">
+            Sign
+          </h1>
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={isSignUp ? "up" : "in"}
+              initial={{ y: isSignUp ? -20 : 20, opacity: 0, filter: "blur(4px)" }}
+              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+              exit={{ y: isSignUp ? -20 : 20, opacity: 0, filter: "blur(4px)" }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="text-5xl  font-bold text-[#3B3109] leading-tight font-['IBM_Plex_Serif']"
+            >
+              {isSignUp ? "up" : "in"}
+            </motion.span>
+          </AnimatePresence>
+        </div>
 
-        <div className="space-y-6">
-          {/* Welcome Message */}
-          <div className="text-black text-sm mb-4">
-            {isSignUp ? "🌱 Create your account" : "🌹 Welcome back to your diary"}
-          </div>
+        {/* Top divider line */}
+        <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
 
+        <div className="space-y-4">
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Input */}
@@ -95,7 +107,7 @@ export default function YellowboxLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder-black placeholder-opacity-60"
+                className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
                 style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
                 required
               />
@@ -109,21 +121,19 @@ export default function YellowboxLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder-black placeholder-opacity-60"
+                className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
                 style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
                 required
               />
             </div>
 
             {/* Error Message */}
-            {error && (
-              <div className="text-red-600 text-sm">{error}</div>
-            )}
+            {error && <div className="text-red-600 text-sm">{error}</div>}
 
             {/* Submit Button */}
             <div className="flex gap-2 items-center h-10">
               <AnimatePresence>
-                {(email.trim() && password.trim()) && (
+                {email.trim() && password.trim() && (
                   <motion.button
                     initial={{
                       opacity: 0,
@@ -149,12 +159,11 @@ export default function YellowboxLoginPage() {
                     className="px-4 rounded-lg bg-transparent text-black text-sm disabled:opacity-50 disabled:cursor-not-allowed h-8"
                     style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
                   >
-                    {isLoading 
-                      ? "Signing in..." 
-                      : isSignUp 
-                        ? "Sign Up" 
-                        : "Sign In"
-                    }
+                    {isLoading
+                      ? "Signing in..."
+                      : isSignUp
+                      ? "Sign Up"
+                      : "Sign In"}
                   </motion.button>
                 )}
               </AnimatePresence>
@@ -168,16 +177,18 @@ export default function YellowboxLoginPage() {
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-black text-sm hover:underline"
             >
-              {isSignUp 
-                ? "Already have an account? Sign in" 
-                : "Don't have an account? Sign up"
-              }
+              {isSignUp
+                ? "Already have an account? Sign in"
+                : "Don't have an account? Sign up"}
             </button>
           </div>
         </div>
 
+        {/* Bottom divider line */}
+        <div className="w-full h-px bg-[#E4BE10] my-2"></div>
+
         {/* Bottom Navigation */}
-        <div className="flex justify-between items-center mt-12 pt-4">
+        <div className="flex justify-between items-center gap-2">
           <div className="text-black text-sm cursor-pointer hover:underline">
             Login
           </div>

@@ -1,12 +1,14 @@
 "use client";
 
-import { LogOut, ArrowLeft, Languages } from "lucide-react";
+import { LogOut, ArrowLeft, Languages, Type } from "lucide-react";
 import { useState, useEffect } from "react";
 import { VoiceInput } from "@/components/voice-input";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useYellowboxTranslation } from "@/lib/i18n/yellowbox";
+import { TextEffect } from "@/components/ui/text-effect";
+import { Button } from "@/components/ui/button";
 
 type DiaryStep = "answer" | "response";
 
@@ -16,6 +18,8 @@ export default function Component() {
   const [userAnswer, setUserAnswer] = useState<string>("");
   const [aiResponse, setAiResponse] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [currentFont, setCurrentFont] = useState<"ibm" | "geist">("ibm");
+  const [isComposing, setIsComposing] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const { t, translations, lang, setLang } = useYellowboxTranslation();
@@ -80,6 +84,30 @@ export default function Component() {
     setUserAnswer(text);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      if (e.ctrlKey || e.shiftKey) {
+        // Allow Ctrl+Enter or Shift+Enter for new line
+        return;
+      } else if (!isComposing) {
+        // Plain Enter submits the form only when not composing (not using IME)
+        e.preventDefault();
+        if (userAnswer.trim() && !isLoading) {
+          handleAnswerSubmit();
+        }
+      }
+      // If composing, let the IME handle the Enter key normally
+    }
+  };
+
+  const handleCompositionStart = () => {
+    setIsComposing(true);
+  };
+
+  const handleCompositionEnd = () => {
+    setIsComposing(false);
+  };
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -100,6 +128,14 @@ export default function Component() {
     return lang === "zh" ? "Switch to English" : "切换到中文";
   };
 
+  const handleFontToggle = () => {
+    setCurrentFont(currentFont === "ibm" ? "geist" : "ibm");
+  };
+
+  const getFontClass = () => {
+    return currentFont === "ibm" ? "font-['IBM_Plex_Serif']" : "font-sans";
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Image */}
@@ -111,83 +147,89 @@ export default function Component() {
       />
 
       {/* Yellow Rounded Box */}
-      <div className="absolute left-4 top-4 w-[520px] bg-yellow-400 rounded-2xl p-4 font-mono">
-        {/* New entry indicator */}
-        <div className="flex items-center gap-2 mb-4">
-          <ArrowLeft className="w-3 h-3 text-black" />
-          <span className="text-[#3B3109] text-xs font-medium">
-            {t("newEntry")}
-          </span>
-        </div>
-
-        <h1 className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight font-['IBM_Plex_Serif']">
-          {t("titlePart1")}
-          <span className="italic font-semibold font-['IBM_Plex_Serif']">
-            {t("titlePart2")}
-          </span>
-          {t("titlePart3")}
-        </h1>
-
-        {/* Top divider line */}
-        <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
-
-        <div className="space-y-6">
-          {/* Answer Input Step */}
-          {currentStep === "answer" && (
-            <div className="space-y-4">
-              <div className="text-black  text-sm mb-2">{}</div>
-              <div className="relative">
-                <textarea
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  placeholder={selectedQuestion}
-                  className="w-full h-96 p-1 rounded-lg font-['IBM_Plex_Serif'] bg-yellow-400 text-black text-sm resize-none focus:outline-none  "
-                />
-              </div>
-              <div className="flex gap-2 items-center h-10">
-                <VoiceInput
-                  onTranscriptionComplete={handleVoiceTranscription}
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* AI Response Step */}
-          {currentStep === "response" && (
-            <div className="space-y-4">
-              <div className="text-black text-sm mb-2">{selectedQuestion}</div>
-              <div className="text-black text-sm mb-3">{userAnswer}</div>
-              <div className="text-black text-sm whitespace-pre-wrap">
-                {aiResponse}
-              </div>
-              <button
-                onClick={resetDiary}
-                className="px-4 py-2 rounded-lg bg-transparent text-black text-sm"
-                style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
-              >
-                {t("newEntryButton")}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom divider line */}
-        <div className="w-full h-px bg-[#E4BE10] my-2"></div>
-
-        {/* Bottom Navigation */}
-        <div className="flex justify-between items-center gap-2">
-          <button
-            onClick={handleAnswerSubmit}
-            disabled={isLoading || !userAnswer.trim()}
-            className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-xs font-medium cursor-pointer hover:bg-yellow-300 w-full disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? t("thinking") : t("sparkButton")}
-          </button>
-          <div className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-xs font-medium cursor-pointer hover:bg-yellow-300 w-full">
-            {t("doneButton")}
+      <div
+        className={`absolute left-4 top-4 w-[540px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
+      >
+          {/* New entry indicator */}
+          <div className="flex items-center gap-2 mb-4">
+            <ArrowLeft className="w-3 h-3 text-black" />
+            <span className="text-[#3B3109] text-xs font-medium">
+              {t("newEntry")}
+            </span>
           </div>
-        </div>
+
+          <h1 className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight">
+            {t("titlePart1")}
+            <span className="italic font-semibold">{t("titlePart2")}</span>
+            {t("titlePart3")}
+          </h1>
+
+          {/* Top divider line */}
+          <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
+
+          <div className="space-y-6">
+            {/* Answer Input Step */}
+            {currentStep === "answer" && (
+              <div className="space-y-4">
+                <div className="text-black  text-sm mb-2">{}</div>
+                <div className="relative">
+                  <textarea
+                    value={userAnswer}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onCompositionStart={handleCompositionStart}
+                    onCompositionEnd={handleCompositionEnd}
+                    placeholder={selectedQuestion}
+                    className="w-full h-96 p-1 rounded-lg bg-yellow-400 text-black text-base resize-none focus:outline-none"
+                  />
+                </div>
+                <div className="flex gap-2 items-center h-10">
+                  <VoiceInput
+                    onTranscriptionComplete={handleVoiceTranscription}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* AI Response Step */}
+            {currentStep === "response" && (
+              <div className="space-y-4">
+                <div className="text-black text-base mb-3">{userAnswer}</div>
+                <TextEffect
+                  per="word"
+                  preset="fade"
+                  className="text-black text-base whitespace-pre-wrap"
+                >
+                  {aiResponse}
+                </TextEffect>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom divider line */}
+          <div className="w-full h-px bg-[#E4BE10] my-2"></div>
+
+          {/* Bottom Navigation */}
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleAnswerSubmit}
+              disabled={isLoading || !userAnswer.trim()}
+              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="ghost"
+              size="sm"
+            >
+              {isLoading ? t("thinking") : t("sparkButton")}
+            </Button>
+            <Button
+              onClick={currentStep === "response" ? resetDiary : undefined}
+              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1"
+              variant="ghost"
+              size="sm"
+            >
+              {t("doneButton")}
+            </Button>
+          </div>
       </div>
 
       {/* Right Side Scroll Indicator */}
@@ -199,23 +241,37 @@ export default function Component() {
           <div className="w-1 h-1 bg-black rounded-full"></div>
         </div>
 
-        {/* Language Switcher */}
-        <button
-          onClick={handleLanguageToggle}
-          className="text-black hover:opacity-70 transition-opacity mb-3"
-          title={getLanguageTooltip()}
+        {/* Font Switcher */}
+        <Button
+          onClick={handleFontToggle}
+          className="text-black hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
+          title={`Switch to ${
+            currentFont === "ibm" ? "Sans" : "IBM Plex Serif"
+          } font`}
+          variant="ghost"
         >
-          <Languages className="w-5 h-5" />
-        </button>
+          <Type className="!w-5 !h-5" />
+        </Button>
+
+        {/* Language Switcher */}
+        <Button
+          onClick={handleLanguageToggle}
+          className="text-black hover:opacity-70  hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
+          title={getLanguageTooltip()}
+          variant="ghost"
+        >
+          <Languages className="!w-5 !h-5" />
+        </Button>
 
         {/* Logout button */}
-        <button
+        <Button
           onClick={handleLogout}
-          className="text-black hover:opacity-70 transition-opacity"
+          className="text-black hover:opacity-70 hover:bg-transparent transition-opacity p-0 h-auto bg-transparent border-none"
           title={t("logout") as string}
+          variant="ghost"
         >
-          <LogOut className="w-5 h-5" />
-        </button>
+          <LogOut className="!w-5 !h-5" />
+        </Button>
       </div>
     </div>
   );
