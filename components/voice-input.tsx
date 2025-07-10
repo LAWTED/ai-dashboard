@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -137,7 +136,7 @@ export function VoiceInput({
 
   if (!isSupported) {
     return (
-      <button disabled size="sm">
+      <button disabled className="text-black opacity-50">
         <MicOff className="w-4 h-4" />
       </button>
     );

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Youtube,
-  Apple,
-  AirplayIcon as Spotify,
-  Type,
-  Languages,
-} from "lucide-react";
+import { Type, Languages } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -23,16 +17,8 @@ export default function YellowboxLoginPage() {
   const [currentFont, setCurrentFont] = useState<"ibm" | "geist">("ibm");
   const router = useRouter();
   const supabase = createClient();
-  const { t, translations, lang, setLang } = useYellowboxTranslation();
+  const { t, lang, setLang } = useYellowboxTranslation();
 
-  const getCurrentDate = () => {
-    const now = new Date();
-    return now.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
 
   const handleFontToggle = () => {
     setCurrentFont(currentFont === "ibm" ? "geist" : "ibm");

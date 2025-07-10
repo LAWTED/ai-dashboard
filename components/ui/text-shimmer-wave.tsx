@@ -54,12 +54,14 @@ export function TextShimmerWave({
               'inline-block whitespace-pre [transform-style:preserve-3d]'
             )}
             initial={{
+              // @ts-expect-error - translateZ is not a standard CSS property but is used for 3D transforms in motion
               translateZ: 0,
               scale: 1,
               rotateY: 0,
               color: 'var(--base-color)',
             }}
             animate={{
+              // @ts-expect-error - translateZ is not a standard CSS property but is used for 3D transforms in motion
               translateZ: [0, zDistance, 0],
               translateX: [0, xDistance, 0],
               translateY: [0, yDistance, 0],
