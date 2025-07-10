@@ -1,0 +1,70 @@
+{
+  "Common": {
+    "loading": "Loading...",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "close": "Close",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "yes": "Yes",
+    "no": "No",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "settings": "Settings",
+    "language": "Language",
+    "chinese": "中文",
+    "english": "English"
+  },
+  "Navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "Yellowbox": {
+    "title": "What's on your mind?",
+    "titlePart1": "What's on ",
+    "titlePart2": "your",
+    "titlePart3": " mind?",
+    "newEntry": "New entry",
+    "placeholder": "Write...",
+    "sparkButton": "Spark",
+    "doneButton": "Done",
+    "thinking": "Thinking...",
+    "newEntryButton": "New Entry",
+    "voiceInput": "Voice Input",
+    "questions": [
+      "What's one win, small or big, you had today?",
+      "What's one positive thing that happened today?",
+      "What was the highlight of your day?"
+    ]
+  },
+  "Auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "loginTitle": "Login",
+    "registerTitle": "Register",
+    "loginButton": "Login",
+    "registerButton": "Register",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account? Register now",
+    "hasAccount": "Already have an account? Login now",
+    "logoutSuccess": "Logged out successfully",
+    "loginError": "Login error",
+    "registerError": "Registration error"
+  },
+  "Errors": {
+    "required": "This field is required",
+    "emailInvalid": "Please enter a valid email address",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordMismatch": "Passwords do not match",
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "networkError": "Network error. Please check your connection."
+  }
+}

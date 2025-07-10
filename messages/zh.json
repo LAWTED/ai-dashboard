@@ -1,0 +1,70 @@
+{
+  "Common": {
+    "loading": "加载中...",
+    "submit": "提交",
+    "cancel": "取消",
+    "confirm": "确认",
+    "back": "返回",
+    "close": "关闭",
+    "save": "保存",
+    "edit": "编辑",
+    "delete": "删除",
+    "yes": "是",
+    "no": "否",
+    "login": "登录",
+    "logout": "退出",
+    "register": "注册",
+    "settings": "设置",
+    "language": "语言",
+    "chinese": "中文",
+    "english": "English"
+  },
+  "Navigation": {
+    "home": "首页",
+    "dashboard": "仪表板",
+    "profile": "个人资料",
+    "about": "关于",
+    "contact": "联系"
+  },
+  "Yellowbox": {
+    "title": "你在想什么？",
+    "titlePart1": "你在想",
+    "titlePart2": "什么",
+    "titlePart3": "？",
+    "newEntry": "新条目",
+    "placeholder": "写点什么...",
+    "sparkButton": "启发",
+    "doneButton": "完成",
+    "thinking": "思考中...",
+    "newEntryButton": "新条目",
+    "voiceInput": "语音输入",
+    "questions": [
+      "今天有什么小小的成功或大大的胜利吗？",
+      "今天发生了什么积极的事情？",
+      "今天的亮点是什么？"
+    ]
+  },
+  "Auth": {
+    "email": "邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "loginTitle": "登录",
+    "registerTitle": "注册",
+    "loginButton": "登录",
+    "registerButton": "注册",
+    "forgotPassword": "忘记密码？",
+    "noAccount": "没有账号？立即注册",
+    "hasAccount": "已有账号？立即登录",
+    "logoutSuccess": "已成功退出",
+    "loginError": "登录错误",
+    "registerError": "注册错误"
+  },
+  "Errors": {
+    "required": "此字段为必填项",
+    "emailInvalid": "请输入有效的邮箱地址",
+    "passwordTooShort": "密码至少需要6个字符",
+    "passwordMismatch": "密码不匹配",
+    "somethingWentWrong": "出了点问题，请重试。",
+    "networkError": "网络错误，请检查您的连接。"
+  }
+}

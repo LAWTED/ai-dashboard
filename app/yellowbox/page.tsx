@@ -1,20 +1,14 @@
 "use client";
 
-import { LogOut, ArrowLeft } from "lucide-react";
+import { LogOut, ArrowLeft, Languages } from "lucide-react";
 import { useState, useEffect } from "react";
 import { VoiceInput } from "@/components/voice-input";
-import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useYellowboxTranslation } from "@/lib/i18n/yellowbox";
 
 type DiaryStep = "answer" | "response";
-
-const questions = [
-  "🌹 What's one win, small or big, you had today?",
-  "🌹 What's one positive thing that happened today?",
-  "🌹 What was the highlight of your day?",
-];
 
 export default function Component() {
   const [currentStep, setCurrentStep] = useState<DiaryStep>("answer");
@@ -24,13 +18,19 @@ export default function Component() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const { t, translations, lang, setLang } = useYellowboxTranslation();
+
+  // Get questions from translations
+  const questions = translations.questions;
 
   // Initialize with a random question
   useEffect(() => {
-    const randomQuestion =
-      questions[Math.floor(Math.random() * questions.length)];
-    setSelectedQuestion(randomQuestion);
-  }, []);
+    if (questions.length > 0) {
+      const randomQuestion =
+        questions[Math.floor(Math.random() * questions.length)];
+      setSelectedQuestion(randomQuestion);
+    }
+  }, [questions]);
 
   const handleAnswerSubmit = async () => {
     if (!userAnswer.trim()) return;
@@ -57,7 +57,7 @@ export default function Component() {
       setCurrentStep("response");
     } catch (error) {
       console.error("Error:", error);
-      setAiResponse("Sorry, something went wrong. Please try again.");
+      setAiResponse(t("somethingWentWrong") as string);
       setCurrentStep("response");
     } finally {
       setIsLoading(false);
@@ -69,9 +69,11 @@ export default function Component() {
     setUserAnswer("");
     setAiResponse("");
     // Get a new random question
-    const randomQuestion =
-      questions[Math.floor(Math.random() * questions.length)];
-    setSelectedQuestion(randomQuestion);
+    if (questions.length > 0) {
+      const randomQuestion =
+        questions[Math.floor(Math.random() * questions.length)];
+      setSelectedQuestion(randomQuestion);
+    }
   };
 
   const handleVoiceTranscription = (text: string) => {
@@ -81,21 +83,21 @@ export default function Component() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("Logged out successfully");
+      toast.success(t("logoutSuccess") as string);
       router.push("/yellowbox/login");
     } catch (error) {
       console.error("Error signing out:", error);
-      toast.error("Error signing out");
+      toast.error(t("loginError") as string);
     }
   };
 
-  const getCurrentDate = () => {
-    const now = new Date();
-    return now.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  const handleLanguageToggle = () => {
+    const newLang = lang === "zh" ? "en" : "zh";
+    setLang(newLang);
+  };
+
+  const getLanguageTooltip = () => {
+    return lang === "zh" ? "Switch to English" : "切换到中文";
   };
 
   return (
@@ -113,15 +115,17 @@ export default function Component() {
         {/* New entry indicator */}
         <div className="flex items-center gap-2 mb-4">
           <ArrowLeft className="w-3 h-3 text-black" />
-          <span className="text-[#3B3109] text-xs font-medium">New entry</span>
+          <span className="text-[#3B3109] text-xs font-medium">
+            {t("newEntry")}
+          </span>
         </div>
 
         <h1 className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight font-['IBM_Plex_Serif']">
-          What&apos;s on{" "}
+          {t("titlePart1")}
           <span className="italic font-semibold font-['IBM_Plex_Serif']">
-            your
-          </span>{" "}
-          mind?
+            {t("titlePart2")}
+          </span>
+          {t("titlePart3")}
         </h1>
 
         {/* Top divider line */}
@@ -136,8 +140,8 @@ export default function Component() {
                 <textarea
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  placeholder={`Write... ${selectedQuestion}`}
-                  className="w-full h-96 p-0 rounded-lg font-['IBM_Plex_Serif'] bg-yellow-400 text-black text-sm resize-none focus:outline-none  "
+                  placeholder={selectedQuestion}
+                  className="w-full h-96 p-1 rounded-lg font-['IBM_Plex_Serif'] bg-yellow-400 text-black text-sm resize-none focus:outline-none  "
                 />
               </div>
               <div className="flex gap-2 items-center h-10">
@@ -162,7 +166,7 @@ export default function Component() {
                 className="px-4 py-2 rounded-lg bg-transparent text-black text-sm"
                 style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
               >
-                New Entry
+                {t("newEntryButton")}
               </button>
             </div>
           )}
@@ -178,10 +182,10 @@ export default function Component() {
             disabled={isLoading || !userAnswer.trim()}
             className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-xs font-medium cursor-pointer hover:bg-yellow-300 w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Thinking..." : "Spark"}
+            {isLoading ? t("thinking") : t("sparkButton")}
           </button>
           <div className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-xs font-medium cursor-pointer hover:bg-yellow-300 w-full">
-            Done
+            {t("doneButton")}
           </div>
         </div>
       </div>
@@ -195,11 +199,20 @@ export default function Component() {
           <div className="w-1 h-1 bg-black rounded-full"></div>
         </div>
 
+        {/* Language Switcher */}
+        <button
+          onClick={handleLanguageToggle}
+          className="text-black hover:opacity-70 transition-opacity mb-3"
+          title={getLanguageTooltip()}
+        >
+          <Languages className="w-5 h-5" />
+        </button>
+
         {/* Logout button */}
         <button
           onClick={handleLogout}
           className="text-black hover:opacity-70 transition-opacity"
-          title="Logout"
+          title={t("logout") as string}
         >
           <LogOut className="w-5 h-5" />
         </button>
