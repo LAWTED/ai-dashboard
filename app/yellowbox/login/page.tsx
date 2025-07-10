@@ -1,6 +1,5 @@
 "use client";
 
-import { Type, Languages } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -14,18 +13,33 @@ export default function YellowboxLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [currentFont, setCurrentFont] = useState<"ibm" | "geist">("ibm");
+  const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">("serif");
   const router = useRouter();
   const supabase = createClient();
   const { t, lang, setLang } = useYellowboxTranslation();
 
 
   const handleFontToggle = () => {
-    setCurrentFont(currentFont === "ibm" ? "geist" : "ibm");
+    if (currentFont === "serif") {
+      setCurrentFont("sans");
+    } else if (currentFont === "sans") {
+      setCurrentFont("mono");
+    } else {
+      setCurrentFont("serif");
+    }
   };
 
   const getFontClass = () => {
-    return currentFont === "ibm" ? "font-['IBM_Plex_Serif']" : "font-sans";
+    switch (currentFont) {
+      case "serif":
+        return "font-serif";
+      case "sans":
+        return "font-sans";
+      case "mono":
+        return "font-mono";
+      default:
+        return "font-serif";
+    }
   };
 
   const handleLanguageToggle = () => {
@@ -79,7 +93,7 @@ export default function YellowboxLoginPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-black">
       {/* Background Image */}
       <motion.div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -256,11 +270,24 @@ export default function YellowboxLoginPage() {
         <button
           onClick={handleFontToggle}
           className="text-black hover:opacity-70 transition-opacity"
-          title={`Switch to ${
-            currentFont === "ibm" ? "Sans" : "IBM Plex Serif"
-          } font`}
+          title={`Current: ${currentFont === "serif" ? "Serif (Georgia)" : currentFont === "sans" ? "Sans (Inter)" : "Mono (Courier New)"}`}
         >
-          <Type className="w-5 h-5" />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={currentFont}
+              initial={{ x: -10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
+              animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
+              exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <span className={`text-lg font-medium ${
+                currentFont === "serif" ? "font-serif" :
+                currentFont === "sans" ? "font-sans" : "font-mono"
+              }`}>
+                Aa
+              </span>
+            </motion.div>
+          </AnimatePresence>
         </button>
 
         {/* Language Switcher */}
@@ -269,7 +296,22 @@ export default function YellowboxLoginPage() {
           className="text-black hover:opacity-70 transition-opacity"
           title={getLanguageTooltip()}
         >
-          <Languages className="w-5 h-5" />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={lang}
+              initial={{ x: -10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
+              animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
+              exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <span className={`text-lg font-medium ${
+                currentFont === "serif" ? "font-serif" :
+                currentFont === "sans" ? "font-sans" : "font-mono"
+              }`}>
+                {lang === "zh" ? "中" : "En"}
+              </span>
+            </motion.div>
+          </AnimatePresence>
         </button>
       </div>
     </div>

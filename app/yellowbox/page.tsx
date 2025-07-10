@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, ArrowLeft, Languages, Type } from "lucide-react";
+import { LogOut, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { VoiceInput } from "@/components/voice-input";
 import { createClient } from "@/lib/supabase/client";
@@ -11,7 +11,7 @@ import { TextEffect } from "@/components/ui/text-effect";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Button } from "@/components/ui/button";
 import useMeasure from "react-use-measure";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 type DiaryStep = "answer" | "response";
 
@@ -21,7 +21,7 @@ export default function Component() {
   const [userAnswer, setUserAnswer] = useState<string>("");
   const [aiResponse, setAiResponse] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentFont, setCurrentFont] = useState<"ibm" | "geist">("ibm");
+  const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">("serif");
   const [isComposing, setIsComposing] = useState(false);
   const [contentRef, bounds] = useMeasure();
   const router = useRouter();
@@ -133,15 +133,30 @@ export default function Component() {
   };
 
   const handleFontToggle = () => {
-    setCurrentFont(currentFont === "ibm" ? "geist" : "ibm");
+    if (currentFont === "serif") {
+      setCurrentFont("sans");
+    } else if (currentFont === "sans") {
+      setCurrentFont("mono");
+    } else {
+      setCurrentFont("serif");
+    }
   };
 
   const getFontClass = () => {
-    return currentFont === "ibm" ? "font-['IBM_Plex_Serif']" : "font-sans";
+    switch (currentFont) {
+      case "serif":
+        return "font-serif";
+      case "sans":
+        return "font-sans";
+      case "mono":
+        return "font-mono";
+      default:
+        return "font-serif";
+    }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-black">
       {/* Background Image */}
       <motion.div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -271,22 +286,50 @@ export default function Component() {
         <Button
           onClick={handleFontToggle}
           className="text-black hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
-          title={`Switch to ${
-            currentFont === "ibm" ? "Sans" : "IBM Plex Serif"
-          } font`}
+          title={`Current: ${currentFont === "serif" ? "Serif (Georgia)" : currentFont === "sans" ? "Sans (Inter)" : "Mono (Courier New)"}`}
           variant="ghost"
         >
-          <Type className="!w-5 !h-5" />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={currentFont}
+              initial={{ x: -10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
+              animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
+              exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <span className={`text-lg font-medium ${
+                currentFont === "serif" ? "font-serif" :
+                currentFont === "sans" ? "font-sans" : "font-mono"
+              }`}>
+                Aa
+              </span>
+            </motion.div>
+          </AnimatePresence>
         </Button>
 
         {/* Language Switcher */}
         <Button
           onClick={handleLanguageToggle}
-          className="text-black hover:opacity-70  hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
+          className="text-black hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
           title={getLanguageTooltip()}
           variant="ghost"
         >
-          <Languages className="!w-5 !h-5" />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={lang}
+              initial={{ x: -10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
+              animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
+              exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <span className={`text-lg font-medium ${
+                currentFont === "serif" ? "font-serif" :
+                currentFont === "sans" ? "font-sans" : "font-mono"
+              }`}>
+                {lang === "zh" ? "中" : "En"}
+              </span>
+            </motion.div>
+          </AnimatePresence>
         </Button>
 
         {/* Logout button */}
