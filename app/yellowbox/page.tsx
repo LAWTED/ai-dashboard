@@ -13,13 +13,17 @@ import { Button } from "@/components/ui/button";
 import useMeasure from "react-use-measure";
 import { motion, AnimatePresence } from "framer-motion";
 
-type DiaryStep = "answer" | "response";
+type ConversationMessage = {
+  type: "user" | "ai";
+  content: string;
+};
 
 export default function Component() {
-  const [currentStep, setCurrentStep] = useState<DiaryStep>("answer");
   const [selectedQuestion, setSelectedQuestion] = useState<string>("");
   const [userAnswer, setUserAnswer] = useState<string>("");
-  const [aiResponse, setAiResponse] = useState<string>("");
+  const [conversationHistory, setConversationHistory] = useState<
+    ConversationMessage[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">(
     "serif"
@@ -28,6 +32,8 @@ export default function Component() {
   const [timeOfDay, setTimeOfDay] = useState<"morning" | "daytime" | "evening">(
     "daytime"
   );
+  const [conversationCount, setConversationCount] = useState(0);
+  const [showInput, setShowInput] = useState(true);
   const [contentRef, bounds] = useMeasure();
   const router = useRouter();
   const supabase = createClient();
@@ -36,30 +42,46 @@ export default function Component() {
   // Get questions from translations
   const questions = translations.questions;
 
-  // Initialize with a random question and set default time of day
+  // Initialize with a question and set default time of day
   useEffect(() => {
-    if (questions.length > 0) {
-      const randomQuestion =
-        questions[Math.floor(Math.random() * questions.length)];
-      setSelectedQuestion(randomQuestion);
-    }
-
     // Set default time of day based on current time
     const now = new Date();
     const hour = now.getHours();
+    let currentTimeOfDay: "morning" | "daytime" | "evening";
+
     if (hour < 9) {
-      setTimeOfDay("morning");
+      currentTimeOfDay = "morning";
     } else if (hour >= 9 && hour < 21) {
-      setTimeOfDay("daytime");
+      currentTimeOfDay = "daytime";
     } else {
-      setTimeOfDay("evening");
+      currentTimeOfDay = "evening";
+    }
+
+    setTimeOfDay(currentTimeOfDay);
+
+    // Set question based on time of day
+    if (currentTimeOfDay === "daytime") {
+      setSelectedQuestion("What's on your mind?");
+    } else if (questions.length > 0) {
+      const randomQuestion =
+        questions[Math.floor(Math.random() * questions.length)];
+      setSelectedQuestion(randomQuestion);
     }
   }, [questions]);
 
   const handleAnswerSubmit = async () => {
     if (!userAnswer.trim()) return;
 
+    const userMessage = userAnswer.trim();
+
+    // Add user message to conversation history
+    setConversationHistory((prev) => [
+      ...prev,
+      { type: "user", content: userMessage },
+    ]);
+    setUserAnswer("");
     setIsLoading(true);
+
     try {
       const response = await fetch("/api/diary", {
         method: "POST",
@@ -68,7 +90,9 @@ export default function Component() {
         },
         body: JSON.stringify({
           selectedQuestion,
-          userEntry: userAnswer,
+          userEntry: userMessage,
+          timeOfDay,
+          conversationCount,
         }),
       });
 
@@ -77,23 +101,47 @@ export default function Component() {
       }
 
       const data = await response.json();
-      setAiResponse(data.response);
-      setCurrentStep("response");
+
+      // Add AI response to conversation history
+      setConversationHistory((prev) => [
+        ...prev,
+        { type: "ai", content: data.response },
+      ]);
+
+      // Hide input when AI response starts showing
+      setShowInput(false);
+
+      // Increment conversation count for daytime mode
+      if (timeOfDay === "daytime") {
+        setConversationCount((prev) => prev + 1);
+      }
     } catch (error) {
       console.error("Error:", error);
-      setAiResponse(t("somethingWentWrong") as string);
-      setCurrentStep("response");
+      const errorMessage = t("somethingWentWrong") as string;
+      setConversationHistory((prev) => [
+        ...prev,
+        { type: "ai", content: errorMessage },
+      ]);
+      
+      // Hide input when error message starts showing
+      setShowInput(false);
     } finally {
       setIsLoading(false);
     }
   };
 
   const resetDiary = () => {
-    setCurrentStep("answer");
     setUserAnswer("");
-    setAiResponse("");
-    // Get a new random question
-    if (questions.length > 0) {
+    setConversationHistory([]);
+    setShowInput(true);
+
+    // Reset conversation count
+    setConversationCount(0);
+
+    // Set appropriate question based on time of day
+    if (timeOfDay === "daytime") {
+      setSelectedQuestion("What's on your mind?");
+    } else if (questions.length > 0) {
       const randomQuestion =
         questions[Math.floor(Math.random() * questions.length)];
       setSelectedQuestion(randomQuestion);
@@ -102,6 +150,10 @@ export default function Component() {
 
   const handleVoiceTranscription = (text: string) => {
     setUserAnswer(text);
+  };
+
+  const handleAnimationComplete = () => {
+    setShowInput(true);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -173,6 +225,18 @@ export default function Component() {
 
   const handleTimeOfDayClick = (period: "morning" | "daytime" | "evening") => {
     setTimeOfDay(period);
+
+    // Set question based on selected time of day
+    if (period === "daytime") {
+      setSelectedQuestion("What's on your mind?");
+    } else if (questions.length > 0) {
+      const randomQuestion =
+        questions[Math.floor(Math.random() * questions.length)];
+      setSelectedQuestion(randomQuestion);
+    }
+
+    // Reset conversation count when switching time periods
+    setConversationCount(0);
   };
 
   return (
@@ -192,7 +256,9 @@ export default function Component() {
       {/* Yellow Rounded Box */}
       <motion.div
         className={`absolute left-4 top-4 w-[640px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
-        animate={{ height: bounds.height ? bounds.height + 32 : undefined }}
+        animate={{
+          height: bounds.height ? bounds.height + 32 : undefined,
+        }}
       >
         <div ref={contentRef}>
           {/* New entry indicator */}
@@ -243,10 +309,52 @@ export default function Component() {
           {/* Top divider line */}
           <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
 
-          <div className="space-y-6">
-            {/* Answer Input Step */}
-            {currentStep === "answer" && (
+          {/* Conversation and Input Container */}
+          <div className="max-h-96 overflow-y-auto space-y-6">
+            {/* Conversation History */}
+            {conversationHistory.length > 0 && (
               <div className="space-y-4">
+                {conversationHistory.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`text-black text-base ${
+                      message.type === "user" ? "font-medium" : ""
+                    }`}
+                  >
+                    {message.type === "ai" ? (
+                      index === conversationHistory.length - 1 ? (
+                        <TextEffect
+                          key={`ai-${index}`}
+                          preset="fade-in-blur"
+                          speedReveal={1.1}
+                          speedSegment={0.3}
+                          className="text-[#C04635] text-base "
+                          onAnimationComplete={handleAnimationComplete}
+                        >
+                          {message.content}
+                        </TextEffect>
+                      ) : (
+                        <div className="text-[#C04635] text-base ">
+                          {message.content}
+                        </div>
+                      )
+                    ) : (
+                      <div className="whitespace-pre-wrap">
+                        {message.content}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Input Section */}
+            {showInput && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                className="space-y-4"
+              >
                 <motion.textarea
                   initial={{ opacity: 0, x: -20, filter: "blur(4px)" }}
                   animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
@@ -255,8 +363,12 @@ export default function Component() {
                   onKeyDown={handleKeyDown}
                   onCompositionStart={handleCompositionStart}
                   onCompositionEnd={handleCompositionEnd}
-                  placeholder={selectedQuestion}
-                  className="w-full h-96 p-1 rounded-lg bg-yellow-400 text-black text-base resize-none focus:outline-none"
+                  placeholder={
+                    conversationHistory.length === 0
+                      ? selectedQuestion
+                      : "Continue your thoughts..."
+                  }
+                  className="w-full h-32 p-1 rounded-lg bg-yellow-400 text-black text-base resize-none focus:outline-none"
                 />
 
                 <motion.div
@@ -269,23 +381,7 @@ export default function Component() {
                     disabled={isLoading}
                   />
                 </motion.div>
-              </div>
-            )}
-
-            {/* AI Response Step */}
-            {currentStep === "response" && (
-              <div className="space-y-4">
-                <div className="text-black text-base mb-3">{userAnswer}</div>
-                <TextEffect
-                  // per="word"
-                  preset="fade-in-blur"
-                  speedReveal={1.1}
-                  speedSegment={0.3}
-                  className="text-black text-base whitespace-pre-wrap"
-                >
-                  {aiResponse}
-                </TextEffect>
-              </div>
+              </motion.div>
             )}
           </div>
 
@@ -313,7 +409,7 @@ export default function Component() {
               )}
             </Button>
             <Button
-              onClick={currentStep === "response" ? resetDiary : undefined}
+              onClick={resetDiary}
               className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1"
               variant="ghost"
               size="sm"

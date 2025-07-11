@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Loader2, CircleStop } from "lucide-react";
 import { toast } from "sonner";
 import {
   createAudioStream,
@@ -155,7 +155,7 @@ export function VoiceInput({
       {isProcessing ? (
         <Loader2 className="w-4 h-4 animate-spin" />
       ) : isRecording ? (
-        <MicOff className="w-4 h-4" />
+        <CircleStop className="w-4 h-4" />
       ) : (
         <Mic className="w-4 h-4" />
       )}
