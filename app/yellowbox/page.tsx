@@ -122,7 +122,7 @@ export default function Component() {
         ...prev,
         { type: "ai", content: errorMessage },
       ]);
-      
+
       // Hide input when error message starts showing
       setShowInput(false);
     } finally {
@@ -255,7 +255,7 @@ export default function Component() {
 
       {/* Yellow Rounded Box */}
       <motion.div
-        className={`absolute left-4 top-4 w-[640px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
+        className={`absolute flex flex-col justify-between  left-4 top-4 w-[640px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
         animate={{
           height: bounds.height ? bounds.height + 32 : undefined,
         }}
@@ -310,7 +310,7 @@ export default function Component() {
           <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
 
           {/* Conversation and Input Container */}
-          <div className="max-h-96 overflow-y-auto space-y-6">
+          <div className="max-h-[calc(100vh-300px)] overflow-y-auto space-y-6">
             {/* Conversation History */}
             {conversationHistory.length > 0 && (
               <div className="space-y-4">
