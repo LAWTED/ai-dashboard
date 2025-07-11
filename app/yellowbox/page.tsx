@@ -61,7 +61,7 @@ export default function Component() {
 
     // Set question based on time of day
     if (currentTimeOfDay === "daytime") {
-      setSelectedQuestion("What's on your mind?");
+      setSelectedQuestion("Write...");
     } else if (questions.length > 0) {
       const randomQuestion =
         questions[Math.floor(Math.random() * questions.length)];
@@ -140,7 +140,7 @@ export default function Component() {
 
     // Set appropriate question based on time of day
     if (timeOfDay === "daytime") {
-      setSelectedQuestion("What's on your mind?");
+      setSelectedQuestion("Write...");
     } else if (questions.length > 0) {
       const randomQuestion =
         questions[Math.floor(Math.random() * questions.length)];
@@ -228,7 +228,7 @@ export default function Component() {
 
     // Set question based on selected time of day
     if (period === "daytime") {
-      setSelectedQuestion("What's on your mind?");
+      setSelectedQuestion("Write...");
     } else if (questions.length > 0) {
       const randomQuestion =
         questions[Math.floor(Math.random() * questions.length)];
@@ -310,17 +310,12 @@ export default function Component() {
           <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
 
           {/* Conversation and Input Container */}
-          <div className="max-h-[calc(100vh-300px)] overflow-y-auto space-y-6">
+          <div className="max-h-[calc(100vh-300px)] overflow-y-auto space-y-3">
             {/* Conversation History */}
             {conversationHistory.length > 0 && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {conversationHistory.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`text-black text-base ${
-                      message.type === "user" ? "font-medium" : ""
-                    }`}
-                  >
+                  <div key={index} className={`text-black text-base`}>
                     {message.type === "ai" ? (
                       index === conversationHistory.length - 1 ? (
                         <TextEffect
@@ -339,7 +334,7 @@ export default function Component() {
                         </div>
                       )
                     ) : (
-                      <div className="whitespace-pre-wrap">
+                      <div className="whitespace-pre-wrap py-1">
                         {message.content}
                       </div>
                     )}
@@ -368,7 +363,7 @@ export default function Component() {
                       ? selectedQuestion
                       : "Continue your thoughts..."
                   }
-                  className="w-full h-32 p-1 rounded-lg bg-yellow-400 text-black text-base resize-none focus:outline-none"
+                  className="w-full py-1 h-32 rounded-lg bg-yellow-400 text-black text-base resize-none focus:outline-none"
                 />
 
                 <motion.div
