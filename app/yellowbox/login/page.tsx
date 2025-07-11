@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useYellowboxTranslation } from "@/lib/i18n/yellowbox";
+import { SlidingNumber } from "@/components/ui/sliding-number";
 
 export default function YellowboxLoginPage() {
   const [email, setEmail] = useState("");
@@ -13,11 +14,33 @@ export default function YellowboxLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">("serif");
+  const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">(
+    "serif"
+  );
+  const [currentTime, setCurrentTime] = useState({
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
   const router = useRouter();
   const supabase = createClient();
   const { t, lang, setLang } = useYellowboxTranslation();
 
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime({
+        hours: now.getHours(),
+        minutes: now.getMinutes(),
+        seconds: now.getSeconds(),
+      });
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleFontToggle = () => {
     if (currentFont === "serif") {
@@ -108,7 +131,7 @@ export default function YellowboxLoginPage() {
 
       {/* Yellow Rounded Box */}
       <div
-        className={`absolute left-4 top-4 w-[540px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
+        className={`absolute left-4 top-4 w-[640px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
       >
         <div className="flex items-center mb-1">
           {lang === "zh" ? (
@@ -255,11 +278,13 @@ export default function YellowboxLoginPage() {
 
         {/* Bottom Navigation */}
         <div className="flex justify-between items-center gap-2">
-          <div className="text-black text-sm cursor-pointer hover:underline">
-            {t("login")}
-          </div>
-          <div className="text-black text-sm cursor-pointer hover:underline">
-            {t("access")}
+          <div className="text-black text-sm cursor-pointer">{t("login")}</div>
+          <div className="text-black text-sm cursor-pointer flex items-center gap-1">
+            <SlidingNumber value={currentTime.hours} padStart={true} />
+            <span>:</span>
+            <SlidingNumber value={currentTime.minutes} padStart={true} />
+            <span>:</span>
+            <SlidingNumber value={currentTime.seconds} padStart={true} />
           </div>
         </div>
       </div>
@@ -270,7 +295,13 @@ export default function YellowboxLoginPage() {
         <button
           onClick={handleFontToggle}
           className="text-black hover:opacity-70 transition-opacity"
-          title={`Current: ${currentFont === "serif" ? "Serif (Georgia)" : currentFont === "sans" ? "Sans (Inter)" : "Mono (Courier New)"}`}
+          title={`Current: ${
+            currentFont === "serif"
+              ? "Serif (Georgia)"
+              : currentFont === "sans"
+              ? "Sans (Inter)"
+              : "Mono (Courier New)"
+          }`}
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -280,10 +311,15 @@ export default function YellowboxLoginPage() {
               exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <span className={`text-lg font-medium ${
-                currentFont === "serif" ? "font-serif" :
-                currentFont === "sans" ? "font-sans" : "font-mono"
-              }`}>
+              <span
+                className={`text-lg font-medium ${
+                  currentFont === "serif"
+                    ? "font-serif"
+                    : currentFont === "sans"
+                    ? "font-sans"
+                    : "font-mono"
+                }`}
+              >
                 Aa
               </span>
             </motion.div>
@@ -304,10 +340,15 @@ export default function YellowboxLoginPage() {
               exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <span className={`text-lg font-medium ${
-                currentFont === "serif" ? "font-serif" :
-                currentFont === "sans" ? "font-sans" : "font-mono"
-              }`}>
+              <span
+                className={`text-lg font-medium ${
+                  currentFont === "serif"
+                    ? "font-serif"
+                    : currentFont === "sans"
+                    ? "font-sans"
+                    : "font-mono"
+                }`}
+              >
                 {lang === "zh" ? "中" : "En"}
               </span>
             </motion.div>

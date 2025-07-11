@@ -23,6 +23,7 @@ export default function Component() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">("serif");
   const [isComposing, setIsComposing] = useState(false);
+  const [timeOfDay, setTimeOfDay] = useState<"morning" | "daytime" | "evening">("daytime");
   const [contentRef, bounds] = useMeasure();
   const router = useRouter();
   const supabase = createClient();
@@ -31,12 +32,23 @@ export default function Component() {
   // Get questions from translations
   const questions = translations.questions;
 
-  // Initialize with a random question
+  // Initialize with a random question and set default time of day
   useEffect(() => {
     if (questions.length > 0) {
       const randomQuestion =
         questions[Math.floor(Math.random() * questions.length)];
       setSelectedQuestion(randomQuestion);
+    }
+
+    // Set default time of day based on current time
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour < 9) {
+      setTimeOfDay("morning");
+    } else if (hour >= 9 && hour < 21) {
+      setTimeOfDay("daytime");
+    } else {
+      setTimeOfDay("evening");
     }
   }, [questions]);
 
@@ -155,6 +167,10 @@ export default function Component() {
     }
   };
 
+  const handleTimeOfDayClick = (period: "morning" | "daytime" | "evening") => {
+    setTimeOfDay(period);
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-black">
       {/* Background Image */}
@@ -171,7 +187,7 @@ export default function Component() {
 
       {/* Yellow Rounded Box */}
       <motion.div
-        className={`absolute left-4 top-4 w-[540px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
+        className={`absolute left-4 top-4 w-[640px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
         animate={{ height: bounds.height ? bounds.height + 32 : undefined }}
       >
         <div ref={contentRef}>
@@ -184,9 +200,21 @@ export default function Component() {
           </div>
 
           <h1 className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight">
-            {t("titlePart1")}
-            <span className="italic font-semibold">{t("titlePart2")}</span>
-            {t("titlePart3")}
+            {timeOfDay === "morning" ? (
+              <>
+                <span className="italic font-semibold">Morning</span> Reflection
+              </>
+            ) : timeOfDay === "evening" ? (
+              <>
+                <span className="italic font-semibold">Evening</span> Reflection
+              </>
+            ) : (
+              <>
+                {t("titlePart1")}
+                <span className="italic font-semibold">{t("titlePart2")}</span>
+                {t("titlePart3")}
+              </>
+            )}
           </h1>
 
           {/* Top divider line */}
@@ -277,9 +305,24 @@ export default function Component() {
       <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4">
         {/* Scroll indicator dots */}
         <div className="flex flex-col items-center space-y-2 mb-4">
-          <div className="w-1 h-1 bg-black rounded-full"></div>
-          <div className="w-1 h-12 bg-black rounded-full"></div>
-          <div className="w-1 h-1 bg-black rounded-full"></div>
+          <motion.div
+            className={`size-1.5 rounded-full cursor-pointer ${timeOfDay === "morning" ? "bg-[#2AB186]" : "bg-black"}`}
+            whileTap={{ scale: 1.5 }}
+            transition={{ duration: 0.1 }}
+            onClick={() => handleTimeOfDayClick("morning")}
+          ></motion.div>
+          <motion.div
+            className={`w-1 h-12 rounded-full cursor-pointer ${timeOfDay === "daytime" ? "bg-[#2AB186]" : "bg-black"}`}
+            whileTap={{ scaleX: 1.5 }}
+            transition={{ duration: 0.1 }}
+            onClick={() => handleTimeOfDayClick("daytime")}
+          ></motion.div>
+          <motion.div
+            className={`size-1.5 rounded-full cursor-pointer ${timeOfDay === "evening" ? "bg-[#2AB186]" : "bg-black"}`}
+            whileTap={{ scale: 1.5 }}
+            transition={{ duration: 0.1 }}
+            onClick={() => handleTimeOfDayClick("evening")}
+          ></motion.div>
         </div>
 
         {/* Font Switcher */}
