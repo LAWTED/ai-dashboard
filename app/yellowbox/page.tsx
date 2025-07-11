@@ -21,9 +21,13 @@ export default function Component() {
   const [userAnswer, setUserAnswer] = useState<string>("");
   const [aiResponse, setAiResponse] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">("serif");
+  const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">(
+    "serif"
+  );
   const [isComposing, setIsComposing] = useState(false);
-  const [timeOfDay, setTimeOfDay] = useState<"morning" | "daytime" | "evening">("daytime");
+  const [timeOfDay, setTimeOfDay] = useState<"morning" | "daytime" | "evening">(
+    "daytime"
+  );
   const [contentRef, bounds] = useMeasure();
   const router = useRouter();
   const supabase = createClient();
@@ -199,23 +203,42 @@ export default function Component() {
             </span>
           </div>
 
-          <h1 className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight">
-            {timeOfDay === "morning" ? (
-              <>
-                <span className="italic font-semibold">Morning</span> Reflection
-              </>
-            ) : timeOfDay === "evening" ? (
-              <>
-                <span className="italic font-semibold">Evening</span> Reflection
-              </>
-            ) : (
-              <>
-                {t("titlePart1")}
-                <span className="italic font-semibold">{t("titlePart2")}</span>
-                {t("titlePart3")}
-              </>
-            )}
-          </h1>
+          <div className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.h1
+                key={timeOfDay}
+                initial={{
+                  x: -100,
+                  opacity: 0,
+                  filter: "blur(4px)",
+                  scale: 0.8,
+                }}
+                animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
+                exit={{ x: 100, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
+                className="text-5xl font-bold leading-tight"
+              >
+                {timeOfDay === "morning" ? (
+                  <>
+                    <span className="italic font-semibold">Morning</span>{" "}
+                    Reflection
+                  </>
+                ) : timeOfDay === "evening" ? (
+                  <>
+                    <span className="italic font-semibold">Evening</span>{" "}
+                    Reflection
+                  </>
+                ) : (
+                  <>
+                    {t("titlePart1")}
+                    <span className="italic font-semibold">
+                      {t("titlePart2")}
+                    </span>
+                    {t("titlePart3")}
+                  </>
+                )}
+              </motion.h1>
+            </AnimatePresence>
+          </div>
 
           {/* Top divider line */}
           <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
@@ -306,19 +329,25 @@ export default function Component() {
         {/* Scroll indicator dots */}
         <div className="flex flex-col items-center space-y-2 mb-4">
           <motion.div
-            className={`size-1.5 rounded-full cursor-pointer ${timeOfDay === "morning" ? "bg-[#2AB186]" : "bg-black"}`}
+            className={`size-1.5 rounded-full cursor-pointer ${
+              timeOfDay === "morning" ? "bg-[#2AB186]" : "bg-black"
+            }`}
             whileTap={{ scale: 1.5 }}
             transition={{ duration: 0.1 }}
             onClick={() => handleTimeOfDayClick("morning")}
           ></motion.div>
           <motion.div
-            className={`w-1 h-12 rounded-full cursor-pointer ${timeOfDay === "daytime" ? "bg-[#2AB186]" : "bg-black"}`}
+            className={`w-1 h-12 rounded-full cursor-pointer ${
+              timeOfDay === "daytime" ? "bg-[#2AB186]" : "bg-black"
+            }`}
             whileTap={{ scaleX: 1.5 }}
             transition={{ duration: 0.1 }}
             onClick={() => handleTimeOfDayClick("daytime")}
           ></motion.div>
           <motion.div
-            className={`size-1.5 rounded-full cursor-pointer ${timeOfDay === "evening" ? "bg-[#2AB186]" : "bg-black"}`}
+            className={`size-1.5 rounded-full cursor-pointer ${
+              timeOfDay === "evening" ? "bg-[#2AB186]" : "bg-black"
+            }`}
             whileTap={{ scale: 1.5 }}
             transition={{ duration: 0.1 }}
             onClick={() => handleTimeOfDayClick("evening")}
@@ -329,7 +358,13 @@ export default function Component() {
         <Button
           onClick={handleFontToggle}
           className="text-black hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
-          title={`Current: ${currentFont === "serif" ? "Serif (Georgia)" : currentFont === "sans" ? "Sans (Inter)" : "Mono (Courier New)"}`}
+          title={`Current: ${
+            currentFont === "serif"
+              ? "Serif (Georgia)"
+              : currentFont === "sans"
+              ? "Sans (Inter)"
+              : "Mono (Courier New)"
+          }`}
           variant="ghost"
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -340,10 +375,15 @@ export default function Component() {
               exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <span className={`text-lg font-medium ${
-                currentFont === "serif" ? "font-serif" :
-                currentFont === "sans" ? "font-sans" : "font-mono"
-              }`}>
+              <span
+                className={`text-lg font-medium ${
+                  currentFont === "serif"
+                    ? "font-serif"
+                    : currentFont === "sans"
+                    ? "font-sans"
+                    : "font-mono"
+                }`}
+              >
                 Aa
               </span>
             </motion.div>
@@ -365,10 +405,15 @@ export default function Component() {
               exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <span className={`text-lg font-medium ${
-                currentFont === "serif" ? "font-serif" :
-                currentFont === "sans" ? "font-sans" : "font-mono"
-              }`}>
+              <span
+                className={`text-lg font-medium ${
+                  currentFont === "serif"
+                    ? "font-serif"
+                    : currentFont === "sans"
+                    ? "font-sans"
+                    : "font-mono"
+                }`}
+              >
                 {lang === "zh" ? "中" : "En"}
               </span>
             </motion.div>
