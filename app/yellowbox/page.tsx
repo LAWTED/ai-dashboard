@@ -240,7 +240,7 @@ export default function Component() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-black">
+    <div className="min-h-screen relative overflow-hidden bg-black selection:bg-black selection:text-yellow-400">
       {/* Background Image */}
       <motion.div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
