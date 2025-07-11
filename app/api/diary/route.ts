@@ -51,7 +51,7 @@ First, tell the user that we can come back to this win later if the user asks fo
     }
 
     const result = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-4o'),
       system: systemPrompt,
       prompt: `Question: ${selectedQuestion}\nUser's answer: ${userEntry}`,
       temperature: 0.8,
