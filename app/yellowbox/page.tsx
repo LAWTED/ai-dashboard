@@ -237,6 +237,11 @@ export default function Component() {
 
     // Reset conversation count when switching time periods
     setConversationCount(0);
+
+    // Clear conversation history and reset input state
+    setConversationHistory([]);
+    setUserAnswer("");
+    setShowInput(true);
   };
 
   return (
@@ -263,7 +268,7 @@ export default function Component() {
         <div ref={contentRef}>
           {/* New entry indicator */}
           <div className="flex items-center gap-2 mb-4">
-            <ArrowLeft className="w-3 h-3 text-black" />
+            <ArrowLeft className="w-3 h-3 text-[#3B3109]" />
             <span className="text-[#3B3109] text-xs font-medium">
               {t("newEntry")}
             </span>
@@ -315,7 +320,7 @@ export default function Component() {
             {conversationHistory.length > 0 && (
               <div className="space-y-3">
                 {conversationHistory.map((message, index) => (
-                  <div key={index} className={`text-black text-base`}>
+                  <div key={index} className={`text-[#3B3109] text-base`}>
                     {message.type === "ai" ? (
                       index === conversationHistory.length - 1 ? (
                         <TextEffect
@@ -344,7 +349,7 @@ export default function Component() {
             )}
 
             {/* Input Section */}
-            {showInput && (
+            {showInput ? (
               <motion.div
                 initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -363,7 +368,7 @@ export default function Component() {
                       ? selectedQuestion
                       : "Continue your thoughts..."
                   }
-                  className="w-full py-1 h-32 rounded-lg bg-yellow-400 text-black text-base resize-none focus:outline-none"
+                  className="w-full py-1 h-32 rounded-lg bg-yellow-400 text-[#3B3109] text-base resize-none focus:outline-none"
                 />
 
                 <motion.div
@@ -377,6 +382,8 @@ export default function Component() {
                   />
                 </motion.div>
               </motion.div>
+            ) : (
+              <div className="h-[40px]"></div>
             )}
           </div>
 
@@ -391,7 +398,7 @@ export default function Component() {
             <Button
               onClick={handleAnswerSubmit}
               disabled={isLoading || !userAnswer.trim()}
-              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               variant="ghost"
               size="sm"
             >
@@ -405,7 +412,7 @@ export default function Component() {
             </Button>
             <Button
               onClick={resetDiary}
-              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-black text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1"
+              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1"
               variant="ghost"
               size="sm"
             >
@@ -448,7 +455,7 @@ export default function Component() {
         {/* Font Switcher */}
         <Button
           onClick={handleFontToggle}
-          className="text-black hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
+          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
           title={`Current: ${
             currentFont === "serif"
               ? "Serif (Georgia)"
@@ -484,7 +491,7 @@ export default function Component() {
         {/* Language Switcher */}
         <Button
           onClick={handleLanguageToggle}
-          className="text-black hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
+          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
           title={getLanguageTooltip()}
           variant="ghost"
         >
@@ -514,7 +521,7 @@ export default function Component() {
         {/* Logout button */}
         <Button
           onClick={handleLogout}
-          className="text-black hover:opacity-70 hover:bg-transparent transition-opacity p-0 h-auto bg-transparent border-none"
+          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity p-0 h-auto bg-transparent border-none"
           title={t("logout") as string}
           variant="ghost"
         >
