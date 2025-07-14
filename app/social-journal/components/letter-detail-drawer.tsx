@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -32,13 +32,7 @@ export default function LetterDetailDrawer() {
   const [success, setSuccess] = useState(false);
   const [currentUser] = useState(getUserFromLocal());
 
-  useEffect(() => {
-    if (letterDetailOpen && selectedLetterId && currentUser) {
-      loadLetter();
-    }
-  }, [letterDetailOpen, selectedLetterId, currentUser]);
-
-  const loadLetter = async () => {
+  const loadLetter = useCallback(async () => {
     if (!currentUser || !selectedLetterId) return;
 
     setIsLoading(true);
@@ -66,7 +60,13 @@ export default function LetterDetailDrawer() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser, selectedLetterId, t]);
+
+  useEffect(() => {
+    if (letterDetailOpen && selectedLetterId && currentUser) {
+      loadLetter();
+    }
+  }, [letterDetailOpen, selectedLetterId, currentUser, loadLetter]);
 
   const handleSubmitAnswer = async () => {
     if (!answer.trim() || !selectedLetterId) {

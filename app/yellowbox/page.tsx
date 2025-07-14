@@ -130,7 +130,59 @@ export default function Component() {
     }
   };
 
-  const resetDiary = () => {
+  const saveEntries = async () => {
+    // Only save if there's conversation history
+    if (conversationHistory.length === 0) {
+      return { success: true };
+    }
+
+    try {
+      const entriesData = {
+        entries: {
+          selectedQuestion,
+          conversationHistory,
+          timeOfDay,
+          conversationCount,
+          completedAt: new Date().toISOString(),
+        },
+        session_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        metadata: {
+          currentFont,
+          language: lang,
+          totalMessages: conversationHistory.length,
+        }
+      };
+
+      const response = await fetch("/api/yellowbox/entries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(entriesData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save entries");
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Error saving entries:", error);
+      return { success: false, error: String(error) };
+    }
+  };
+
+  const resetDiary = async () => {
+    // Save entries before resetting
+    const saveResult = await saveEntries();
+    
+    if (saveResult.success) {
+      toast.success(t("entriesSaved") as string || "Entries saved successfully!");
+    } else {
+      toast.error(t("saveError") as string || "Failed to save entries");
+    }
+
     setUserAnswer("");
     setConversationHistory([]);
     setShowInput(true);

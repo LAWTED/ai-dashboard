@@ -44,6 +44,8 @@ export interface YellowboxTranslations {
   somethingWentWrong: string;
   logoutSuccess: string;
   loginError: string;
+  entriesSaved: string;
+  saveError: string;
 }
 
 export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
@@ -90,7 +92,9 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     // Errors and messages
     somethingWentWrong: '出了点问题，请重试。',
     logoutSuccess: '已成功退出',
-    loginError: '登录错误'
+    loginError: '登录错误',
+    entriesSaved: '条目已保存成功！',
+    saveError: '保存条目失败'
   },
 
   en: {
@@ -136,7 +140,9 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     // Errors and messages
     somethingWentWrong: 'Something went wrong. Please try again.',
     logoutSuccess: 'Logged out successfully',
-    loginError: 'Login error'
+    loginError: 'Login error',
+    entriesSaved: 'Entries saved successfully!',
+    saveError: 'Failed to save entries'
   }
 };
 
