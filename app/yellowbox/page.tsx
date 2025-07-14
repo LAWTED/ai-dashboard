@@ -12,6 +12,7 @@ import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Button } from "@/components/ui/button";
 import useMeasure from "react-use-measure";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 type ConversationMessage = {
   type: "user" | "ai";
@@ -318,13 +319,15 @@ export default function Component() {
         }}
       >
         <div ref={contentRef}>
-          {/* New entry indicator */}
-          <div className="flex items-center gap-2 mb-4">
-            <ArrowLeft className="w-3 h-3 text-[#3B3109]" />
-            <span className="text-[#3B3109] text-xs font-medium">
-              {t("newEntry")}
-            </span>
-          </div>
+          {/* View Entries Link */}
+          <Link href="/yellowbox/entries">
+            <div className="flex items-center gap-2 mb-4 cursor-pointer hover:opacity-70 transition-opacity">
+              <ArrowLeft className="w-3 h-3 text-[#3B3109]" />
+              <span className="text-[#3B3109] text-xs font-medium">
+                {t("myEntries")}
+              </span>
+            </div>
+          </Link>
 
           <div className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
             <AnimatePresence mode="popLayout" initial={false}>

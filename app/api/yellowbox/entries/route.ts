@@ -78,16 +78,26 @@ export async function GET(req: NextRequest) {
 
     // Get query parameters
     const url = new URL(req.url);
+    const id = url.searchParams.get('id');
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
-    // Fetch user's entries
-    const { data, error } = await supabase
+    let query = supabase
       .from('yellowbox_entries')
       .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .eq('user_id', user.id);
+
+    // If ID is provided, fetch specific entry
+    if (id) {
+      query = query.eq('id', id);
+    } else {
+      // Otherwise fetch paginated list
+      query = query
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Database query error:', error);

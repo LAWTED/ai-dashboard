@@ -46,6 +46,21 @@ export interface YellowboxTranslations {
   loginError: string;
   entriesSaved: string;
   saveError: string;
+  
+  // Entries pages
+  myEntries: string;
+  noEntries: string;
+  backToWrite: string;
+  backToEntries: string;
+  entryDetail: string;
+  loadingEntries: string;
+  loadingEntry: string;
+  errorLoadingEntries: string;
+  errorLoadingEntry: string;
+  entryNotFound: string;
+  createdAt: string;
+  conversation: string;
+  messages: string;
 }
 
 export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
@@ -94,7 +109,22 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     logoutSuccess: '已成功退出',
     loginError: '登录错误',
     entriesSaved: '条目已保存成功！',
-    saveError: '保存条目失败'
+    saveError: '保存条目失败',
+    
+    // Entries pages
+    myEntries: '我的笔记',
+    noEntries: '还没有笔记条目',
+    backToWrite: 'Write...',
+    backToEntries: '返回列表',
+    entryDetail: '笔记详情',
+    loadingEntries: '加载中...',
+    loadingEntry: '加载中...',
+    errorLoadingEntries: '加载笔记失败',
+    errorLoadingEntry: '加载笔记详情失败',
+    entryNotFound: '找不到该笔记',
+    createdAt: '创建时间',
+    conversation: '对话记录',
+    messages: '条消息'
   },
 
   en: {
@@ -142,7 +172,22 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     logoutSuccess: 'Logged out successfully',
     loginError: 'Login error',
     entriesSaved: 'Entries saved successfully!',
-    saveError: 'Failed to save entries'
+    saveError: 'Failed to save entries',
+    
+    // Entries pages
+    myEntries: 'My Entries',
+    noEntries: 'No entries yet',
+    backToWrite: 'Write...',
+    backToEntries: 'Back to Entries',
+    entryDetail: 'Entry Detail',
+    loadingEntries: 'Loading...',
+    loadingEntry: 'Loading...',
+    errorLoadingEntries: 'Failed to load entries',
+    errorLoadingEntry: 'Failed to load entry',
+    entryNotFound: 'Entry not found',
+    createdAt: 'Created at',
+    conversation: 'Conversation',
+    messages: 'messages'
   }
 };
 
