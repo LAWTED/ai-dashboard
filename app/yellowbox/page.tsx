@@ -298,18 +298,7 @@ export default function Component() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-black selection:bg-black selection:text-yellow-400">
-      {/* Background Image */}
-      <motion.div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: "url('/room.png')",
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
-      />
+    <>
 
       {/* Yellow Rounded Box */}
       <motion.div
@@ -583,6 +572,6 @@ export default function Component() {
           <LogOut className="!w-5 !h-5" />
         </Button>
       </div>
-    </div>
+    </>
   );
 }
