@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { LogOut, ArrowLeft } from "lucide-react";
+import { LogOut, ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useYellowboxTranslation } from "@/lib/i18n/yellowbox";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ export default function EntryDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">("serif");
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const params = useParams();
   const entryId = params.id as string;
@@ -120,6 +121,53 @@ export default function EntryDetailPage() {
       setCurrentFont("mono");
     } else {
       setCurrentFont("serif");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!entry) return;
+
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      lang === "zh" 
+        ? "确定要删除这个条目吗？此操作无法撤销。"
+        : "Are you sure you want to delete this entry? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsDeleting(true);
+      
+      const response = await fetch(`/api/yellowbox/entries?id=${entryId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete entry");
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success(
+          lang === "zh" 
+            ? "条目已成功删除"
+            : "Entry deleted successfully"
+        );
+        router.push("/yellowbox/entries");
+      } else {
+        throw new Error(result.message || "Failed to delete entry");
+      }
+    } catch (error) {
+      console.error("Error deleting entry:", error);
+      toast.error(
+        lang === "zh" 
+          ? "删除条目失败"
+          : "Failed to delete entry"
+      );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -228,6 +276,22 @@ export default function EntryDetailPage() {
             layout
             className="w-full h-px bg-[#E4BE10] my-2"
           ></motion.div>
+
+          {/* Delete Button */}
+          <div className="flex justify-center mt-4">
+            <Button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white border-none px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              title={lang === "zh" ? "删除条目" : "Delete entry"}
+            >
+              <Trash2 className="w-4 h-4" />
+              {isDeleting 
+                ? (lang === "zh" ? "删除中..." : "Deleting...") 
+                : (lang === "zh" ? "删除" : "Delete")
+              }
+            </Button>
+          </div>
           </>
         ) : null}
         </div>
