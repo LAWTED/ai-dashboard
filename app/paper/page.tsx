@@ -809,7 +809,7 @@ export default function PaperPage() {
         {/* 模式切换按钮 - 固定在左下角 */}
         <motion.div
           onClick={() => setIsEditMode(!isEditMode)}
-          className="fixed bottom-8 left-8 z-50 text-2xl font-bold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer pointer-events-auto"
+          className="fixed bottom-8 left-8 z-50 text-4xl font-bold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer pointer-events-auto"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
