@@ -16,7 +16,7 @@ const TimeSelector = ({
   onTimeSelect: (type: "Week" | "Month" | "Year") => void;
 }) => {
   return (
-    <div className="fixed top-8 right-8 z-50 ">
+    <div className="fixed top-4 right-4 md:top-8 md:right-8 z-50 ">
       <div className="rounded-[8px] bg-gray-100 p-[2px] dark:bg-zinc-800">
         <AnimatedBackground
           defaultValue="Week"
@@ -36,7 +36,7 @@ const TimeSelector = ({
                 data-id={label}
                 type="button"
                 aria-label={`${label} view`}
-                className="inline-flex w-20 items-center justify-center text-center text-gray-400 text-lg font-bold transition-transform active:scale-[0.98] dark:text-zinc-50"
+                className="inline-flex w-16 md:w-20 items-center justify-center text-center text-gray-400 text-base md:text-lg font-bold transition-transform active:scale-[0.98] dark:text-zinc-50"
               >
                 {label}
               </button>
@@ -84,105 +84,105 @@ const initialElementsTemplate = [
     id: 1,
     imageUrl:
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 0, 15), // 2025年1月15日
   },
   {
     id: 2,
     imageUrl:
       "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500&h=300&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 1, 8), // 2025年2月8日
   },
   {
     id: 3,
     imageUrl:
       "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 2, 22), // 2025年3月22日
   },
   {
     id: 4,
     imageUrl:
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=350&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 3, 12), // 2025年4月12日
   },
   {
     id: 5,
     imageUrl:
       "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=350&h=350&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 4, 5), // 2025年5月5日
   },
   {
     id: 6,
     imageUrl:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 5, 20), // 2025年6月20日
   },
   {
     id: 7,
     imageUrl:
       "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 6, 18), // 2025年7月18日 (第1张)
   },
   {
     id: 8,
     imageUrl:
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 6, 18), // 2025年7月18日 (第2张)
   },
   {
     id: 9,
     imageUrl:
       "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 6, 18), // 2025年7月18日 (第3张)
   },
   {
     id: 10,
     imageUrl:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 6, 18), // 2025年7月18日 (第4张)
   },
   {
     id: 11,
     imageUrl:
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 6, 28), // 2025年7月28日
   },
   {
     id: 12,
     imageUrl:
       "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 6, 4), // 2025年7月4日
   },
   {
     id: 13,
     imageUrl:
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 6, 25), // 2025年7月25日
   },
   {
     id: 14,
     imageUrl:
       "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 5, 10), // 2025年6月10日
   },
   {
     id: 15,
     imageUrl:
       "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=400&fit=crop&crop=center",
-    className: "w-52 h-52 rounded-lg overflow-hidden",
+    className: "w-32 h-32 md:w-52 md:h-52 rounded-lg overflow-hidden",
     date: new Date(2025, 6, 8), // 2025年7月8日
   },
 ];
@@ -755,20 +755,27 @@ export default function PaperPage() {
   }, [elements, screenSize, isPhotoInTimeRange, selectedTimeType]);
 
   return (
-    <div
-      className={`h-screen w-screen relative overflow-hidden transition-all duration-300 ${
-        isEditMode ? "bg-[#F4F5F6]" : "bg-[#F4F5F6]"
-      }`}
-      style={
-        isEditMode
-          ? {
+    <div className="h-screen w-screen relative overflow-hidden bg-[#F4F5F6]">
+      {/* Edit Mode 背景点点动画 */}
+      <AnimatePresence>
+        {isEditMode && (
+          <motion.div
+            initial={{ clipPath: "inset(0 100% 0 0)" }}
+            animate={{ clipPath: "inset(0 0% 0 0)" }}
+            exit={{ clipPath: "inset(0 100% 0 0)" }}
+            transition={{
+              duration: 0.8,
+              ease: "easeInOut",
+            }}
+            className="absolute inset-0 z-0"
+            style={{
               backgroundImage: `radial-gradient(circle, #C0C0C0 1px, transparent 1px)`,
               backgroundSize: "20px 20px",
               backgroundPosition: "0 0, 10px 10px",
-            }
-          : {}
-      }
-    >
+            }}
+          />
+        )}
+      </AnimatePresence>
       <div className="p-8">
         {/* 时间选择器 */}
         <TimeSelector onTimeSelect={handleTimeSelect} />
@@ -784,7 +791,7 @@ export default function PaperPage() {
               transition={{
                 bounce: 0.2,
               }}
-              className="fixed top-8 left-8 z-50 text-4xl font-bold text-gray-400 transition-colors pointer-events-auto"
+              className="fixed top-4 left-4 md:top-8 md:left-8 z-50 text-2xl md:text-4xl font-bold text-gray-400 transition-colors pointer-events-auto"
             >
               {currentTimeInfo}
             </motion.div>
@@ -809,7 +816,7 @@ export default function PaperPage() {
         {/* 模式切换按钮 - 固定在左下角 */}
         <motion.div
           onClick={() => setIsEditMode(!isEditMode)}
-          className="fixed bottom-8 left-8 z-50 text-4xl font-bold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer pointer-events-auto"
+          className="fixed bottom-4 left-4 md:bottom-8 md:left-8 z-50 text-2xl md:text-4xl font-bold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer pointer-events-auto"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -819,13 +826,13 @@ export default function PaperPage() {
         {/* Shuffle Button - 固定在右下角 */}
         <motion.div
           onClick={handleShuffle}
-          className={`fixed bottom-8 right-8 z-50 text-4xl font-bold text-gray-400 transition-colors cursor-pointer pointer-events-auto ${
+          className={`fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 text-2xl md:text-4xl font-bold text-gray-400 transition-colors cursor-pointer pointer-events-auto ${
             isEditMode ? "" : "hover:text-gray-600"
           }`}
           whileHover={isEditMode ? {} : { scale: 1.02 }}
           whileTap={isEditMode ? {} : { scale: 0.98 }}
         >
-          Shuffle Them Around
+          Shuffle
         </motion.div>
 
         <AnimatePresence>
@@ -838,7 +845,7 @@ export default function PaperPage() {
             >
               <motion.div
                 onClick={handleCallBack}
-                className={`text-4xl font-bold text-gray-400 transition-colors cursor-pointer pointer-events-auto ${
+                className={`text-2xl md:text-4xl font-bold text-gray-400 transition-colors cursor-pointer pointer-events-auto ${
                   isEditMode ? "" : "hover:text-gray-600"
                 }`}
                 whileHover={isEditMode ? {} : { scale: 1.02 }}
