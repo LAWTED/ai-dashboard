@@ -41,42 +41,46 @@ const TimeSelector = () => {
   );
 };
 
-
 const initialElements = [
   {
     id: 1,
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop&crop=center",
+    imageUrl:
+      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
     initialX: 800,
     initialY: 280,
   },
   {
     id: 2,
-    imageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500&h=300&fit=crop&crop=center",
+    imageUrl:
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500&h=300&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
     initialX: 550,
     initialY: 150,
   },
   {
     id: 3,
-    imageUrl: "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=400&fit=crop&crop=center",
+    imageUrl:
+      "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=400&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
     initialX: 680,
     initialY: 150,
   },
   {
     id: 4,
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=350&fit=crop&crop=center",
+    imageUrl:
+      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=350&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
     initialX: 820,
-    initialY: -120,
+    initialY: 50,
   },
   {
     id: 5,
-    imageUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=350&h=350&fit=crop&crop=center",
+    imageUrl:
+      "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=350&h=350&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
-    initialX: 720,
-    initialY: -400,
+    initialX: 600,
+    initialY: 200,
   },
 ];
 
@@ -190,6 +194,26 @@ export default function PaperPage() {
     new Set()
   );
   const [showCallBack, setShowCallBack] = useState(false);
+  const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
+  const [centerPoint, setCenterPoint] = useState({ x: 0, y: 0 });
+
+  // 获取屏幕尺寸
+  useEffect(() => {
+    const updateScreenSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      setScreenSize({ width, height });
+      setCenterPoint({ x: width / 2, y: height / 2 });
+    };
+
+    // 初始化
+    updateScreenSize();
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', updateScreenSize);
+
+    return () => window.removeEventListener('resize', updateScreenSize);
+  }, []);
 
   const handleOffScreen = useCallback((id: number) => {
     setOffScreenElements((prev) => {
@@ -220,7 +244,7 @@ export default function PaperPage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-[#F4F5F6] relative overflow-hidden">
+    <div className="h-screen w-screen bg-[#F4F5F6] relative overflow-hidden">
       <div className="p-8">
         {/* 时间选择器 */}
         <TimeSelector />
@@ -235,6 +259,26 @@ export default function PaperPage() {
             onOnScreen={handleOnScreen}
           />
         ))}
+
+        {/* 屏幕中心红点 */}
+        {centerPoint.x > 0 && centerPoint.y > 0 && (
+          <div
+            className="absolute w-4 h-4 bg-red-500 rounded-full z-50 transform -translate-x-2 -translate-y-2"
+            style={{
+              left: centerPoint.x,
+              top: centerPoint.y,
+            }}
+          />
+        )}
+
+        {/* 显示屏幕尺寸信息 */}
+        {screenSize.width > 0 && (
+          <div className="fixed top-4 left-4 z-50 bg-black/70 text-white p-2 rounded text-sm">
+            Screen: {screenSize.width} x {screenSize.height}
+            <br />
+            Center: ({Math.round(centerPoint.x)}, {Math.round(centerPoint.y)})
+          </div>
+        )}
 
         <AnimatePresence>
           {showCallBack && (
