@@ -6,13 +6,17 @@ import {
   useAnimation,
   useInView,
 } from "framer-motion";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 
 // 时间选择器组件
-const TimeSelector = () => {
+const TimeSelector = ({
+  onTimeSelect,
+}: {
+  onTimeSelect: (type: "Week" | "Month" | "Year") => void;
+}) => {
   return (
-    <div className="fixed top-4 right-4 z-50 ">
+    <div className="fixed top-8 right-8 z-50 ">
       <div className="rounded-[8px] bg-gray-100 p-[2px] dark:bg-zinc-800">
         <AnimatedBackground
           defaultValue="Week"
@@ -20,6 +24,9 @@ const TimeSelector = () => {
           transition={{
             ease: "easeInOut",
             duration: 0.2,
+          }}
+          onValueChange={(value) => {
+            onTimeSelect(value as "Week" | "Month" | "Year");
           }}
         >
           {["Week", "Month", "Year"].map((label, index) => {
@@ -29,7 +36,7 @@ const TimeSelector = () => {
                 data-id={label}
                 type="button"
                 aria-label={`${label} view`}
-                className="inline-flex w-20 items-center justify-center text-center text-zinc-800 transition-transform active:scale-[0.98] dark:text-zinc-50"
+                className="inline-flex w-20 items-center justify-center text-center text-gray-400 text-lg font-bold transition-transform active:scale-[0.98] dark:text-zinc-50"
               >
                 {label}
               </button>
@@ -41,55 +48,186 @@ const TimeSelector = () => {
   );
 };
 
-const initialElements = [
+// 生成随机屏幕外位置
+const generateOffscreenPosition = () => {
+  const isXOutside = Math.random() < 0.5;
+
+  if (isXOutside) {
+    // X轴在屏幕外，Y轴可以在任意位置
+    const xPercent = Math.random() < 0.5
+      ? -50 + Math.random() * 30  // (-50, -20)
+      : 120 + Math.random() * 30;  // (120, 150)
+    const yPercent = -50 + Math.random() * 200; // (-50, 150)
+    return { xPercent, yPercent };
+  } else {
+    // Y轴在屏幕外，X轴可以在任意位置
+    const yPercent = Math.random() < 0.5
+      ? -50 + Math.random() * 30  // (-50, -20)
+      : 120 + Math.random() * 30;  // (120, 150)
+    const xPercent = -50 + Math.random() * 200; // (-50, 150)
+    return { xPercent, yPercent };
+  }
+};
+
+// 生成随机屏幕内位置
+const generateOnscreenPosition = () => {
+  const xPercent = 20 + Math.random() * 60; // (20, 80)
+  const yPercent = 20 + Math.random() * 60; // (20, 80)
+  return { xPercent, yPercent };
+};
+
+// 使用随机位置定义照片 - 默认都在屏幕外
+const initialElementsTemplate = [
   {
     id: 1,
     imageUrl:
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
-    initialX: 800,
-    initialY: 280,
+    date: new Date(2025, 0, 15), // 2025年1月15日
   },
   {
     id: 2,
     imageUrl:
       "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500&h=300&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
-    initialX: 550,
-    initialY: 150,
+    date: new Date(2025, 1, 8), // 2025年2月8日
   },
   {
     id: 3,
     imageUrl:
       "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=400&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
-    initialX: 680,
-    initialY: 150,
+    date: new Date(2025, 2, 22), // 2025年3月22日
   },
   {
     id: 4,
     imageUrl:
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=350&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
-    initialX: 820,
-    initialY: 50,
+    date: new Date(2025, 3, 12), // 2025年4月12日
   },
   {
     id: 5,
     imageUrl:
       "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=350&h=350&fit=crop&crop=center",
     className: "w-52 h-52 rounded-lg overflow-hidden",
-    initialX: 600,
-    initialY: 200,
+    date: new Date(2025, 4, 5), // 2025年5月5日
+  },
+  {
+    id: 6,
+    imageUrl:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 5, 20), // 2025年6月20日
+  },
+  {
+    id: 7,
+    imageUrl:
+      "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 6, 18), // 2025年7月18日 (第1张)
+  },
+  {
+    id: 8,
+    imageUrl:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 6, 18), // 2025年7月18日 (第2张)
+  },
+  {
+    id: 9,
+    imageUrl:
+      "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 6, 18), // 2025年7月18日 (第3张)
+  },
+  {
+    id: 10,
+    imageUrl:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 6, 18), // 2025年7月18日 (第4张)
+  },
+  {
+    id: 11,
+    imageUrl:
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 6, 28), // 2025年7月28日
+  },
+  {
+    id: 12,
+    imageUrl:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 6, 4), // 2025年7月4日
+  },
+  {
+    id: 13,
+    imageUrl:
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 6, 25), // 2025年7月25日
+  },
+  {
+    id: 14,
+    imageUrl:
+      "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 5, 10), // 2025年6月10日
+  },
+  {
+    id: 15,
+    imageUrl:
+      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=400&fit=crop&crop=center",
+    className: "w-52 h-52 rounded-lg overflow-hidden",
+    date: new Date(2025, 6, 8), // 2025年7月8日
   },
 ];
 
+// 根据屏幕尺寸计算实际像素位置 - 为每个元素生成随机屏幕外位置
+const getInitialElements = (screenWidth: number, screenHeight: number) => {
+  return initialElementsTemplate.map((element) => {
+    const offscreenPos = generateOffscreenPosition();
+    const onscreenPos = generateOnscreenPosition();
+
+    return {
+      ...element,
+      // 屏幕外的初始位置
+      offscreenX: (screenWidth * offscreenPos.xPercent) / 100,
+      offscreenY: (screenHeight * offscreenPos.yPercent) / 100,
+      offscreenXPercent: offscreenPos.xPercent,
+      offscreenYPercent: offscreenPos.yPercent,
+      // 屏幕内的目标位置
+      onscreenX: (screenWidth * onscreenPos.xPercent) / 100,
+      onscreenY: (screenHeight * onscreenPos.yPercent) / 100,
+      onscreenXPercent: onscreenPos.xPercent,
+      onscreenYPercent: onscreenPos.yPercent,
+    };
+  });
+};
+
 interface DraggableElementProps {
-  element: (typeof initialElements)[0];
+  element: {
+    id: number;
+    imageUrl: string;
+    className: string;
+    offscreenX: number;
+    offscreenY: number;
+    offscreenXPercent: number;
+    offscreenYPercent: number;
+    onscreenX: number;
+    onscreenY: number;
+    onscreenXPercent: number;
+    onscreenYPercent: number;
+    date: Date;
+  };
   index: number;
   resetTrigger: number;
   onOffScreen: (id: number) => void;
   onOnScreen: (id: number) => void;
+  shuffledPosition?: { x: number; y: number } | null;
+  isInTimeRange: boolean;
 }
 
 function DraggableElement({
@@ -98,67 +236,151 @@ function DraggableElement({
   resetTrigger,
   onOffScreen,
   onOnScreen,
+  shuffledPosition,
+  isInTimeRange,
 }: DraggableElementProps) {
   const controls = useAnimation();
   const elementRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(elementRef, { amount: 0.1 });
 
+  // 计算屏幕外的初始位置（基于随机生成的屏幕外位置）
+  const getInitialPosition = () => {
+    // 计算从屏幕外位置到屏幕内位置的偏移量
+    const xOffset = element.offscreenX - element.onscreenX;
+    const yOffset = element.offscreenY - element.onscreenY;
+
+    return {
+      x: xOffset,
+      y: yOffset,
+    };
+  };
+
+  const initialPos = getInitialPosition();
+
   useEffect(() => {
-    if (!isInView) {
-      onOffScreen(element.id);
+    // 只有在时间范围内的图片才参与屏幕内外状态追踪
+    if (isInTimeRange) {
+      if (!isInView) {
+        onOffScreen(element.id);
+      } else {
+        onOnScreen(element.id);
+      }
     } else {
+      // 不在时间范围内的图片，从追踪列表中移除
       onOnScreen(element.id);
     }
-  }, [isInView, element.id, onOffScreen, onOnScreen]);
+  }, [isInView, element.id, onOffScreen, onOnScreen, isInTimeRange]);
 
   useEffect(() => {
     if (resetTrigger === 0) {
-      // 初始动画：从屏幕外飞进来
+      // 根据时间范围决定初始状态
+      if (isInTimeRange) {
+        // 在时间范围内：从屏幕外飞进来
+        controls.start({
+          x: 0,
+          y: 0,
+          opacity: 1,
+          transition: {
+            duration: 0.8,
+            delay: index * 0.1,
+            type: "spring",
+            stiffness: 80,
+            damping: 12,
+          },
+        });
+      } else {
+        // 不在时间范围内：保持在屏幕外
+        controls.set({
+          x: initialPos.x,
+          y: initialPos.y,
+        });
+      }
+    } else {
+      // 重置动画：只重置在时间范围内的图片
+      if (isInTimeRange) {
+        const resetToInitial = async () => {
+          await controls.start({
+            x: 0,
+            y: 0,
+            transition: {
+              type: "spring",
+              stiffness: 120,
+              damping: 20,
+              duration: 0.8,
+              delay: index * 0.1,
+            },
+          });
+        };
+        resetToInitial();
+      }
+      // 不在时间范围内的图片保持当前状态，不参与重置
+    }
+  }, [resetTrigger, controls, index, isInTimeRange, initialPos.x, initialPos.y]);
+
+  // 处理时间范围变化
+  useEffect(() => {
+    if (resetTrigger > 0) return; // 避免与重置动画冲突
+
+        if (isInTimeRange) {
+      // 进入时间范围：飞入屏幕
       controls.start({
         x: 0,
         y: 0,
         opacity: 1,
         transition: {
           duration: 0.8,
-          delay: index * 0.1,
+          delay: index * 0.05,
           type: "spring",
           stiffness: 80,
           damping: 12,
         },
       });
     } else {
-      // 重置动画：从当前位置回到初始位置
-      const resetToInitial = async () => {
-        await controls.start({
-          x: 0,
-          y: 0,
+      // 离开时间范围：先确保照片在屏幕内，然后飞出屏幕
+      // 先立即设置到屏幕内位置，确保有清晰的飞出起点
+
+      controls.set({ x: 0, y: 0, opacity: 1 });
+
+      // 然后执行飞出动画
+      setTimeout(() => {
+        controls.start({
+          x: initialPos.x,
+          y: initialPos.y,
           transition: {
-            type: "spring",
-            stiffness: 120,
-            damping: 20,
             duration: 0.8,
-            delay: index * 0.1,
+            delay: index * 0.03,
+            type: "spring",
+            stiffness: 100,
+            damping: 20,
           },
         });
-      };
-      resetToInitial();
+      }, 16); // 一帧的时间，减少闪烁
     }
-  }, [resetTrigger, controls, index]);
+  }, [isInTimeRange, controls, index, initialPos.x, initialPos.y, resetTrigger]);
 
-  // 计算初始位置（从屏幕外的四周）
-  const getInitialPosition = () => {
-    const positions = [
-      { x: -300, y: 0 }, // 左侧
-      { x: 300, y: 0 }, // 右侧
-      { x: 0, y: -300 }, // 上方
-      { x: 0, y: 300 }, // 下方
-      { x: -300, y: -300 }, // 左上
-      { x: 300, y: -300 }, // 右上
-    ];
-    return positions[index % positions.length];
-  };
+  // 处理shuffle动画
+  useEffect(() => {
+    if (shuffledPosition) {
+      // 计算需要移动的距离（从屏幕内位置到shuffle位置）
+      const deltaX = shuffledPosition.x - element.onscreenX;
+      const deltaY = shuffledPosition.y - element.onscreenY;
 
-  const initialPos = getInitialPosition();
+      controls.start({
+        x: deltaX,
+        y: deltaY,
+        transition: {
+          type: "spring",
+          stiffness: 100,
+          damping: 25,
+          duration: 1.2,
+          delay: index * 0.05, // 错开动画时间
+        },
+      });
+    } else if (shuffledPosition === null) {
+      // 当shuffle被清除时，回到原始位置 (但不要和resetTrigger冲突)
+      // 这个逻辑已经在resetTrigger的useEffect中处理了
+    }
+  }, [shuffledPosition, controls, element.onscreenX, element.onscreenY, index]);
 
   return (
     <motion.div
@@ -166,16 +388,15 @@ function DraggableElement({
       drag
       dragElastic={0.1}
       animate={controls}
-      className={`${element.className} shadow-lg cursor-grab active:cursor-grabbing absolute relative z-20`}
+      className={`${element.className} shadow-lg cursor-grab active:cursor-grabbing absolute z-20 -translate-x-1/2 -translate-y-1/2`}
       style={{
-        left: `${element.initialX}px`,
-        top: `${element.initialY}px`,
+        left: `${element.onscreenX}px`,
+        top: `${element.onscreenY}px`,
       }}
       whileDrag={{ scale: 1.1 }}
       initial={{
         x: initialPos.x,
         y: initialPos.y,
-        opacity: 0,
       }}
     >
       <img
@@ -195,7 +416,21 @@ export default function PaperPage() {
   );
   const [showCallBack, setShowCallBack] = useState(false);
   const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
-  const [centerPoint, setCenterPoint] = useState({ x: 0, y: 0 });
+  const [shuffledPositions, setShuffledPositions] = useState<{
+    [key: number]: { x: number; y: number };
+  } | null>(null);
+  const [selectedTimeType, setSelectedTimeType] = useState<
+    "Week" | "Month" | "Year"
+  >("Week");
+  const [currentTimeInfo, setCurrentTimeInfo] = useState<string>("");
+
+  // 根据当前屏幕尺寸计算照片位置 - 使用useMemo避免每次渲染都重新生成随机位置
+  const initialElements = useMemo(() => {
+    if (screenSize.width === 0 || screenSize.height === 0) {
+      return [];
+    }
+    return getInitialElements(screenSize.width, screenSize.height);
+  }, [screenSize.width, screenSize.height]);
 
   // 获取屏幕尺寸
   useEffect(() => {
@@ -203,16 +438,15 @@ export default function PaperPage() {
       const width = window.innerWidth;
       const height = window.innerHeight;
       setScreenSize({ width, height });
-      setCenterPoint({ x: width / 2, y: height / 2 });
     };
 
     // 初始化
     updateScreenSize();
 
     // 监听窗口大小变化
-    window.addEventListener('resize', updateScreenSize);
+    window.addEventListener("resize", updateScreenSize);
 
-    return () => window.removeEventListener('resize', updateScreenSize);
+    return () => window.removeEventListener("resize", updateScreenSize);
   }, []);
 
   const handleOffScreen = useCallback((id: number) => {
@@ -241,15 +475,163 @@ export default function PaperPage() {
     setResetTrigger((prev) => prev + 1);
     setOffScreenElements(new Set());
     setShowCallBack(false);
+    setShuffledPositions(null); // 重置shuffle状态
   }, []);
+
+
+
+  // 获取当前时间信息
+  const getCurrentTimeInfo = useCallback((type: "Week" | "Month" | "Year") => {
+    const now = new Date();
+
+    switch (type) {
+      case "Week":
+        // 计算当前是第几周
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        const days = Math.floor(
+          (now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)
+        );
+        const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+        return `Week ${weekNumber}`;
+      case "Month":
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        return monthNames[now.getMonth()];
+      case "Year":
+        return now.getFullYear().toString();
+      default:
+        return "";
+    }
+  }, []);
+
+  // 处理时间选择器点击
+  const handleTimeSelect = useCallback(
+    (type: "Week" | "Month" | "Year") => {
+      console.log("type", type);
+      setSelectedTimeType(type);
+      setCurrentTimeInfo(getCurrentTimeInfo(type));
+    },
+    [getCurrentTimeInfo]
+  );
+
+  // 初始化当前时间信息
+  useEffect(() => {
+    setCurrentTimeInfo(getCurrentTimeInfo(selectedTimeType));
+  }, [selectedTimeType, getCurrentTimeInfo]);
+
+  // 判断照片是否在当前时间范围内
+  const isPhotoInTimeRange = useCallback((photoDate: Date, timeType: "Week" | "Month" | "Year") => {
+    const now = new Date();
+
+    switch (timeType) {
+      case "Week":
+        // 获取当前周的开始和结束日期
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        return photoDate >= startOfWeek && photoDate <= endOfWeek;
+
+      case "Month":
+        return photoDate.getMonth() === now.getMonth() && photoDate.getFullYear() === now.getFullYear();
+
+      case "Year":
+        return photoDate.getFullYear() === now.getFullYear();
+
+      default:
+        return false;
+    }
+  }, []);
+
+  // 随机重新分布照片位置 - 只处理时间范围内的图片
+  const handleShuffle = useCallback(() => {
+    const newPositions: { [key: number]: { x: number; y: number } } = {};
+
+    initialElements.forEach((element: {
+      id: number;
+      imageUrl: string;
+      className: string;
+      offscreenX: number;
+      offscreenY: number;
+      offscreenXPercent: number;
+      offscreenYPercent: number;
+      onscreenX: number;
+      onscreenY: number;
+      onscreenXPercent: number;
+      onscreenYPercent: number;
+      date: Date;
+    }) => {
+      // 只对在时间范围内的图片进行shuffle
+      if (isPhotoInTimeRange(element.date, selectedTimeType)) {
+        // 在 20%-80% 范围内生成随机位置
+        const randomX = 20 + Math.random() * 60; // 20% to 80%
+        const randomY = 20 + Math.random() * 60; // 20% to 80%
+
+        newPositions[element.id] = {
+          x: (screenSize.width * randomX) / 100,
+          y: (screenSize.height * randomY) / 100,
+        };
+      }
+      // 不在时间范围内的图片保持原状态，不加入newPositions
+    });
+
+    setShuffledPositions(newPositions);
+  }, [initialElements, screenSize, isPhotoInTimeRange, selectedTimeType]);
 
   return (
     <div className="h-screen w-screen bg-[#F4F5F6] relative overflow-hidden">
       <div className="p-8">
         {/* 时间选择器 */}
-        <TimeSelector />
+        <TimeSelector onTimeSelect={handleTimeSelect} />
 
-        {initialElements.map((element, index) => (
+        {/* 时间信息显示 - 左上角 */}
+        <AnimatePresence>
+          {currentTimeInfo && (
+            <motion.div
+              initial={{ opacity: 0, y: -40, filter: "blur(4px)", scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
+              exit={{ opacity: 0, y: -40, filter: "blur(4px)", scale: 0.9 }}
+              key={currentTimeInfo}
+              transition={{
+                bounce: 0.2,
+              }}
+              className="fixed top-8 left-8 z-50 text-4xl font-bold text-gray-400 transition-colors pointer-events-auto"
+            >
+              {currentTimeInfo}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {initialElements.map((element: {
+          id: number;
+          imageUrl: string;
+          className: string;
+          offscreenX: number;
+          offscreenY: number;
+          offscreenXPercent: number;
+          offscreenYPercent: number;
+          onscreenX: number;
+          onscreenY: number;
+          onscreenXPercent: number;
+          onscreenYPercent: number;
+          date: Date;
+        }, index: number) => (
           <DraggableElement
             key={element.id}
             element={element}
@@ -257,28 +639,20 @@ export default function PaperPage() {
             resetTrigger={resetTrigger}
             onOffScreen={handleOffScreen}
             onOnScreen={handleOnScreen}
+            shuffledPosition={shuffledPositions?.[element.id]}
+            isInTimeRange={isPhotoInTimeRange(element.date, selectedTimeType)}
           />
         ))}
 
-        {/* 屏幕中心红点 */}
-        {centerPoint.x > 0 && centerPoint.y > 0 && (
-          <div
-            className="absolute w-4 h-4 bg-red-500 rounded-full z-50 transform -translate-x-2 -translate-y-2"
-            style={{
-              left: centerPoint.x,
-              top: centerPoint.y,
-            }}
-          />
-        )}
-
-        {/* 显示屏幕尺寸信息 */}
-        {screenSize.width > 0 && (
-          <div className="fixed top-4 left-4 z-50 bg-black/70 text-white p-2 rounded text-sm">
-            Screen: {screenSize.width} x {screenSize.height}
-            <br />
-            Center: ({Math.round(centerPoint.x)}, {Math.round(centerPoint.y)})
-          </div>
-        )}
+        {/* Shuffle Button - 固定在右下角 */}
+        <motion.div
+          onClick={handleShuffle}
+          className="fixed bottom-8 right-8 z-50 text-4xl font-bold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer pointer-events-auto"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          Shuffle Them Around
+        </motion.div>
 
         <AnimatePresence>
           {showCallBack && (
