@@ -54,16 +54,18 @@ const generateOffscreenPosition = () => {
 
   if (isXOutside) {
     // X轴在屏幕外，Y轴可以在任意位置
-    const xPercent = Math.random() < 0.5
-      ? -50 + Math.random() * 30  // (-50, -20)
-      : 120 + Math.random() * 30;  // (120, 150)
+    const xPercent =
+      Math.random() < 0.5
+        ? -50 + Math.random() * 30 // (-50, -20)
+        : 120 + Math.random() * 30; // (120, 150)
     const yPercent = -50 + Math.random() * 200; // (-50, 150)
     return { xPercent, yPercent };
   } else {
     // Y轴在屏幕外，X轴可以在任意位置
-    const yPercent = Math.random() < 0.5
-      ? -50 + Math.random() * 30  // (-50, -20)
-      : 120 + Math.random() * 30;  // (120, 150)
+    const yPercent =
+      Math.random() < 0.5
+        ? -50 + Math.random() * 30 // (-50, -20)
+        : 120 + Math.random() * 30; // (120, 150)
     const xPercent = -50 + Math.random() * 200; // (-50, 150)
     return { xPercent, yPercent };
   }
@@ -187,24 +189,26 @@ const initialElementsTemplate = [
 
 // 从 localStorage 获取保存的位置
 const getSavedPositions = () => {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
 
   try {
-    const saved = localStorage.getItem('paper-element-positions');
+    const saved = localStorage.getItem("paper-element-positions");
     return saved ? JSON.parse(saved) : null;
   } catch (error) {
-    console.error('Failed to load saved positions:', error);
+    console.error("Failed to load saved positions:", error);
     return null;
   }
 };
 
 // 保存位置到 localStorage
-const savePositions = (elements: Array<{
-  id: number;
-  onscreenX: number;
-  onscreenY: number;
-}>) => {
-  if (typeof window === 'undefined') return;
+const savePositions = (
+  elements: Array<{
+    id: number;
+    onscreenX: number;
+    onscreenY: number;
+  }>
+) => {
+  if (typeof window === "undefined") return;
 
   try {
     const positions = elements.reduce((acc, element) => {
@@ -215,9 +219,9 @@ const savePositions = (elements: Array<{
       return acc;
     }, {} as Record<number, { onscreenX: number; onscreenY: number }>);
 
-    localStorage.setItem('paper-element-positions', JSON.stringify(positions));
+    localStorage.setItem("paper-element-positions", JSON.stringify(positions));
   } catch (error) {
-    console.error('Failed to save positions:', error);
+    console.error("Failed to save positions:", error);
   }
 };
 
@@ -368,13 +372,19 @@ function DraggableElement({
       }
       // 不在时间范围内的图片保持当前状态，不参与重置
     }
-  }, [resetTrigger, controls, index, isInTimeRange, initialPos.x, initialPos.y]);
+  }, [
+    resetTrigger,
+    controls,
+    index,
+    isInTimeRange,
+    initialPos.x,
+    initialPos.y,
+  ]);
 
   // 处理时间范围变化
   useEffect(() => {
-    if (resetTrigger > 0) return; // 避免与重置动画冲突
 
-        if (isInTimeRange) {
+    if (isInTimeRange) {
       // 进入时间范围：飞入屏幕
       controls.start({
         x: 0,
@@ -389,10 +399,26 @@ function DraggableElement({
         },
       });
     } else {
-      // 离开时间范围：先确保照片在屏幕内，然后飞出屏幕
-      // 先立即设置到屏幕内位置，确保有清晰的飞出起点
+      // 离开时间范围：从当前位置飞出屏幕
+      // 获取当前实际位置
+      const getCurrentPosition = () => {
+        if (!elementRef.current) return { x: 0, y: 0 };
 
-      controls.set({ x: 0, y: 0, opacity: 1 });
+        const rect = elementRef.current.getBoundingClientRect();
+        const currentX = rect.left + rect.width / 2;
+        const currentY = rect.top + rect.height / 2;
+
+        // 计算相对于存储位置的偏移
+        const deltaX = currentX - element.onscreenX;
+        const deltaY = currentY - element.onscreenY;
+
+        return { x: deltaX, y: deltaY };
+      };
+
+      const currentPos = getCurrentPosition();
+
+      // 先设置到当前位置，确保连续性
+      controls.set({ x: currentPos.x, y: currentPos.y, opacity: 1 });
 
       // 然后执行飞出动画
       setTimeout(() => {
@@ -409,7 +435,16 @@ function DraggableElement({
         });
       }, 16); // 一帧的时间，减少闪烁
     }
-  }, [isInTimeRange, controls, index, initialPos.x, initialPos.y, resetTrigger]);
+  }, [
+    isInTimeRange,
+    controls,
+    index,
+    initialPos.x,
+    initialPos.y,
+    resetTrigger,
+    element.onscreenX,
+    element.onscreenY,
+  ]);
 
   // 处理shuffle动画
   useEffect(() => {
@@ -436,7 +471,10 @@ function DraggableElement({
   }, [shuffledPosition, controls, element.onscreenX, element.onscreenY, index]);
 
   // 处理拖拽结束，只在Edit模式下更新位置
-  const handleDragEnd = (_event: unknown, info: { offset: { x: number; y: number } }) => {
+  const handleDragEnd = (
+    _event: unknown,
+    info: { offset: { x: number; y: number } }
+  ) => {
     if (!elementRef.current || !isEditMode) return;
 
     // 获取元素的边界矩形
@@ -509,20 +547,22 @@ export default function PaperPage() {
     "Week" | "Month" | "Year"
   >("Week");
   const [currentTimeInfo, setCurrentTimeInfo] = useState<string>("");
-  const [elements, setElements] = useState<Array<{
-    id: number;
-    imageUrl: string;
-    className: string;
-    offscreenX: number;
-    offscreenY: number;
-    offscreenXPercent: number;
-    offscreenYPercent: number;
-    onscreenX: number;
-    onscreenY: number;
-    onscreenXPercent: number;
-    onscreenYPercent: number;
-    date: Date;
-  }>>([]);
+  const [elements, setElements] = useState<
+    Array<{
+      id: number;
+      imageUrl: string;
+      className: string;
+      offscreenX: number;
+      offscreenY: number;
+      offscreenXPercent: number;
+      offscreenYPercent: number;
+      onscreenX: number;
+      onscreenY: number;
+      onscreenXPercent: number;
+      onscreenYPercent: number;
+      date: Date;
+    }>
+  >([]);
   const [isEditMode, setIsEditMode] = useState(false);
 
   // 根据当前屏幕尺寸计算照片位置 - 使用useMemo避免每次渲染都重新生成随机位置
@@ -576,20 +616,23 @@ export default function PaperPage() {
   }, []);
 
   // 处理位置更新
-  const handlePositionUpdate = useCallback((id: number, newX: number, newY: number) => {
-    setElements((prev) => {
-      const updated = prev.map((element) =>
-        element.id === id
-          ? { ...element, onscreenX: newX, onscreenY: newY }
-          : element
-      );
-      
-      // 保存更新后的位置到 localStorage
-      savePositions(updated);
-      
-      return updated;
-    });
-  }, []);
+  const handlePositionUpdate = useCallback(
+    (id: number, newX: number, newY: number) => {
+      setElements((prev) => {
+        const updated = prev.map((element) =>
+          element.id === id
+            ? { ...element, onscreenX: newX, onscreenY: newY }
+            : element
+        );
+
+        // 保存更新后的位置到 localStorage
+        savePositions(updated);
+
+        return updated;
+      });
+    },
+    []
+  );
 
   useEffect(() => {
     setShowCallBack(offScreenElements.size > 0);
@@ -601,8 +644,6 @@ export default function PaperPage() {
     setShowCallBack(false);
     setShuffledPositions(null); // 重置shuffle状态
   }, []);
-
-
 
   // 获取当前时间信息
   const getCurrentTimeInfo = useCallback((type: "Week" | "Month" | "Year") => {
@@ -658,32 +699,38 @@ export default function PaperPage() {
   }, [selectedTimeType, getCurrentTimeInfo]);
 
   // 判断照片是否在当前时间范围内
-  const isPhotoInTimeRange = useCallback((photoDate: Date, timeType: "Week" | "Month" | "Year") => {
-    const now = new Date();
+  const isPhotoInTimeRange = useCallback(
+    (photoDate: Date, timeType: "Week" | "Month" | "Year") => {
+      const now = new Date();
 
-    switch (timeType) {
-      case "Week":
-        // 获取当前周的开始和结束日期
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-        startOfWeek.setHours(0, 0, 0, 0);
+      switch (timeType) {
+        case "Week":
+          // 获取当前周的开始和结束日期
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(now.getDate() - now.getDay());
+          startOfWeek.setHours(0, 0, 0, 0);
 
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        endOfWeek.setHours(23, 59, 59, 999);
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6);
+          endOfWeek.setHours(23, 59, 59, 999);
 
-        return photoDate >= startOfWeek && photoDate <= endOfWeek;
+          return photoDate >= startOfWeek && photoDate <= endOfWeek;
 
-      case "Month":
-        return photoDate.getMonth() === now.getMonth() && photoDate.getFullYear() === now.getFullYear();
+        case "Month":
+          return (
+            photoDate.getMonth() === now.getMonth() &&
+            photoDate.getFullYear() === now.getFullYear()
+          );
 
-      case "Year":
-        return photoDate.getFullYear() === now.getFullYear();
+        case "Year":
+          return photoDate.getFullYear() === now.getFullYear();
 
-      default:
-        return false;
-    }
-  }, []);
+        default:
+          return false;
+      }
+    },
+    []
+  );
 
   // 随机重新分布照片位置 - 只处理时间范围内的图片
   const handleShuffle = useCallback(() => {
@@ -710,15 +757,17 @@ export default function PaperPage() {
   return (
     <div
       className={`h-screen w-screen relative overflow-hidden transition-all duration-300 ${
-        isEditMode
-          ? 'bg-[#F4F5F6]'
-          : 'bg-[#F4F5F6]'
+        isEditMode ? "bg-[#F4F5F6]" : "bg-[#F4F5F6]"
       }`}
-      style={isEditMode ? {
-        backgroundImage: `radial-gradient(circle, #C0C0C0 1px, transparent 1px)`,
-        backgroundSize: '20px 20px',
-        backgroundPosition: '0 0, 10px 10px'
-      } : {}}
+      style={
+        isEditMode
+          ? {
+              backgroundImage: `radial-gradient(circle, #C0C0C0 1px, transparent 1px)`,
+              backgroundSize: "20px 20px",
+              backgroundPosition: "0 0, 10px 10px",
+            }
+          : {}
+      }
     >
       <div className="p-8">
         {/* 时间选择器 */}
@@ -771,7 +820,7 @@ export default function PaperPage() {
         <motion.div
           onClick={handleShuffle}
           className={`fixed bottom-8 right-8 z-50 text-4xl font-bold text-gray-400 transition-colors cursor-pointer pointer-events-auto ${
-            isEditMode ? '' : 'hover:text-gray-600'
+            isEditMode ? "" : "hover:text-gray-600"
           }`}
           whileHover={isEditMode ? {} : { scale: 1.02 }}
           whileTap={isEditMode ? {} : { scale: 0.98 }}
@@ -790,7 +839,7 @@ export default function PaperPage() {
               <motion.div
                 onClick={handleCallBack}
                 className={`text-4xl font-bold text-gray-400 transition-colors cursor-pointer pointer-events-auto ${
-                  isEditMode ? '' : 'hover:text-gray-600'
+                  isEditMode ? "" : "hover:text-gray-600"
                 }`}
                 whileHover={isEditMode ? {} : { scale: 1.02 }}
                 whileTap={isEditMode ? {} : { scale: 0.98 }}
