@@ -185,11 +185,60 @@ const initialElementsTemplate = [
   },
 ];
 
-// 根据屏幕尺寸计算实际像素位置 - 为每个元素生成随机屏幕外位置
+// 从 localStorage 获取保存的位置
+const getSavedPositions = () => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const saved = localStorage.getItem('paper-element-positions');
+    return saved ? JSON.parse(saved) : null;
+  } catch (error) {
+    console.error('Failed to load saved positions:', error);
+    return null;
+  }
+};
+
+// 保存位置到 localStorage
+const savePositions = (elements: Array<{
+  id: number;
+  onscreenX: number;
+  onscreenY: number;
+}>) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const positions = elements.reduce((acc, element) => {
+      acc[element.id] = {
+        onscreenX: element.onscreenX,
+        onscreenY: element.onscreenY,
+      };
+      return acc;
+    }, {} as Record<number, { onscreenX: number; onscreenY: number }>);
+
+    localStorage.setItem('paper-element-positions', JSON.stringify(positions));
+  } catch (error) {
+    console.error('Failed to save positions:', error);
+  }
+};
+
+// 根据屏幕尺寸计算实际像素位置 - 优先使用保存的位置，否则生成随机位置
 const getInitialElements = (screenWidth: number, screenHeight: number) => {
+  const savedPositions = getSavedPositions();
+
   return initialElementsTemplate.map((element) => {
     const offscreenPos = generateOffscreenPosition();
-    const onscreenPos = generateOnscreenPosition();
+
+    let onscreenPos;
+    if (savedPositions && savedPositions[element.id]) {
+      // 使用保存的位置
+      onscreenPos = {
+        xPercent: (savedPositions[element.id].onscreenX / screenWidth) * 100,
+        yPercent: (savedPositions[element.id].onscreenY / screenHeight) * 100,
+      };
+    } else {
+      // 使用随机位置
+      onscreenPos = generateOnscreenPosition();
+    }
 
     return {
       ...element,
@@ -228,6 +277,8 @@ interface DraggableElementProps {
   onOnScreen: (id: number) => void;
   shuffledPosition?: { x: number; y: number } | null;
   isInTimeRange: boolean;
+  onPositionUpdate: (id: number, x: number, y: number) => void;
+  isEditMode: boolean;
 }
 
 function DraggableElement({
@@ -238,6 +289,8 @@ function DraggableElement({
   onOnScreen,
   shuffledPosition,
   isInTimeRange,
+  onPositionUpdate,
+  isEditMode,
 }: DraggableElementProps) {
   const controls = useAnimation();
   const elementRef = useRef<HTMLDivElement>(null);
@@ -382,18 +435,51 @@ function DraggableElement({
     }
   }, [shuffledPosition, controls, element.onscreenX, element.onscreenY, index]);
 
+  // 处理拖拽结束，只在Edit模式下更新位置
+  const handleDragEnd = (_event: unknown, info: { offset: { x: number; y: number } }) => {
+    if (!elementRef.current || !isEditMode) return;
+
+    // 获取元素的边界矩形
+    const rect = elementRef.current.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    // 检查元素是否至少有一部分在屏幕内
+    const isElementVisible =
+      rect.left < windowWidth &&
+      rect.right > 0 &&
+      rect.top < windowHeight &&
+      rect.bottom > 0;
+
+    // 只有当元素还在屏幕内时才更新屏幕位置
+    if (isElementVisible) {
+      const newX = element.onscreenX + info.offset.x;
+      const newY = element.onscreenY + info.offset.y;
+
+      // 先更新位置，然后在下一帧重置偏移，避免抽搐
+      onPositionUpdate(element.id, newX, newY);
+
+      // 使用 requestAnimationFrame 确保位置更新后再重置偏移
+      requestAnimationFrame(() => {
+        controls.set({ x: 0, y: 0 });
+      });
+    }
+  };
+
   return (
     <motion.div
       ref={elementRef}
       drag
-      dragElastic={0.1}
+      dragElastic={isEditMode ? 0 : 0.1}
+      dragMomentum={isEditMode ? false : true}
       animate={controls}
+      onDragEnd={handleDragEnd}
       className={`${element.className} shadow-lg cursor-grab active:cursor-grabbing absolute z-20 -translate-x-1/2 -translate-y-1/2`}
       style={{
         left: `${element.onscreenX}px`,
         top: `${element.onscreenY}px`,
       }}
-      whileDrag={{ scale: 1.1 }}
+      whileDrag={isEditMode ? {} : { scale: 1.1 }}
       initial={{
         x: initialPos.x,
         y: initialPos.y,
@@ -423,6 +509,21 @@ export default function PaperPage() {
     "Week" | "Month" | "Year"
   >("Week");
   const [currentTimeInfo, setCurrentTimeInfo] = useState<string>("");
+  const [elements, setElements] = useState<Array<{
+    id: number;
+    imageUrl: string;
+    className: string;
+    offscreenX: number;
+    offscreenY: number;
+    offscreenXPercent: number;
+    offscreenYPercent: number;
+    onscreenX: number;
+    onscreenY: number;
+    onscreenXPercent: number;
+    onscreenYPercent: number;
+    date: Date;
+  }>>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // 根据当前屏幕尺寸计算照片位置 - 使用useMemo避免每次渲染都重新生成随机位置
   const initialElements = useMemo(() => {
@@ -431,6 +532,13 @@ export default function PaperPage() {
     }
     return getInitialElements(screenSize.width, screenSize.height);
   }, [screenSize.width, screenSize.height]);
+
+  // 当initialElements改变时，更新elements状态
+  useEffect(() => {
+    if (initialElements.length > 0) {
+      setElements(initialElements);
+    }
+  }, [initialElements]);
 
   // 获取屏幕尺寸
   useEffect(() => {
@@ -464,6 +572,22 @@ export default function PaperPage() {
       const newSet = new Set(prev);
       newSet.delete(id);
       return newSet;
+    });
+  }, []);
+
+  // 处理位置更新
+  const handlePositionUpdate = useCallback((id: number, newX: number, newY: number) => {
+    setElements((prev) => {
+      const updated = prev.map((element) =>
+        element.id === id
+          ? { ...element, onscreenX: newX, onscreenY: newY }
+          : element
+      );
+      
+      // 保存更新后的位置到 localStorage
+      savePositions(updated);
+      
+      return updated;
     });
   }, []);
 
@@ -522,6 +646,8 @@ export default function PaperPage() {
       console.log("type", type);
       setSelectedTimeType(type);
       setCurrentTimeInfo(getCurrentTimeInfo(type));
+      // 切换时间时自动切换到 View Mode
+      setIsEditMode(false);
     },
     [getCurrentTimeInfo]
   );
@@ -563,20 +689,7 @@ export default function PaperPage() {
   const handleShuffle = useCallback(() => {
     const newPositions: { [key: number]: { x: number; y: number } } = {};
 
-    initialElements.forEach((element: {
-      id: number;
-      imageUrl: string;
-      className: string;
-      offscreenX: number;
-      offscreenY: number;
-      offscreenXPercent: number;
-      offscreenYPercent: number;
-      onscreenX: number;
-      onscreenY: number;
-      onscreenXPercent: number;
-      onscreenYPercent: number;
-      date: Date;
-    }) => {
+    elements.forEach((element) => {
       // 只对在时间范围内的图片进行shuffle
       if (isPhotoInTimeRange(element.date, selectedTimeType)) {
         // 在 20%-80% 范围内生成随机位置
@@ -592,10 +705,21 @@ export default function PaperPage() {
     });
 
     setShuffledPositions(newPositions);
-  }, [initialElements, screenSize, isPhotoInTimeRange, selectedTimeType]);
+  }, [elements, screenSize, isPhotoInTimeRange, selectedTimeType]);
 
   return (
-    <div className="h-screen w-screen bg-[#F4F5F6] relative overflow-hidden">
+    <div
+      className={`h-screen w-screen relative overflow-hidden transition-all duration-300 ${
+        isEditMode
+          ? 'bg-[#F4F5F6]'
+          : 'bg-[#F4F5F6]'
+      }`}
+      style={isEditMode ? {
+        backgroundImage: `radial-gradient(circle, #C0C0C0 1px, transparent 1px)`,
+        backgroundSize: '20px 20px',
+        backgroundPosition: '0 0, 10px 10px'
+      } : {}}
+    >
       <div className="p-8">
         {/* 时间选择器 */}
         <TimeSelector onTimeSelect={handleTimeSelect} />
@@ -618,20 +742,7 @@ export default function PaperPage() {
           )}
         </AnimatePresence>
 
-        {initialElements.map((element: {
-          id: number;
-          imageUrl: string;
-          className: string;
-          offscreenX: number;
-          offscreenY: number;
-          offscreenXPercent: number;
-          offscreenYPercent: number;
-          onscreenX: number;
-          onscreenY: number;
-          onscreenXPercent: number;
-          onscreenYPercent: number;
-          date: Date;
-        }, index: number) => (
+        {elements.map((element, index: number) => (
           <DraggableElement
             key={element.id}
             element={element}
@@ -641,15 +752,29 @@ export default function PaperPage() {
             onOnScreen={handleOnScreen}
             shuffledPosition={shuffledPositions?.[element.id]}
             isInTimeRange={isPhotoInTimeRange(element.date, selectedTimeType)}
+            onPositionUpdate={handlePositionUpdate}
+            isEditMode={isEditMode}
           />
         ))}
+
+        {/* 模式切换按钮 - 固定在左下角 */}
+        <motion.div
+          onClick={() => setIsEditMode(!isEditMode)}
+          className="fixed bottom-8 left-8 z-50 text-2xl font-bold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer pointer-events-auto"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {isEditMode ? "Edit Mode" : "View Mode"}
+        </motion.div>
 
         {/* Shuffle Button - 固定在右下角 */}
         <motion.div
           onClick={handleShuffle}
-          className="fixed bottom-8 right-8 z-50 text-4xl font-bold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer pointer-events-auto"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className={`fixed bottom-8 right-8 z-50 text-4xl font-bold text-gray-400 transition-colors cursor-pointer pointer-events-auto ${
+            isEditMode ? '' : 'hover:text-gray-600'
+          }`}
+          whileHover={isEditMode ? {} : { scale: 1.02 }}
+          whileTap={isEditMode ? {} : { scale: 0.98 }}
         >
           Shuffle Them Around
         </motion.div>
@@ -664,9 +789,11 @@ export default function PaperPage() {
             >
               <motion.div
                 onClick={handleCallBack}
-                className="text-4xl font-bold text-gray-400 hover:text-gray-600 transition-colors cursor-pointer pointer-events-auto"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                className={`text-4xl font-bold text-gray-400 transition-colors cursor-pointer pointer-events-auto ${
+                  isEditMode ? '' : 'hover:text-gray-600'
+                }`}
+                whileHover={isEditMode ? {} : { scale: 1.02 }}
+                whileTap={isEditMode ? {} : { scale: 0.98 }}
               >
                 Call Them Back
               </motion.div>
