@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body = await req.json();
-    const { entries, session_id, metadata } = body;
+    const { entries, session_id, metadata, analytics } = body;
 
     if (!entries) {
       return NextResponse.json(
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
         session_id: session_id || null,
         entries,
         metadata: metadata || null,
+        analytics: analytics || null,
         status: 'completed'
       })
       .select()

@@ -1,7 +1,7 @@
 "use client";
 
 import { LogOut, ArrowLeft } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { VoiceInput } from "@/components/voice-input";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import useMeasure from "react-use-measure";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useYellowboxAnalytics } from "@/hooks/use-yellowbox-analytics";
 
 type ConversationMessage = {
   type: "user" | "ai";
@@ -36,12 +37,37 @@ export default function Component() {
   const [conversationCount, setConversationCount] = useState(0);
   const [showInput, setShowInput] = useState(true);
   const [contentRef, bounds] = useMeasure();
+  const [userId, setUserId] = useState<string>("");
   const router = useRouter();
   const supabase = createClient();
   const { t, translations, lang, setLang } = useYellowboxTranslation();
+  const previousAnswer = useRef<string>("");
+
+  // Initialize analytics with session ID
+  const sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+  const {
+    analytics,
+    trackKeystroke,
+    trackTextChange,
+    trackInteraction,
+    trackApiCall,
+    trackError,
+    finalizeSession
+  } = useYellowboxAnalytics(sessionId, userId);
 
   // Get questions from translations
   const questions = translations.questions;
+
+  // Get user ID on mount
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUser();
+  }, [supabase]);
 
   // Initialize with a question and set default time of day
   useEffect(() => {
@@ -74,6 +100,9 @@ export default function Component() {
     if (!userAnswer.trim()) return;
 
     const userMessage = userAnswer.trim();
+    
+    // Track submit attempt
+    trackInteraction('submitAttempts');
 
     // Add user message to conversation history
     setConversationHistory((prev) => [
@@ -83,6 +112,7 @@ export default function Component() {
     setUserAnswer("");
     setIsLoading(true);
 
+    const apiStartTime = Date.now();
     try {
       const response = await fetch("/api/diary", {
         method: "POST",
@@ -96,8 +126,11 @@ export default function Component() {
           conversationCount,
         }),
       });
+      
+      trackApiCall('/api/diary', apiStartTime, response.ok);
 
       if (!response.ok) {
+        trackError('aiResponseErrors');
         throw new Error("Failed to get AI response");
       }
 
@@ -118,6 +151,7 @@ export default function Component() {
       }
     } catch (error) {
       console.error("Error:", error);
+      trackError('aiResponseErrors');
       const errorMessage = t("somethingWentWrong") as string;
       setConversationHistory((prev) => [
         ...prev,
@@ -137,6 +171,10 @@ export default function Component() {
       return { success: true };
     }
 
+    // Finalize analytics before saving
+    finalizeSession();
+
+    const apiStartTime = Date.now();
     try {
       const entriesData = {
         entries: {
@@ -146,12 +184,13 @@ export default function Component() {
           conversationCount,
           completedAt: new Date().toISOString(),
         },
-        session_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        session_id: sessionId,
         metadata: {
           currentFont,
           language: lang,
           totalMessages: conversationHistory.length,
-        }
+        },
+        analytics: analytics
       };
 
       const response = await fetch("/api/yellowbox/entries", {
@@ -161,8 +200,11 @@ export default function Component() {
         },
         body: JSON.stringify(entriesData),
       });
+      
+      trackApiCall('/api/yellowbox/entries', apiStartTime, response.ok);
 
       if (!response.ok) {
+        trackError('savingErrors');
         throw new Error("Failed to save entries");
       }
 
@@ -170,11 +212,15 @@ export default function Component() {
       return result;
     } catch (error) {
       console.error("Error saving entries:", error);
+      trackError('savingErrors');
       return { success: false, error: String(error) };
     }
   };
 
   const resetDiary = async () => {
+    // Track reset button click
+    trackInteraction('resetButtonClicks');
+    
     // Save entries before resetting
     const saveResult = await saveEntries();
     
@@ -202,6 +248,12 @@ export default function Component() {
   };
 
   const handleVoiceTranscription = (text: string) => {
+    // Track voice input usage
+    trackInteraction('voiceInputUsage');
+    
+    // Track text change from voice input
+    trackTextChange(text, userAnswer);
+    
     setUserAnswer(text);
   };
 
@@ -246,6 +298,13 @@ export default function Component() {
 
   const handleLanguageToggle = () => {
     const newLang = lang === "zh" ? "en" : "zh";
+    
+    // Track language switch
+    trackInteraction('languageSwitches', {
+      from: lang,
+      to: newLang
+    });
+    
     setLang(newLang);
   };
 
@@ -254,13 +313,22 @@ export default function Component() {
   };
 
   const handleFontToggle = () => {
+    let newFont: "serif" | "sans" | "mono";
     if (currentFont === "serif") {
-      setCurrentFont("sans");
+      newFont = "sans";
     } else if (currentFont === "sans") {
-      setCurrentFont("mono");
+      newFont = "mono";
     } else {
-      setCurrentFont("serif");
+      newFont = "serif";
     }
+    
+    // Track font switch
+    trackInteraction('fontSwitches', {
+      from: currentFont,
+      to: newFont
+    });
+    
+    setCurrentFont(newFont);
   };
 
   const getFontClass = () => {
@@ -403,8 +471,19 @@ export default function Component() {
                   initial={{ opacity: 0, x: -20, filter: "blur(4px)" }}
                   animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
                   value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  onKeyDown={handleKeyDown}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    trackTextChange(newValue, previousAnswer.current);
+                    previousAnswer.current = newValue;
+                    setUserAnswer(newValue);
+                  }}
+                  onKeyDown={(e) => {
+                    trackKeystroke(e.nativeEvent, userAnswer.length);
+                    handleKeyDown(e);
+                  }}
+                  onKeyUp={(e) => {
+                    trackKeystroke(e.nativeEvent, userAnswer.length);
+                  }}
                   onCompositionStart={handleCompositionStart}
                   onCompositionEnd={handleCompositionEnd}
                   placeholder={
@@ -420,10 +499,12 @@ export default function Component() {
                   animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
                   className="flex gap-2 items-center h-10"
                 >
-                  <VoiceInput
-                    onTranscriptionComplete={handleVoiceTranscription}
-                    disabled={isLoading}
-                  />
+                  <div onClick={() => trackInteraction('voiceButtonClicks')}>
+                    <VoiceInput
+                      onTranscriptionComplete={handleVoiceTranscription}
+                      disabled={isLoading}
+                    />
+                  </div>
                 </motion.div>
               </motion.div>
             ) : (
