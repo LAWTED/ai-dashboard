@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LogOut, ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { useYellowboxTranslation } from "@/lib/i18n/yellowbox";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { OptimizedAnalyticsDebug } from "@/components/optimized-yellowbox-analytics-debug";
+import { MinimalYellowBoxAnalytics } from "@/types/yellowbox-analytics";
 
 interface YellowboxEntry {
   id: string;
@@ -27,6 +29,7 @@ interface YellowboxEntry {
     language?: string;
     totalMessages: number;
   };
+  analytics?: MinimalYellowBoxAnalytics;
   created_at: string;
 }
 
@@ -38,7 +41,9 @@ export default function EntryDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const entryId = params.id as string;
+  const isDebugMode = searchParams.get('debug') === 'true';
   const supabase = createClient();
   const { t, lang, setLang } = useYellowboxTranslation();
 
@@ -129,7 +134,7 @@ export default function EntryDetailPage() {
 
     // Show confirmation dialog
     const confirmed = window.confirm(
-      lang === "zh" 
+      lang === "zh"
         ? "确定要删除这个条目吗？此操作无法撤销。"
         : "Are you sure you want to delete this entry? This action cannot be undone."
     );
@@ -138,7 +143,7 @@ export default function EntryDetailPage() {
 
     try {
       setIsDeleting(true);
-      
+
       const response = await fetch(`/api/yellowbox/entries?id=${entryId}`, {
         method: "DELETE",
       });
@@ -148,10 +153,10 @@ export default function EntryDetailPage() {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success(
-          lang === "zh" 
+          lang === "zh"
             ? "条目已成功删除"
             : "Entry deleted successfully"
         );
@@ -162,7 +167,7 @@ export default function EntryDetailPage() {
     } catch (error) {
       console.error("Error deleting entry:", error);
       toast.error(
-        lang === "zh" 
+        lang === "zh"
           ? "删除条目失败"
           : "Failed to delete entry"
       );
@@ -250,7 +255,7 @@ export default function EntryDetailPage() {
                 {entry.entries.selectedQuestion}
               </div>
             )}
-            
+
             {/* Conversation History */}
             {entry.entries.conversationHistory.length > 0 && (
               <div className="space-y-3">
@@ -286,8 +291,8 @@ export default function EntryDetailPage() {
               title={lang === "zh" ? "删除条目" : "Delete entry"}
             >
               <Trash2 className="w-4 h-4" />
-              {isDeleting 
-                ? (lang === "zh" ? "删除中..." : "Deleting...") 
+              {isDeleting
+                ? (lang === "zh" ? "删除中..." : "Deleting...")
                 : (lang === "zh" ? "删除" : "Delete")
               }
             </Button>
@@ -296,6 +301,16 @@ export default function EntryDetailPage() {
         ) : null}
         </div>
       </div>
+
+      {/* Analytics Debug Information */}
+      {isDebugMode && entry && (
+        <div className="absolute right-4 top-[0px] w-[640px]">
+          <OptimizedAnalyticsDebug
+            analytics={entry.analytics || null}
+            language={lang}
+          />
+        </div>
+      )}
 
       {/* Right Side Controls */}
       <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4">

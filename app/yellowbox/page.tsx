@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import useMeasure from "react-use-measure";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useYellowboxAnalytics } from "@/hooks/use-yellowbox-analytics";
+import { useOptimizedYellowboxAnalytics } from "@/hooks/use-optimized-yellowbox-analytics";
 
 type ConversationMessage = {
   type: "user" | "ai";
@@ -49,11 +49,12 @@ export default function Component() {
     analytics,
     trackKeystroke,
     trackTextChange,
-    trackInteraction,
-    trackApiCall,
+    trackFontChange,
+    trackVoiceUsage,
     trackError,
+    forceEndCurrentSegment,
     finalizeSession
-  } = useYellowboxAnalytics(sessionId, userId);
+  } = useOptimizedYellowboxAnalytics(sessionId, userId);
 
   // Get questions from translations
   const questions = translations.questions;
@@ -101,8 +102,8 @@ export default function Component() {
 
     const userMessage = userAnswer.trim();
     
-    // Track submit attempt
-    trackInteraction('submitAttempts');
+    // Force end current writing segment before submission
+    forceEndCurrentSegment(userMessage);
 
     // Add user message to conversation history
     setConversationHistory((prev) => [
@@ -112,7 +113,6 @@ export default function Component() {
     setUserAnswer("");
     setIsLoading(true);
 
-    const apiStartTime = Date.now();
     try {
       const response = await fetch("/api/diary", {
         method: "POST",
@@ -127,10 +127,8 @@ export default function Component() {
         }),
       });
       
-      trackApiCall('/api/diary', apiStartTime, response.ok);
-
       if (!response.ok) {
-        trackError('aiResponseErrors');
+        trackError();
         throw new Error("Failed to get AI response");
       }
 
@@ -151,7 +149,7 @@ export default function Component() {
       }
     } catch (error) {
       console.error("Error:", error);
-      trackError('aiResponseErrors');
+      trackError();
       const errorMessage = t("somethingWentWrong") as string;
       setConversationHistory((prev) => [
         ...prev,
@@ -174,7 +172,6 @@ export default function Component() {
     // Finalize analytics before saving
     finalizeSession();
 
-    const apiStartTime = Date.now();
     try {
       const entriesData = {
         entries: {
@@ -201,10 +198,8 @@ export default function Component() {
         body: JSON.stringify(entriesData),
       });
       
-      trackApiCall('/api/yellowbox/entries', apiStartTime, response.ok);
-
       if (!response.ok) {
-        trackError('savingErrors');
+        trackError();
         throw new Error("Failed to save entries");
       }
 
@@ -212,14 +207,12 @@ export default function Component() {
       return result;
     } catch (error) {
       console.error("Error saving entries:", error);
-      trackError('savingErrors');
+      trackError();
       return { success: false, error: String(error) };
     }
   };
 
   const resetDiary = async () => {
-    // Track reset button click
-    trackInteraction('resetButtonClicks');
     
     // Save entries before resetting
     const saveResult = await saveEntries();
@@ -249,7 +242,7 @@ export default function Component() {
 
   const handleVoiceTranscription = (text: string) => {
     // Track voice input usage
-    trackInteraction('voiceInputUsage');
+    trackVoiceUsage();
     
     // Track text change from voice input
     trackTextChange(text, userAnswer);
@@ -298,13 +291,6 @@ export default function Component() {
 
   const handleLanguageToggle = () => {
     const newLang = lang === "zh" ? "en" : "zh";
-    
-    // Track language switch
-    trackInteraction('languageSwitches', {
-      from: lang,
-      to: newLang
-    });
-    
     setLang(newLang);
   };
 
@@ -322,11 +308,8 @@ export default function Component() {
       newFont = "serif";
     }
     
-    // Track font switch
-    trackInteraction('fontSwitches', {
-      from: currentFont,
-      to: newFont
-    });
+    // Track font selection
+    trackFontChange(newFont);
     
     setCurrentFont(newFont);
   };
@@ -499,12 +482,10 @@ export default function Component() {
                   animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
                   className="flex gap-2 items-center h-10"
                 >
-                  <div onClick={() => trackInteraction('voiceButtonClicks')}>
-                    <VoiceInput
-                      onTranscriptionComplete={handleVoiceTranscription}
-                      disabled={isLoading}
-                    />
-                  </div>
+                  <VoiceInput
+                    onTranscriptionComplete={handleVoiceTranscription}
+                    disabled={isLoading}
+                  />
                 </motion.div>
               </motion.div>
             ) : (
