@@ -1,12 +1,11 @@
 "use client";
 
-import { LogOut, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { VoiceInput } from "@/components/voice-input";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useYellowboxTranslation } from "@/lib/i18n/yellowbox";
+import { useYellowBoxContext } from "@/contexts/yellowbox-context";
 import { TextEffect } from "@/components/ui/text-effect";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Button } from "@/components/ui/button";
@@ -45,9 +44,6 @@ export default function Component() {
     ConversationMessage[]
   >([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">(
-    "serif"
-  );
   const [isComposing, setIsComposing] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState<"morning" | "daytime" | "evening">(
     "daytime"
@@ -55,15 +51,12 @@ export default function Component() {
   const [conversationCount, setConversationCount] = useState(0);
   const [showInput, setShowInput] = useState(true);
   const [contentRef, bounds] = useMeasure();
-  const [userId, setUserId] = useState<string>("");
   const [summaryTitle, setSummaryTitle] = useState<string>("");
   const [, setEnhancedSummary] = useState<EnhancedSummary | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
-  const [isMac, setIsMac] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
-  const { t, translations, lang, setLang } = useYellowboxTranslation();
+  const { userId, currentFont, isMac, lang, t, translations, getFontClass } = useYellowBoxContext();
   const previousAnswer = useRef<string>("");
 
   // Initialize analytics with session ID
@@ -74,7 +67,6 @@ export default function Component() {
     analytics,
     trackKeystroke,
     trackTextChange,
-    trackFontChange,
     trackVoiceUsage,
     trackError,
     forceEndCurrentSegment,
@@ -84,23 +76,6 @@ export default function Component() {
   // Get questions from translations
   const questions = translations.questions;
 
-  // Get user ID and detect platform on mount
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-      }
-    };
-    getUser();
-
-    // Detect if user is on Mac
-    if (typeof window !== "undefined") {
-      setIsMac(navigator.platform.includes("Mac"));
-    }
-  }, [supabase]);
 
   // Initialize with a question and set default time of day
   useEffect(() => {
@@ -408,75 +383,7 @@ export default function Component() {
     setIsComposing(false);
   };
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast.success(t("logoutSuccess") as string);
-      router.push("/yellowbox/login");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error(t("loginError") as string);
-    }
-  };
 
-  const handleLanguageToggle = () => {
-    const newLang = lang === "zh" ? "en" : "zh";
-    setLang(newLang);
-  };
-
-  const getLanguageTooltip = () => {
-    return lang === "zh" ? "Switch to English" : "切换到中文";
-  };
-
-  const handleFontToggle = () => {
-    let newFont: "serif" | "sans" | "mono";
-    if (currentFont === "serif") {
-      newFont = "sans";
-    } else if (currentFont === "sans") {
-      newFont = "mono";
-    } else {
-      newFont = "serif";
-    }
-
-    // Track font selection
-    trackFontChange(newFont);
-
-    setCurrentFont(newFont);
-  };
-
-  const getFontClass = () => {
-    switch (currentFont) {
-      case "serif":
-        return "font-serif";
-      case "sans":
-        return "font-sans";
-      case "mono":
-        return "font-mono";
-      default:
-        return "font-serif";
-    }
-  };
-
-  const handleTimeOfDayClick = (period: "morning" | "daytime" | "evening") => {
-    setTimeOfDay(period);
-
-    // Set question based on selected time of day
-    if (period === "daytime") {
-      setSelectedQuestion("Write...");
-    } else if (questions.length > 0) {
-      const randomQuestion =
-        questions[Math.floor(Math.random() * questions.length)];
-      setSelectedQuestion(randomQuestion);
-    }
-
-    // Reset conversation count when switching time periods
-    setConversationCount(0);
-
-    // Clear conversation history and reset input state
-    setConversationHistory([]);
-    setUserAnswer("");
-    setShowInput(true);
-  };
 
   return (
     <>
@@ -675,112 +582,6 @@ export default function Component() {
         </div>
       </motion.div>
 
-      {/* Right Side Scroll Indicator */}
-      <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4">
-        {/* Scroll indicator dots */}
-        <div className="flex flex-col items-center space-y-2 mb-4">
-          <motion.div
-            className={`size-1.5 rounded-full cursor-pointer ${
-              timeOfDay === "morning" ? "bg-[#2AB186]" : "bg-black"
-            }`}
-            whileTap={{ scale: 1.5 }}
-            transition={{ duration: 0.1 }}
-            onClick={() => handleTimeOfDayClick("morning")}
-          ></motion.div>
-          <motion.div
-            className={`w-1 h-12 rounded-full cursor-pointer ${
-              timeOfDay === "daytime" ? "bg-[#2AB186]" : "bg-black"
-            }`}
-            whileTap={{ scaleX: 1.5 }}
-            transition={{ duration: 0.1 }}
-            onClick={() => handleTimeOfDayClick("daytime")}
-          ></motion.div>
-          <motion.div
-            className={`size-1.5 rounded-full cursor-pointer ${
-              timeOfDay === "evening" ? "bg-[#2AB186]" : "bg-black"
-            }`}
-            whileTap={{ scale: 1.5 }}
-            transition={{ duration: 0.1 }}
-            onClick={() => handleTimeOfDayClick("evening")}
-          ></motion.div>
-        </div>
-
-        {/* Font Switcher */}
-        <Button
-          onClick={handleFontToggle}
-          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
-          title={`Current: ${
-            currentFont === "serif"
-              ? "Serif (Georgia)"
-              : currentFont === "sans"
-              ? "Sans (Inter)"
-              : "Mono (Courier New)"
-          }`}
-          variant="ghost"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={currentFont}
-              initial={{ x: -10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-              animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
-              exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <span
-                className={`text-lg font-medium ${
-                  currentFont === "serif"
-                    ? "font-serif"
-                    : currentFont === "sans"
-                    ? "font-sans"
-                    : "font-mono"
-                }`}
-              >
-                Aa
-              </span>
-            </motion.div>
-          </AnimatePresence>
-        </Button>
-
-        {/* Language Switcher */}
-        <Button
-          onClick={handleLanguageToggle}
-          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
-          title={getLanguageTooltip()}
-          variant="ghost"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={lang}
-              initial={{ x: -10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-              animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
-              exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <span
-                className={`text-lg font-medium ${
-                  currentFont === "serif"
-                    ? "font-serif"
-                    : currentFont === "sans"
-                    ? "font-sans"
-                    : "font-mono"
-                }`}
-              >
-                {lang === "zh" ? "中" : "En"}
-              </span>
-            </motion.div>
-          </AnimatePresence>
-        </Button>
-
-        {/* Logout button */}
-        <Button
-          onClick={handleLogout}
-          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity p-0 h-auto bg-transparent border-none"
-          title={t("logout") as string}
-          variant="ghost"
-        >
-          <LogOut className="!w-5 !h-5" />
-        </Button>
-      </div>
     </>
   );
 }

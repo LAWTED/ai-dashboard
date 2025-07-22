@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { LogOut, ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useYellowboxTranslation } from "@/lib/i18n/yellowbox";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { OptimizedAnalyticsDebug } from "@/components/optimized-yellowbox-analytics-debug";
 import { MinimalYellowBoxAnalytics } from "@/types/yellowbox-analytics";
+import { useYellowBoxContext } from "@/contexts/yellowbox-context";
 
 interface YellowboxEntry {
   id: string;
@@ -48,15 +47,13 @@ export default function EntryDetailPage() {
   const [entry, setEntry] = useState<YellowboxEntry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">("serif");
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const entryId = params.id as string;
   const isDebugMode = searchParams.get('debug') === 'true';
-  const supabase = createClient();
-  const { t, lang, setLang } = useYellowboxTranslation();
+  const { lang, t, getFontClass } = useYellowBoxContext();
 
   const loadEntry = useCallback(async () => {
     try {
@@ -91,54 +88,7 @@ export default function EntryDetailPage() {
     }
   }, [entryId, loadEntry]);
 
-  useEffect(() => {
-    if (entry?.metadata?.currentFont) {
-      setCurrentFont(entry.metadata.currentFont as "serif" | "sans" | "mono");
-    }
-  }, [entry]);
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast.success(t("logoutSuccess") as string);
-      router.push("/yellowbox/login");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error(t("loginError") as string);
-    }
-  };
-
-  const handleLanguageToggle = () => {
-    const newLang = lang === "zh" ? "en" : "zh";
-    setLang(newLang);
-  };
-
-  const getLanguageTooltip = () => {
-    return lang === "zh" ? "Switch to English" : "切换到中文";
-  };
-
-  const getFontClass = () => {
-    switch (currentFont) {
-      case "serif":
-        return "font-serif";
-      case "sans":
-        return "font-sans";
-      case "mono":
-        return "font-mono";
-      default:
-        return "font-serif";
-    }
-  };
-
-  const handleFontToggle = () => {
-    if (currentFont === "serif") {
-      setCurrentFont("sans");
-    } else if (currentFont === "sans") {
-      setCurrentFont("mono");
-    } else {
-      setCurrentFont("serif");
-    }
-  };
 
   const handleDelete = async () => {
     if (!entry) return;
@@ -358,91 +308,6 @@ export default function EntryDetailPage() {
         </div>
       )}
 
-      {/* Right Side Controls */}
-      <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4">
-        {/* Scroll indicator dots (static for detail page) */}
-        <div className="flex flex-col items-center space-y-2 mb-4">
-          <div className="size-1.5 rounded-full bg-black"></div>
-          <div className="w-1 h-12 rounded-full bg-[#2AB186]"></div>
-          <div className="size-1.5 rounded-full bg-black"></div>
-        </div>
-
-        {/* Font Switcher */}
-        <Button
-          onClick={handleFontToggle}
-          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
-          title={`Current: ${
-            currentFont === "serif"
-              ? "Serif (Georgia)"
-              : currentFont === "sans"
-              ? "Sans (Inter)"
-              : "Mono (Courier New)"
-          }`}
-          variant="ghost"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={currentFont}
-              initial={{ x: -10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-              animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
-              exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <span
-                className={`text-lg font-medium ${
-                  currentFont === "serif"
-                    ? "font-serif"
-                    : currentFont === "sans"
-                    ? "font-sans"
-                    : "font-mono"
-                }`}
-              >
-                Aa
-              </span>
-            </motion.div>
-          </AnimatePresence>
-        </Button>
-
-        {/* Language Switcher */}
-        <Button
-          onClick={handleLanguageToggle}
-          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
-          title={getLanguageTooltip()}
-          variant="ghost"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={lang}
-              initial={{ x: -10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-              animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
-              exit={{ x: 10, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <span
-                className={`text-lg font-medium ${
-                  currentFont === "serif"
-                    ? "font-serif"
-                    : currentFont === "sans"
-                    ? "font-sans"
-                    : "font-mono"
-                }`}
-              >
-                {lang === "zh" ? "中" : "En"}
-              </span>
-            </motion.div>
-          </AnimatePresence>
-        </Button>
-
-        {/* Logout button */}
-        <Button
-          onClick={handleLogout}
-          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity p-0 h-auto bg-transparent border-none"
-          title={t("logout") as string}
-          variant="ghost"
-        >
-          <LogOut className="!w-5 !h-5" />
-        </Button>
-      </div>
     </>
   );
 }
