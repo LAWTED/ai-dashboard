@@ -26,6 +26,17 @@ interface YellowboxEntry {
     currentFont?: string;
     language?: string;
     totalMessages: number;
+    aiSummary?: string;
+    enhancedSummary?: {
+      title: string;
+      tags: string[];
+      emotion: {
+        primary: string;
+        intensity: 'low' | 'medium' | 'high';
+        confidence: number;
+      };
+      themes: string[];
+    };
   };
   created_at: string;
 }
@@ -137,8 +148,15 @@ export default function EntriesPage() {
   };
 
   const getPreviewText = (
-    conversationHistory: Array<{ type: string; content: string }>
+    conversationHistory: Array<{ type: string; content: string }>,
+    aiSummary?: string
   ) => {
+    // If AI summary exists, use it as the title
+    if (aiSummary && aiSummary.trim()) {
+      return aiSummary;
+    }
+    
+    // Fallback to original preview logic
     const userMessages = conversationHistory.filter(
       (msg) => msg.type === "user"
     );
@@ -213,9 +231,41 @@ export default function EntriesPage() {
 
                 {/* Entry Content */}
                 <div className="text-[#3B3109] text-base leading-relaxed mb-1">
-                  {getPreviewText(entry.entries.conversationHistory) ||
+                  {getPreviewText(entry.entries.conversationHistory, entry.metadata?.aiSummary) ||
                    'Untitled Entry'}
                 </div>
+
+                {/* Enhanced Summary Info */}
+                {entry.metadata?.enhancedSummary && (
+                  <div className="mb-2 space-y-1.5">
+                    {/* Tags - show first 3 */}
+                    {entry.metadata.enhancedSummary.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {entry.metadata.enhancedSummary.tags.slice(0, 3).map((tag, index) => (
+                          <span 
+                            key={index}
+                            className="inline-block px-1.5 py-0.5 text-xs rounded-full bg-[#E4BE10] text-[#3B3109] font-medium"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                        {entry.metadata.enhancedSummary.tags.length > 3 && (
+                          <span className="text-xs text-[#3B3109] opacity-50">
+                            +{entry.metadata.enhancedSummary.tags.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Emotion indicator */}
+                    <div className="text-xs text-[#3B3109] opacity-60">
+                      <span className="capitalize">{entry.metadata.enhancedSummary.emotion.primary}</span>
+                      {entry.metadata.enhancedSummary.emotion.intensity !== 'medium' && (
+                        <span className="ml-1 opacity-75">({entry.metadata.enhancedSummary.emotion.intensity})</span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Subtitle with additional info */}
                 <div className="text-[#3B3109] text-sm opacity-75 mb-4">

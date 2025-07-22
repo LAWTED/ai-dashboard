@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Mic, MicOff, Loader2, CircleStop } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -23,8 +23,16 @@ export function VoiceInput({
 }: VoiceInputProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // Check browser support after component mounts
+  useEffect(() => {
+    setIsMounted(true);
+    setIsSupported(isAudioSupported());
+  }, []);
 
   const processAudio = useCallback(
     async (audioBlob: Blob) => {
@@ -131,12 +139,19 @@ export function VoiceInput({
     }
   };
 
-  // Check if browser supports required APIs
-  const isSupported = isAudioSupported();
+  // Return loading state during SSR or before mount
+  if (!isMounted) {
+    return (
+      <button disabled className="disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center text-black">
+        <Mic className="w-4 h-4" />
+      </button>
+    );
+  }
 
+  // Check if browser supports required APIs
   if (!isSupported) {
     return (
-      <button disabled className="text-black opacity-50">
+      <button disabled className="disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center text-black opacity-50">
         <MicOff className="w-4 h-4" />
       </button>
     );

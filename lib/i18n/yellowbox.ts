@@ -47,6 +47,10 @@ export interface YellowboxTranslations {
   entriesSaved: string;
   saveError: string;
   
+  // Summary related
+  generatingSummary: string;
+  summaryError: string;
+  
   // Entries pages
   myEntries: string;
   noEntries: string;
@@ -111,6 +115,10 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     entriesSaved: '条目已保存成功！',
     saveError: '保存条目失败',
     
+    // Summary related
+    generatingSummary: '生成摘要中...',
+    summaryError: '生成摘要失败',
+    
     // Entries pages
     myEntries: '我的笔记',
     noEntries: '还没有笔记条目',
@@ -173,6 +181,10 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     loginError: 'Login error',
     entriesSaved: 'Entries saved successfully!',
     saveError: 'Failed to save entries',
+    
+    // Summary related
+    generatingSummary: 'Generating summary...',
+    summaryError: 'Failed to generate summary',
     
     // Entries pages
     myEntries: 'My Entries',

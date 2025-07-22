@@ -28,6 +28,17 @@ interface YellowboxEntry {
     currentFont?: string;
     language?: string;
     totalMessages: number;
+    aiSummary?: string;
+    enhancedSummary?: {
+      title: string;
+      tags: string[];
+      emotion: {
+        primary: string;
+        intensity: 'low' | 'medium' | 'high';
+        confidence: number;
+      };
+      themes: string[];
+    };
   };
   analytics?: MinimalYellowBoxAnalytics;
   created_at: string;
@@ -220,7 +231,11 @@ export default function EntryDetailPage() {
                 exit={{ x: 100, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
                 className="text-5xl font-bold leading-tight"
               >
-                {entry.entries.timeOfDay === "morning" ? (
+                {entry.metadata?.aiSummary ? (
+                  <span className="text-[#C04635] italic">
+                    {entry.metadata.aiSummary}
+                  </span>
+                ) : entry.entries.timeOfDay === "morning" ? (
                   <>
                     <span className="italic font-semibold">Morning</span>{" "}
                     Reflection
@@ -243,6 +258,37 @@ export default function EntryDetailPage() {
             </AnimatePresence>
           </div>
 
+          {/* Enhanced Summary Tags and Emotion */}
+          {entry.metadata?.enhancedSummary && (
+            <div className="mb-3 space-y-2">
+              {/* Tags */}
+              {entry.metadata.enhancedSummary.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {entry.metadata.enhancedSummary.tags.map((tag, index) => (
+                    <span 
+                      key={index}
+                      className="inline-block px-2 py-0.5 text-xs rounded-full bg-[#E4BE10] text-[#3B3109] font-medium"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              {/* Emotion */}
+              <div className="flex items-center gap-2 text-sm text-[#3B3109] opacity-75">
+                <span className="capitalize">{entry.metadata.enhancedSummary.emotion.primary}</span>
+                <span className="text-xs">•</span>
+                <span className="capitalize">{entry.metadata.enhancedSummary.emotion.intensity} intensity</span>
+                {entry.metadata.enhancedSummary.themes.length > 0 && (
+                  <>
+                    <span className="text-xs">•</span>
+                    <span className="text-xs">{entry.metadata.enhancedSummary.themes.join(", ")}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Top divider line */}
           <div className="w-full h-px bg-[#E4BE10] mb-2"></div>

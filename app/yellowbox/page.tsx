@@ -1,7 +1,7 @@
 "use client";
 
 import { LogOut, ArrowLeft } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { VoiceInput } from "@/components/voice-input";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,24 @@ import { useOptimizedYellowboxAnalytics } from "@/hooks/use-optimized-yellowbox-
 type ConversationMessage = {
   type: "user" | "ai";
   content: string;
+};
+
+type EnhancedSummary = {
+  title: string;
+  tags: string[];
+  emotion: {
+    primary: string;
+    intensity: "low" | "medium" | "high";
+    confidence: number;
+  };
+  themes: string[];
+};
+
+type SummaryAPIResponse = {
+  success: boolean;
+  summary: string; // backward compatibility
+  enhanced: EnhancedSummary;
+  language: string;
 };
 
 export default function Component() {
@@ -38,13 +56,20 @@ export default function Component() {
   const [showInput, setShowInput] = useState(true);
   const [contentRef, bounds] = useMeasure();
   const [userId, setUserId] = useState<string>("");
+  const [summaryTitle, setSummaryTitle] = useState<string>("");
+  const [, setEnhancedSummary] = useState<EnhancedSummary | null>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [isMac, setIsMac] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const { t, translations, lang, setLang } = useYellowboxTranslation();
   const previousAnswer = useRef<string>("");
 
   // Initialize analytics with session ID
-  const sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+  const sessionId = `${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2, 11)}`;
   const {
     analytics,
     trackKeystroke,
@@ -53,21 +78,28 @@ export default function Component() {
     trackVoiceUsage,
     trackError,
     forceEndCurrentSegment,
-    finalizeSession
+    finalizeSession,
   } = useOptimizedYellowboxAnalytics(sessionId, userId);
 
   // Get questions from translations
   const questions = translations.questions;
 
-  // Get user ID on mount
+  // Get user ID and detect platform on mount
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
       }
     };
     getUser();
+
+    // Detect if user is on Mac
+    if (typeof window !== "undefined") {
+      setIsMac(navigator.platform.includes("Mac"));
+    }
   }, [supabase]);
 
   // Initialize with a question and set default time of day
@@ -101,7 +133,7 @@ export default function Component() {
     if (!userAnswer.trim()) return;
 
     const userMessage = userAnswer.trim();
-    
+
     // Force end current writing segment before submission
     forceEndCurrentSegment(userMessage);
 
@@ -126,7 +158,7 @@ export default function Component() {
           conversationCount,
         }),
       });
-      
+
       if (!response.ok) {
         trackError();
         throw new Error("Failed to get AI response");
@@ -163,90 +195,181 @@ export default function Component() {
     }
   };
 
-  const saveEntries = async () => {
-    // Only save if there's conversation history
+  const generateSummary = useCallback(async (): Promise<{
+    title: string;
+    enhanced?: EnhancedSummary;
+  }> => {
     if (conversationHistory.length === 0) {
-      return { success: true };
+      return { title: "" };
     }
 
-    // Finalize analytics before saving
-    finalizeSession();
-
     try {
-      const entriesData = {
-        entries: {
-          selectedQuestion,
-          conversationHistory,
-          timeOfDay,
-          conversationCount,
-          completedAt: new Date().toISOString(),
-        },
-        session_id: sessionId,
-        metadata: {
-          currentFont,
-          language: lang,
-          totalMessages: conversationHistory.length,
-        },
-        analytics: analytics
-      };
-
-      const response = await fetch("/api/yellowbox/entries", {
+      const response = await fetch("/api/yellowbox/generate-summary", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(entriesData),
+        body: JSON.stringify({
+          conversationHistory,
+          language: lang,
+          selectedQuestion,
+          timeOfDay,
+        }),
       });
-      
+
       if (!response.ok) {
-        trackError();
-        throw new Error("Failed to save entries");
+        throw new Error("Failed to generate summary");
       }
 
-      const result = await response.json();
-      return result;
+      const result: SummaryAPIResponse = await response.json();
+      return result.success
+        ? { title: result.summary, enhanced: result.enhanced }
+        : { title: "" };
     } catch (error) {
-      console.error("Error saving entries:", error);
-      trackError();
-      return { success: false, error: String(error) };
+      console.error("Error generating summary:", error);
+      return { title: "" };
     }
-  };
+  }, [conversationHistory, lang, selectedQuestion, timeOfDay]);
 
-  const resetDiary = async () => {
-    
-    // Save entries before resetting
-    const saveResult = await saveEntries();
-    
-    if (saveResult.success) {
-      toast.success(t("entriesSaved") as string || "Entries saved successfully!");
+  const resetDiary = useCallback(async () => {
+    // Only generate summary if there's conversation history
+    if (conversationHistory.length === 0) {
+      setUserAnswer("");
+      setConversationHistory([]);
+      setShowInput(true);
+      setConversationCount(0);
+
+      if (timeOfDay === "daytime") {
+        setSelectedQuestion("Write...");
+      } else if (questions.length > 0) {
+        const randomQuestion =
+          questions[Math.floor(Math.random() * questions.length)];
+        setSelectedQuestion(randomQuestion);
+      }
+      return;
+    }
+
+    // Step 1: Generate AI summary and show it
+    setIsGeneratingSummary(true);
+    setShowSummary(true);
+    setShowInput(false);
+
+    const summaryResult = await generateSummary();
+
+    if (summaryResult.title) {
+      setIsGeneratingSummary(false);
+      setSummaryTitle(summaryResult.title);
+      setEnhancedSummary(summaryResult.enhanced || null);
     } else {
-      toast.error(t("saveError") as string || "Failed to save entries");
+      setIsGeneratingSummary(false);
+      setSummaryTitle(t("summaryError") as string);
+      setEnhancedSummary(null);
     }
 
-    setUserAnswer("");
-    setConversationHistory([]);
-    setShowInput(true);
+    // Step 2: Save entries with enhanced summary inline
+    let saveResult: { success: boolean; error?: string } = { success: true };
+    if (conversationHistory.length > 0) {
+      finalizeSession();
 
-    // Reset conversation count
-    setConversationCount(0);
+      try {
+        const entriesData = {
+          entries: {
+            selectedQuestion,
+            conversationHistory,
+            timeOfDay,
+            conversationCount,
+            completedAt: new Date().toISOString(),
+          },
+          session_id: sessionId,
+          metadata: {
+            currentFont,
+            language: lang,
+            totalMessages: conversationHistory.length,
+            aiSummary: summaryResult.title,
+            enhancedSummary: summaryResult.enhanced,
+          },
+          analytics: analytics,
+        };
 
-    // Set appropriate question based on time of day
-    if (timeOfDay === "daytime") {
-      setSelectedQuestion("Write...");
-    } else if (questions.length > 0) {
-      const randomQuestion =
-        questions[Math.floor(Math.random() * questions.length)];
-      setSelectedQuestion(randomQuestion);
+        const response = await fetch("/api/yellowbox/entries", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(entriesData),
+        });
+
+        if (!response.ok) {
+          trackError();
+          throw new Error("Failed to save entries");
+        }
+
+        const result = await response.json();
+        saveResult = result;
+      } catch (error) {
+        console.error("Error saving entries:", error);
+        trackError();
+        saveResult = { success: false, error: String(error) };
+      }
     }
-  };
+
+    if (saveResult.success) {
+      toast.success(
+        (t("entriesSaved") as string) || "Entries saved successfully!"
+      );
+    } else {
+      toast.error((t("saveError") as string) || "Failed to save entries");
+    }
+
+    // Step 3: Wait 2 seconds then navigate to entries page
+    setTimeout(() => {
+      router.push("/yellowbox/entries");
+    }, 2000);
+  }, [
+    conversationHistory,
+    generateSummary,
+    t,
+    timeOfDay,
+    questions,
+    router,
+    finalizeSession,
+    selectedQuestion,
+    conversationCount,
+    sessionId,
+    currentFont,
+    lang,
+    analytics,
+    trackError,
+  ]);
+
+  // Global keyboard shortcut handler (defined after resetDiary)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        // Cmd/Ctrl+Enter triggers Done functionality globally
+        e.preventDefault();
+        if (conversationHistory.length > 0 && !isGeneratingSummary) {
+          resetDiary();
+        }
+      }
+    };
+
+    // Add event listener
+    document.addEventListener("keydown", handleGlobalKeyDown);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [conversationHistory.length, isGeneratingSummary, resetDiary]);
 
   const handleVoiceTranscription = (text: string) => {
     // Track voice input usage
     trackVoiceUsage();
-    
+
     // Track text change from voice input
     trackTextChange(text, userAnswer);
-    
+
     setUserAnswer(text);
   };
 
@@ -256,8 +379,15 @@ export default function Component() {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      if (e.ctrlKey || e.shiftKey) {
-        // Allow Ctrl+Enter or Shift+Enter for new line
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        // Cmd/Ctrl+Enter triggers Done functionality
+        e.preventDefault();
+        if (conversationHistory.length > 0 && !isGeneratingSummary) {
+          resetDiary();
+        }
+        return;
+      } else if (e.ctrlKey || e.shiftKey) {
+        // Allow Ctrl+Enter (handled above) or Shift+Enter for new line
         return;
       } else if (!isComposing) {
         // Plain Enter submits the form only when not composing (not using IME)
@@ -307,10 +437,10 @@ export default function Component() {
     } else {
       newFont = "serif";
     }
-    
+
     // Track font selection
     trackFontChange(newFont);
-    
+
     setCurrentFont(newFont);
   };
 
@@ -350,7 +480,6 @@ export default function Component() {
 
   return (
     <>
-
       {/* Yellow Rounded Box */}
       <motion.div
         className={`absolute flex flex-col justify-between  left-4 top-4 w-[640px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
@@ -372,7 +501,7 @@ export default function Component() {
           <div className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.h1
-                key={timeOfDay}
+                key={showSummary ? `summary-${summaryTitle}` : timeOfDay}
                 initial={{
                   x: -100,
                   opacity: 0,
@@ -383,7 +512,13 @@ export default function Component() {
                 exit={{ x: 100, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
                 className="text-5xl font-bold leading-tight"
               >
-                {timeOfDay === "morning" ? (
+                {showSummary ? (
+                  <span className="text-[#C04635] italic">
+                    {isGeneratingSummary
+                      ? t("generatingSummary")
+                      : summaryTitle}
+                  </span>
+                ) : timeOfDay === "morning" ? (
                   <>
                     <span className="italic font-semibold">Morning</span>{" "}
                     Reflection
@@ -504,25 +639,37 @@ export default function Component() {
             <Button
               onClick={handleAnswerSubmit}
               disabled={isLoading || !userAnswer.trim()}
-              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed group relative"
               variant="ghost"
               size="sm"
+              title={`${t("sparkButton")} (Enter)`}
             >
               {isLoading ? (
-                <TextShimmer className="font-medium text-base" duration={1.5}>
-                  {t("thinking") as string}
-                </TextShimmer>
+                <>
+                  <TextShimmer className="font-medium text-base" duration={1.5}>
+                    {t("thinking") as string}
+                  </TextShimmer>
+                </>
               ) : (
-                t("sparkButton")
+                <>
+                  <span>{t("sparkButton")}</span>
+                  <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
+                    ↵
+                  </span>
+                </>
               )}
             </Button>
             <Button
               onClick={resetDiary}
-              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1"
+              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 group relative"
               variant="ghost"
               size="sm"
+              title={`${t("doneButton")} (${isMac ? "Cmd" : "Ctrl"}+Enter)`}
             >
-              {t("doneButton")}
+              <span>{t("doneButton")}</span>
+              <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
+                {isMac ? "⌘" : "Ctrl"}+↵
+              </span>
             </Button>
           </motion.div>
         </div>
