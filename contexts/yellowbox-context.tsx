@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useYellowboxTranslation, Language } from '@/lib/i18n/yellowbox';
+import { useYellowboxTranslation, Language, YellowboxTranslations } from '@/lib/i18n/yellowbox';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -21,8 +21,8 @@ interface YellowBoxContextType {
   // Translation state
   lang: Language;
   setLang: (lang: Language) => void;
-  t: (key: string) => string | string[];
-  translations: any;
+  t: (key: keyof YellowboxTranslations) => string | string[];
+  translations: YellowboxTranslations;
   
   // Actions
   handleLogout: () => Promise<void>;
