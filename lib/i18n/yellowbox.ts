@@ -8,7 +8,7 @@ export interface YellowboxTranslations {
   // Common
   loading: string;
   logout: string;
-  
+
   // Yellowbox specific
   title: string;
   titlePart1: string;
@@ -20,10 +20,10 @@ export interface YellowboxTranslations {
   doneButton: string;
   thinking: string;
   newEntryButton: string;
-  
+
   // Questions
   questions: string[];
-  
+
   // Auth
   email: string;
   password: string;
@@ -39,18 +39,18 @@ export interface YellowboxTranslations {
   anErrorOccurred: string;
   access: string;
   login: string;
-  
+
   // Errors and messages
   somethingWentWrong: string;
   logoutSuccess: string;
   loginError: string;
   entriesSaved: string;
   saveError: string;
-  
+
   // Summary related
   generatingSummary: string;
   summaryError: string;
-  
+
   // Entries pages
   myEntries: string;
   noEntries: string;
@@ -65,6 +65,12 @@ export interface YellowboxTranslations {
   createdAt: string;
   conversation: string;
   messages: string;
+
+  // Quote generation
+  generateQuote: string;
+  generating: string;
+  quoteGenerated: string;
+  quoteGenerationFailed: string;
 }
 
 export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
@@ -72,7 +78,7 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     // Common
     loading: '加载中...',
     logout: '退出',
-    
+
     // Yellowbox specific
     title: '你在想什么？',
     titlePart1: '你在想',
@@ -84,14 +90,14 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     doneButton: '完成',
     thinking: '思考中...',
     newEntryButton: '新条目',
-    
+
     // Questions
     questions: [
       '今天有什么小小的成功或大大的胜利吗？',
       '今天发生了什么积极的事情？',
       '今天的亮点是什么？'
     ],
-    
+
     // Auth
     email: '邮箱',
     password: '密码',
@@ -107,18 +113,18 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     anErrorOccurred: '发生错误',
     access: '访问',
     login: '登录',
-    
+
     // Errors and messages
     somethingWentWrong: '出了点问题，请重试。',
     logoutSuccess: '已成功退出',
     loginError: '登录错误',
     entriesSaved: '条目已保存成功！',
     saveError: '保存条目失败',
-    
+
     // Summary related
     generatingSummary: '生成摘要中...',
     summaryError: '生成摘要失败',
-    
+
     // Entries pages
     myEntries: '我的笔记',
     noEntries: '还没有笔记条目',
@@ -132,14 +138,20 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     entryNotFound: '找不到该笔记',
     createdAt: '创建时间',
     conversation: '对话记录',
-    messages: '条消息'
+    messages: '条消息',
+
+    // Quote generation
+    generateQuote: '生成精彩瞬间',
+    generating: '生成中...',
+    quoteGenerated: '精彩瞬间已生成并下载！',
+    quoteGenerationFailed: '生成精彩瞬间失败，请稍后重试'
   },
 
   en: {
     // Common
     loading: 'Loading...',
     logout: 'Logout',
-    
+
     // Yellowbox specific
     title: "What's on your mind?",
     titlePart1: "What's on ",
@@ -151,14 +163,14 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     doneButton: 'Done',
     thinking: 'Thinking...',
     newEntryButton: 'New Entry',
-    
+
     // Questions
     questions: [
       "What's one win, small or big, you had today?",
       "What's one positive thing that happened today?",
       "What was the highlight of your day?"
     ],
-    
+
     // Auth
     email: 'Email',
     password: 'Password',
@@ -174,18 +186,18 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     anErrorOccurred: 'An error occurred',
     access: 'Access',
     login: 'Login',
-    
+
     // Errors and messages
     somethingWentWrong: 'Something went wrong. Please try again.',
     logoutSuccess: 'Logged out successfully',
     loginError: 'Login error',
     entriesSaved: 'Entries saved successfully!',
     saveError: 'Failed to save entries',
-    
+
     // Summary related
     generatingSummary: 'Generating summary...',
     summaryError: 'Failed to generate summary',
-    
+
     // Entries pages
     myEntries: 'My Entries',
     noEntries: 'No entries yet',
@@ -199,7 +211,13 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     entryNotFound: 'Entry not found',
     createdAt: 'Created at',
     conversation: 'Conversation',
-    messages: 'messages'
+    messages: 'messages',
+
+    // Quote generation
+    generateQuote: 'Generate Quote',
+    generating: 'Generating...',
+    quoteGenerated: 'Quote generated and downloaded!',
+    quoteGenerationFailed: 'Failed to generate quote, please try again'
   }
 };
 
