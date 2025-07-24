@@ -35,7 +35,7 @@ export async function POST(): Promise<NextResponse> {
       .select("entries, metadata, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(20); // 最多获取最近20条记录
+      .limit(20);
 
     if (entriesError) {
       console.error("Error fetching entries:", entriesError);
@@ -114,7 +114,7 @@ export async function POST(): Promise<NextResponse> {
     const quotes = extractedQuotes
       .split("\n")
       .filter((q: string) => q.trim().length > 0);
-    const selectedQuote = quotes[0]; // 选择第一个
+    const selectedQuote = quotes[0];
 
     // 生成图片数据（SVG格式）
     const svgContent = generateQuoteImage(selectedQuote, user.email || "用户");
@@ -126,6 +126,7 @@ export async function POST(): Promise<NextResponse> {
       svg: svgContent,
       timestamp: new Date().toISOString(),
     });
+
   } catch (error) {
     console.error("Error generating quote:", error);
     return NextResponse.json(
@@ -139,61 +140,154 @@ function generateQuoteImage(quote: string, userEmail: string): string {
   const userName = userEmail.split("@")[0];
   const date = new Date().toLocaleDateString("zh-CN");
 
-  // 计算文字长度来调整字体大小
-  const fontSize = quote.length > 50 ? 24 : quote.length > 30 ? 28 : 32;
-  const lineHeight = fontSize * 1.4;
-
-  // 简单的文字换行逻辑
-  const maxCharsPerLine = 20;
+  // 智能文字换行逻辑
+  const maxCharsPerLine = 24;
   const lines: string[] = [];
-  for (let i = 0; i < quote.length; i += maxCharsPerLine) {
-    lines.push(quote.substring(i, i + maxCharsPerLine));
+  let currentLine = '';
+
+  for (const char of quote) {
+    if (currentLine.length < maxCharsPerLine) {
+      currentLine += char;
+    } else {
+      lines.push(currentLine);
+      currentLine = char;
+    }
   }
+  if (currentLine) lines.push(currentLine);
 
+  // 动态调整字体大小和行高
+  const fontSize = quote.length > 60 ? 22 : quote.length > 40 ? 26 : 30;
+  const lineHeight = fontSize * 1.5;
   const textHeight = lines.length * lineHeight;
-  const svgHeight = Math.max(400, textHeight + 200);
+  const svgHeight = Math.max(500, textHeight + 280);
 
-  return `
-<svg width="800" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
-  <!-- 背景 -->
-  <rect width="800" height="${svgHeight}" fill="#FACC15"/>
+  return `<svg width="900" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+  <!-- 渐变背景定义 -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FEF3C7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FACC15;stop-opacity:1" />
+    </linearGradient>
 
-  <!-- 主内容区域 -->
-  <rect x="60" y="60" width="680" height="${
-    svgHeight - 180
-  }" fill="#FEF3C7" stroke="#E4BE10" stroke-width="2" rx="16"/>
+    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFBEB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FEF3C7;stop-opacity:1" />
+    </linearGradient>
 
-  <!-- 引号装饰 -->
-  <text x="100" y="130" font-family="serif" font-size="60" fill="#C04635" opacity="0.3">"</text>
+    <!-- 阴影滤镜 -->
+    <filter id="dropshadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="6" stdDeviation="4" flood-color="#000000" flood-opacity="0.2"/>
+    </filter>
 
-  <!-- 主文字内容 -->
-  <g transform="translate(120, 160)">
+    <!-- 文字阴影 -->
+    <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="1" dy="2" stdDeviation="1" flood-color="#000000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- 主背景 -->
+  <rect width="900" height="${svgHeight}" fill="url(#bgGradient)"/>
+
+  <!-- 装饰圆点 -->
+  <circle cx="100" cy="80" r="3" fill="#E4BE10" opacity="0.6"/>
+  <circle cx="800" cy="100" r="2" fill="#C04635" opacity="0.4"/>
+  <circle cx="120" cy="${svgHeight - 60}" r="2.5" fill="#E4BE10" opacity="0.5"/>
+  <circle cx="780" cy="${svgHeight - 80}" r="3" fill="#C04635" opacity="0.3"/>
+
+  <!-- 主卡片区域 -->
+  <rect x="80" y="80" width="740" height="${svgHeight - 200}"
+        fill="url(#cardGradient)"
+        stroke="#E4BE10"
+        stroke-width="3"
+        rx="24"
+        ry="24"
+        filter="url(#dropshadow)"/>
+
+  <!-- 内层边框 -->
+  <rect x="90" y="90" width="720" height="${svgHeight - 220}"
+        fill="none"
+        stroke="#F59E0B"
+        stroke-width="1"
+        rx="18"
+        ry="18"
+        opacity="0.3"/>
+
+  <!-- 左上角装饰引号 -->
+  <text x="120" y="150"
+        font-family="serif"
+        font-size="48"
+        fill="#C04635"
+        opacity="0.4"
+        font-weight="bold">"</text>
+
+  <!-- 主文字内容区域 -->
+  <g transform="translate(150, 180)">
     ${lines
       .map(
         (line, index) =>
-          `<text x="0" y="${
-            index * lineHeight
-          }" font-family="serif" font-size="${fontSize}" fill="#3B3109" text-anchor="start">${line}</text>`
+          `<text x="0" y="${index * lineHeight}"
+                 font-family="'Georgia', serif"
+                 font-size="${fontSize}"
+                 fill="#1F2937"
+                 text-anchor="start"
+                 filter="url(#textShadow)"
+                 font-weight="400"
+                 letter-spacing="0.5px">${line}</text>`
       )
       .join("")}
   </g>
 
-  <!-- 结束引号 -->
-  <text x="660" y="${
-    160 + textHeight + 20
-  }" font-family="serif" font-size="60" fill="#C04635" opacity="0.3">"</text>
+  <!-- 右下角装饰引号 -->
+  <text x="750" y="${180 + textHeight + 40}"
+        font-family="serif"
+        font-size="48"
+        fill="#C04635"
+        opacity="0.4"
+        font-weight="bold"
+        text-anchor="end">"</text>
 
-  <!-- 署名 -->
-  <text x="680" y="${
-    svgHeight - 120
-  }" font-family="sans-serif" font-size="18" fill="#3B3109" text-anchor="end">— ${userName}</text>
-  <text x="680" y="${
-    svgHeight - 95
-  }" font-family="sans-serif" font-size="16" fill="#3B3109" text-anchor="end" opacity="0.7">${date}</text>
+  <!-- 分割线 -->
+  <line x1="150" y1="${180 + textHeight + 60}"
+        x2="750" y2="${180 + textHeight + 60}"
+        stroke="#E4BE10"
+        stroke-width="2"
+        opacity="0.6"/>
+
+  <!-- 署名区域 -->
+  <text x="750" y="${180 + textHeight + 90}"
+        font-family="'Helvetica', sans-serif"
+        font-size="20"
+        fill="#374151"
+        text-anchor="end"
+        font-weight="500"
+        filter="url(#textShadow)">— ${userName}</text>
+
+  <text x="750" y="${180 + textHeight + 115}"
+        font-family="'Helvetica', sans-serif"
+        font-size="16"
+        fill="#6B7280"
+        text-anchor="end"
+        font-weight="400">${date}</text>
+
+  <!-- 底部Logo区域背景 -->
+  <rect x="350" y="${svgHeight - 80}" width="200" height="40"
+        fill="#F59E0B"
+        rx="20"
+        opacity="0.8"/>
 
   <!-- YellowBox标识 -->
-  <text x="400" y="${
-    svgHeight - 40
-  }" font-family="serif" font-size="20" fill="#3B3109" text-anchor="middle" font-weight="bold">YELLOW BOX</text>
+  <text x="450" y="${svgHeight - 55}"
+        font-family="'Georgia', serif"
+        font-size="18"
+        fill="#FFFFFF"
+        text-anchor="middle"
+        font-weight="bold"
+        letter-spacing="1px">YELLOW BOX</text>
+
+  <!-- 装饰小星星 -->
+  <polygon points="200,120 203,127 210,127 205,132 207,139 200,135 193,139 195,132 190,127 197,127"
+           fill="#F59E0B" opacity="0.4"/>
+  <polygon points="700,160 702,165 707,165 704,168 705,173 700,170 695,173 696,168 693,165 698,165"
+           fill="#C04635" opacity="0.3"/>
 </svg>`;
 }
