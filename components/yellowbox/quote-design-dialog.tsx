@@ -70,7 +70,7 @@ const QUOTE_TEMPLATES: QuoteTemplate[] = [
   {
     id: "elegant-simple",
     name: "简约雅致",
-    background: "#ffffff",
+    background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
     textColor: "#1a202c",
     fontSize: 26,
     fontFamily: "serif",
@@ -80,7 +80,7 @@ const QUOTE_TEMPLATES: QuoteTemplate[] = [
   {
     id: "modern-clean",
     name: "现代简洁",
-    background: "#ffffff",
+    background: "linear-gradient(135deg, #fef3e2 0%, #fde68a 100%)",
     textColor: "#374151",
     fontSize: 24,
     fontFamily: "sans-serif",
@@ -90,8 +90,8 @@ const QUOTE_TEMPLATES: QuoteTemplate[] = [
   {
     id: "literary-style",
     name: "文学风格",
-    background: "#ffffff",
-    textColor: "#4a5568",
+    background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+    textColor: "#166534",
     fontSize: 27,
     fontFamily: "serif",
     layout: "center",
@@ -100,12 +100,32 @@ const QUOTE_TEMPLATES: QuoteTemplate[] = [
   {
     id: "minimalist-zen",
     name: "禅意简约",
-    background: "#ffffff",
-    textColor: "#2d3748",
+    background: "linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)",
+    textColor: "#831843",
     fontSize: 25,
     fontFamily: "serif",
     layout: "center",
     decorativeElements: ["\u25cf", "\u25cf"],
+  },
+  {
+    id: "vintage-paper",
+    name: "复古纸张",
+    background: "linear-gradient(135deg, #fef9e7 0%, #f3e8c2 100%)",
+    textColor: "#8b4513",
+    fontSize: 26,
+    fontFamily: "serif",
+    layout: "center",
+    decorativeElements: ["\u2766", "\u2766"],
+  },
+  {
+    id: "ocean-breeze",
+    name: "海洋微风",
+    background: "linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%)",
+    textColor: "#0277bd",
+    fontSize: 25,
+    fontFamily: "sans-serif",
+    layout: "center",
+    decorativeElements: ["\u2248", "\u2248"],
   },
 ];
 
@@ -213,47 +233,112 @@ export function QuoteDesignDialog({
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
 
-      // Draw card background
-      ctx.fillStyle = currentTemplate.background;
+      // Draw card background with gradient support
+      if (currentTemplate.background.startsWith('linear-gradient')) {
+        // Parse linear gradient
+        const gradientMatch = currentTemplate.background.match(/linear-gradient\(([^)]+)\)/);
+        if (gradientMatch) {
+          const gradientString = gradientMatch[1];
+          const parts = gradientString.split(',').map(s => s.trim());
+
+          // Extract angle (135deg)
+          const angle = parseFloat(parts[0].replace('deg', '')) || 0;
+
+          // Convert angle to x1,y1,x2,y2 coordinates
+          const angleRad = (angle - 90) * (Math.PI / 180);
+          const x1 = cardWidth / 2 + Math.cos(angleRad) * cardWidth / 2;
+          const y1 = cardHeight / 2 + Math.sin(angleRad) * cardHeight / 2;
+          const x2 = cardWidth / 2 - Math.cos(angleRad) * cardWidth / 2;
+          const y2 = cardHeight / 2 - Math.sin(angleRad) * cardHeight / 2;
+
+          const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+
+          // Add color stops
+          for (let i = 1; i < parts.length; i++) {
+            const colorStop = parts[i].trim();
+            const colorMatch = colorStop.match(/(#[a-fA-F0-9]{6}|rgba?\([^)]+\))\s+(\d+)%/);
+            if (colorMatch) {
+              const color = colorMatch[1];
+              const position = parseInt(colorMatch[2]) / 100;
+              gradient.addColorStop(position, color);
+            }
+          }
+
+          ctx.fillStyle = gradient;
+        } else {
+          ctx.fillStyle = '#ffffff';
+        }
+      } else {
+        ctx.fillStyle = currentTemplate.background;
+      }
+
       ctx.fillRect(0, 0, cardWidth, cardHeight);
+
+      // Draw subtle pattern overlay
+      ctx.fillStyle = currentTemplate.textColor;
+      ctx.globalAlpha = 0.02;
+      for (let x = 0; x < cardWidth; x += 30) {
+        for (let y = 0; y < cardHeight; y += 30) {
+          if ((x + y) % 60 === 0) {
+            ctx.beginPath();
+            ctx.arc(x, y, 1, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
 
       // Draw card border
       ctx.strokeStyle = "#e5e7eb";
       ctx.lineWidth = 1;
       ctx.strokeRect(0, 0, cardWidth, cardHeight);
 
-      // Add icon sticker
-      ctx.font = "32px Arial";
-      ctx.fillStyle = "rgba(0,0,0,0.8)";
+      // Add icon sticker without background
       ctx.save();
       ctx.translate(cardWidth - 50, 50);
       ctx.rotate((12 * Math.PI) / 180); // 12 degrees
-      ctx.fillText("🔯", -16, 16);
+
+      // Draw icon
+      ctx.font = "32px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🔯", 0, 0);
+
       ctx.restore();
 
       // Add decorative elements if they exist
       if (currentTemplate.decorativeElements) {
         ctx.font = "48px serif";
         ctx.fillStyle = currentTemplate.textColor;
-        ctx.globalAlpha = 0.3;
+        ctx.globalAlpha = 0.4;
 
-        // Left decoration
-        ctx.fillText(currentTemplate.decorativeElements[0], 32, 80);
+        // Left decoration with rotation
+        ctx.save();
+        ctx.translate(50, 80);
+        ctx.rotate((-12 * Math.PI) / 180);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(currentTemplate.decorativeElements[0], 0, 0);
+        ctx.restore();
 
-        // Right decoration
+        // Right decoration with rotation
         const rightDecor =
           currentTemplate.decorativeElements[1] ||
           currentTemplate.decorativeElements[0];
-        ctx.textAlign = "right";
-        ctx.fillText(rightDecor, cardWidth - 32, cardHeight - 32);
-        ctx.textAlign = "start";
+        ctx.save();
+        ctx.translate(cardWidth - 50, cardHeight - 50);
+        ctx.rotate((12 * Math.PI) / 180);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(rightDecor, 0, 0);
+        ctx.restore();
 
         ctx.globalAlpha = 1;
       }
 
       // Set text properties for quote
       ctx.fillStyle = currentTemplate.textColor;
-      ctx.font = `${currentTemplate.fontSize}px ${currentTemplate.fontFamily}`;
+      ctx.font = `500 ${currentTemplate.fontSize}px ${currentTemplate.fontFamily}`;
       ctx.textAlign =
         currentTemplate.layout === "center"
           ? "center"
@@ -348,36 +433,58 @@ export function QuoteDesignDialog({
                   <CarouselItem key={template.id} className="p-4">
                     <div className="flex justify-center">
                       <div
-                        className="w-[600px] h-[400px] bg-white rounded-lg shadow-lg border border-gray-200 flex items-center justify-center text-center relative p-12"
+                        className="w-[600px] h-[400px] bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center text-center relative p-12 overflow-hidden"
                         style={{
                           background: template.background,
                           color: template.textColor,
                           fontFamily: template.fontFamily,
+                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06)",
                         }}
                       >
                         {/* Icon Sticker */}
                         <div
-                          className="absolute top-4 right-4 text-3xl transform rotate-12 opacity-80"
+                          className="absolute top-4 right-4 text-4xl transform rotate-12 opacity-90"
                           style={{
-                            filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.1))",
+                            filter: "drop-shadow(3px 3px 8px rgba(0,0,0,0.2))",
                             zIndex: 10,
+                            background: "rgba(255, 255, 255, 0.8)",
+                            borderRadius: "50%",
+                            padding: "6px",
+                            border: "2px solid rgba(255, 255, 255, 0.9)",
                           }}
                         >
                           🔯
                         </div>
 
+                        {/* Subtle pattern overlay */}
+                        <div
+                          className="absolute inset-0 pointer-events-none opacity-5"
+                          style={{
+                            backgroundImage: `radial-gradient(circle at 20% 20%, ${template.textColor} 1px, transparent 1px)`,
+                            backgroundSize: "30px 30px",
+                          }}
+                        ></div>
+
                         {/* Decorative Elements */}
                         {template.decorativeElements && (
                           <>
                             <div
-                              className="absolute top-8 left-8 text-4xl opacity-30"
-                              style={{ color: template.textColor }}
+                              className="absolute top-8 left-8 text-5xl opacity-40 transform -rotate-12"
+                              style={{
+                                color: template.textColor,
+                                filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.1))",
+                                textShadow: "1px 1px 2px rgba(255,255,255,0.8)"
+                              }}
                             >
                               {template.decorativeElements[0]}
                             </div>
                             <div
-                              className="absolute bottom-8 right-8 text-4xl opacity-30"
-                              style={{ color: template.textColor }}
+                              className="absolute bottom-8 right-8 text-5xl opacity-40 transform rotate-12"
+                              style={{
+                                color: template.textColor,
+                                filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.1))",
+                                textShadow: "1px 1px 2px rgba(255,255,255,0.8)"
+                              }}
                             >
                               {template.decorativeElements[1] ||
                                 template.decorativeElements[0]}
@@ -387,10 +494,14 @@ export function QuoteDesignDialog({
 
                         {/* Quote Content */}
                         <div
-                          className="max-w-full leading-relaxed"
+                          className="max-w-full leading-relaxed relative z-10"
                           style={{
                             fontSize: `${template.fontSize}px`,
                             textAlign: template.layout,
+                            textShadow: "1px 1px 3px rgba(255,255,255,0.8)",
+                            lineHeight: "1.8",
+                            fontWeight: "500",
+                            letterSpacing: "0.5px",
                           }}
                         >
                           {isGenerating ? (
