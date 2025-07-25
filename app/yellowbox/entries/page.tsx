@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useYellowBoxContext } from "@/contexts/yellowbox-context";
-import { Download, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
 
 interface YellowboxEntry {
   id: string;
@@ -44,7 +45,7 @@ export default function EntriesPage() {
   const [entries, setEntries] = useState<YellowboxEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isGeneratingQuote, setIsGeneratingQuote] = useState(false);
+  const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
   const router = useRouter();
   const { lang, t, getFontClass } = useYellowBoxContext();
 
@@ -85,50 +86,8 @@ export default function EntriesPage() {
       return;
     }
 
-    setIsGeneratingQuote(true);
-    try {
-      const response = await fetch("/api/yellowbox/generate-quote", {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate quote");
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        // 创建下载链接
-        const svgBlob = new Blob([result.svg], { type: "image/svg+xml" });
-        const url = URL.createObjectURL(svgBlob);
-
-        // 创建一个临时的下载链接
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `yellowbox-quote-${new Date().getTime()}.svg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        toast.success(
-          lang === "zh"
-            ? `精彩瞬间已生成并下载！内容：${result.quote.slice(0, 30)}...`
-            : `Quote generated and downloaded! Content: ${result.quote.slice(0, 30)}...`
-        );
-      } else {
-        throw new Error(result.error || "Failed to generate quote");
-      }
-    } catch (error) {
-      console.error("Error generating quote:", error);
-      toast.error(
-        lang === "zh"
-          ? "生成精彩瞬间失败，请稍后重试"
-          : "Failed to generate quote, please try again"
-      );
-    } finally {
-      setIsGeneratingQuote(false);
-    }
+    // Open the quote design dialog
+    setIsQuoteDialogOpen(true);
   };
 
 
@@ -291,20 +250,10 @@ export default function EntriesPage() {
           {entries.length > 0 && (
             <Button
               onClick={handleGenerateQuote}
-              disabled={isGeneratingQuote}
-              className="bg-[#C04635] hover:bg-[#A03B2A] text-white border-none px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
             >
-              {isGeneratingQuote ? (
-                <>
-                  <Download className="w-4 h-4 animate-pulse" />
-                  {lang === "zh" ? "生成中..." : "Generating..."}
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  {lang === "zh" ? "生成精彩瞬间" : "Generate Quote"}
-                </>
-              )}
+              <Sparkles className="w-4 h-4" />
+              {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
             </Button>
           )}
 
@@ -320,6 +269,12 @@ export default function EntriesPage() {
         </div>
       </div>
 
+      {/* Quote Design Dialog */}
+      <QuoteDesignDialog
+        open={isQuoteDialogOpen}
+        onOpenChange={setIsQuoteDialogOpen}
+        entries={entries}
+      />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateText } from "ai";
 import { openai } from "@/lib/ai-sdk-client";
@@ -16,8 +16,16 @@ interface EntryData {
   created_at: string;
 }
 
-export async function POST(): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Check if request body contains specific content for quote generation
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+
     const supabase = await createClient();
 
     // 获取当前用户
@@ -29,7 +37,47 @@ export async function POST(): Promise<NextResponse> {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 获取用户的所有entries
+    // If specific content is provided, use it for quote generation
+    if (body.content || body.aiSummary) {
+      const { content, aiSummary, emotion, themes, language } = body;
+
+      // Create a prompt for quote generation
+      const prompt = language === "zh" 
+        ? `基于以下日记内容，生成一句富有诗意和启发性的引言。引言应该捕捉文本的核心情感和主题，长度在15-30个字之间，要优美、深刻且富有哲理性。
+
+日记内容：${content || aiSummary}
+${emotion ? `情感基调：${emotion}` : ''}
+${themes && themes.length > 0 ? `主题：${themes.join(', ')}` : ''}
+
+请直接返回引言，不要包含任何解释或额外文字。引言要能够独立存在，给人以思考和启发。`
+        : `Based on the following diary content, generate a poetic and inspirational quote. The quote should capture the core emotion and themes of the text, be 10-25 words long, and be beautiful, profound, and philosophical.
+
+Diary content: ${content || aiSummary}
+${emotion ? `Emotional tone: ${emotion}` : ''}
+${themes && themes.length > 0 ? `Themes: ${themes.join(', ')}` : ''}
+
+Please return only the quote without any explanation or additional text. The quote should be able to stand alone and provide inspiration and reflection.`;
+
+      const result = await generateText({
+        model: openai("gpt-4o-mini"),
+        prompt: prompt,
+        temperature: 0.8,
+      });
+
+      // Clean up the quote - remove quotes if they were added by the AI
+      let quote = result.text.trim();
+      if ((quote.startsWith('"') && quote.endsWith('"')) || 
+          (quote.startsWith("'") && quote.endsWith("'"))) {
+        quote = quote.slice(1, -1);
+      }
+
+      return NextResponse.json({
+        success: true,
+        quote: quote,
+      });
+    }
+
+    // Original logic: 获取用户的所有entries
     const { data: entries, error: entriesError } = await supabase
       .from("yellowbox_entries")
       .select("entries, metadata, created_at")

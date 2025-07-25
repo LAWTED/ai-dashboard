@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,6 +10,7 @@ import Link from "next/link";
 import { OptimizedAnalyticsDebug } from "@/components/optimized-yellowbox-analytics-debug";
 import { MinimalYellowBoxAnalytics } from "@/types/yellowbox-analytics";
 import { useYellowBoxContext } from "@/contexts/yellowbox-context";
+import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
 
 interface YellowboxEntry {
   id: string;
@@ -48,6 +49,7 @@ export default function EntryDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -278,8 +280,18 @@ export default function EntryDetailPage() {
             className="w-full h-px bg-[#E4BE10] my-2"
           ></motion.div>
 
-          {/* Delete Button */}
-          <div className="flex justify-center mt-4">
+          {/* Action Buttons */}
+          <div className="flex justify-center gap-3 mt-4">
+            {/* Design Quote Button */}
+            <Button
+              onClick={() => setIsQuoteDialogOpen(true)}
+              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
+            </Button>
+            
+            {/* Delete Button */}
             <Button
               onClick={handleDelete}
               disabled={isDeleting}
@@ -308,6 +320,14 @@ export default function EntryDetailPage() {
         </div>
       )}
 
+      {/* Quote Design Dialog */}
+      {entry && (
+        <QuoteDesignDialog
+          open={isQuoteDialogOpen}
+          onOpenChange={setIsQuoteDialogOpen}
+          entries={[entry]}
+        />
+      )}
     </>
   );
 }
