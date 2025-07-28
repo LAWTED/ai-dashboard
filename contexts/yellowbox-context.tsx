@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
 type FontType = "serif" | "sans" | "mono";
+type TimeOfDay = "morning" | "daytime" | "evening";
 
 interface YellowBoxContextType {
   // User state
@@ -16,6 +17,8 @@ interface YellowBoxContextType {
   // UI preferences
   currentFont: FontType;
   setCurrentFont: (font: FontType) => void;
+  timeOfDay: TimeOfDay;
+  setTimeOfDay: (timeOfDay: TimeOfDay) => void;
   isMac: boolean;
   
   // Translation state
@@ -44,6 +47,7 @@ export function YellowBoxProvider({ children }: YellowBoxProviderProps) {
   const [userId, setUserId] = useState<string>("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentFont, setCurrentFontState] = useState<FontType>("serif");
+  const [timeOfDay, setTimeOfDayState] = useState<TimeOfDay>("daytime");
   const [isMac, setIsMac] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   
@@ -70,6 +74,21 @@ export function YellowBoxProvider({ children }: YellowBoxProviderProps) {
         if (savedFont && ['serif', 'sans', 'mono'].includes(savedFont)) {
           setCurrentFontState(savedFont);
         }
+
+        // Initialize time of day based on current time
+        const now = new Date();
+        const hour = now.getHours();
+        let currentTimeOfDay: TimeOfDay;
+        
+        if (hour < 9) {
+          currentTimeOfDay = "morning";
+        } else if (hour >= 9 && hour < 21) {
+          currentTimeOfDay = "daytime";
+        } else {
+          currentTimeOfDay = "evening";
+        }
+        
+        setTimeOfDayState(currentTimeOfDay);
       }
       
       setIsInitialized(true);
@@ -84,6 +103,11 @@ export function YellowBoxProvider({ children }: YellowBoxProviderProps) {
     if (typeof window !== "undefined") {
       localStorage.setItem('yellowbox-font', font);
     }
+  };
+
+  // Handle time of day changes
+  const setTimeOfDay = (timeOfDay: TimeOfDay) => {
+    setTimeOfDayState(timeOfDay);
   };
 
   // Handle logout
@@ -148,6 +172,8 @@ export function YellowBoxProvider({ children }: YellowBoxProviderProps) {
     isAuthenticated,
     currentFont,
     setCurrentFont,
+    timeOfDay,
+    setTimeOfDay,
     isMac,
     lang,
     setLang,
