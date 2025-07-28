@@ -1,12 +1,33 @@
 import { useState } from "react";
 import { useDrag } from "react-dnd";
 import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
-import { ChevronDown, ChevronRight, Type, Sparkles, Calendar, MessageSquare, Bot } from "lucide-react";
+import { ChevronDown, ChevronRight, Type, Calendar, MessageSquare, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface EntryData {
+  id: string;
+  entries: {
+    conversationHistory: Array<{ type: string; content: string }>;
+  };
+  metadata?: {
+    enhancedSummary?: {
+      title: string;
+    };
+  };
+  created_at: string;
+}
+
 interface ElementsPanelProps {
-  entryData: any;
-  onAddElement: (element: any) => void;
+  entryData: EntryData | null;
+  onAddElement: (element: {
+    type: string;
+    content: string;
+    x: number;
+    y: number;
+    fontSize: number;
+    fontFamily: string;
+    color: string;
+  }) => void;
 }
 
 interface DraggableItemProps {
@@ -29,7 +50,7 @@ function DraggableItem({ type, content, fontSize, fontFamily, color, icon }: Dra
 
   return (
     <div
-      ref={drag}
+      ref={drag as any}
       className={cn(
         "p-3 bg-white rounded-lg cursor-move hover:bg-yellow-50 transition-colors border border-[#E4BE10]",
         isDragging && "opacity-50"
@@ -48,7 +69,7 @@ function DraggableItem({ type, content, fontSize, fontFamily, color, icon }: Dra
 }
 
 export function ElementsPanel({ entryData, onAddElement }: ElementsPanelProps) {
-  const { lang, t } = useYellowBoxI18n();
+  const { lang } = useYellowBoxI18n();
   const [expandedSections, setExpandedSections] = useState({
     text: true,
     stickers: true,
@@ -80,9 +101,9 @@ export function ElementsPanel({ entryData, onAddElement }: ElementsPanelProps) {
 
     // User messages
     const userMessages = entryData.entries?.conversationHistory?.filter(
-      (msg: any) => msg.type === "user"
+      (msg) => msg.type === "user"
     ) || [];
-    userMessages.forEach((msg: any, index: number) => {
+    userMessages.forEach((msg) => {
       if (msg.content) {
         textElements.push({
           type: "text" as const,
@@ -97,9 +118,9 @@ export function ElementsPanel({ entryData, onAddElement }: ElementsPanelProps) {
 
     // AI responses (golden quotes)
     const aiMessages = entryData.entries?.conversationHistory?.filter(
-      (msg: any) => msg.type === "ai"
+      (msg) => msg.type === "ai"
     ) || [];
-    aiMessages.forEach((msg: any, index: number) => {
+    aiMessages.forEach((msg, index) => {
       if (msg.content && index < 2) { // Limit to first 2 AI responses
         textElements.push({
           type: "text" as const,
@@ -256,7 +277,7 @@ function DraggableSticker({ content }: { content: string }) {
 
   return (
     <div
-      ref={drag}
+      ref={drag as any}
       className={cn(
         "w-10 h-10 flex items-center justify-center bg-white rounded-lg cursor-move hover:bg-yellow-50 transition-colors text-2xl",
         isDragging && "opacity-50"

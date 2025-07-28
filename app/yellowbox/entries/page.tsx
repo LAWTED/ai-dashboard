@@ -12,37 +12,6 @@ import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
 
-interface YellowboxEntryType {
-  id: string;
-  entries: {
-    selectedQuestion?: string;
-    conversationHistory: Array<{
-      type: "user" | "ai";
-      content: string;
-    }>;
-    timeOfDay: "morning" | "daytime" | "evening";
-    conversationCount: number;
-    completedAt: string;
-  };
-  metadata: {
-    currentFont?: string;
-    language?: string;
-    totalMessages: number;
-    aiSummary?: string;
-    enhancedSummary?: {
-      title: string;
-      tags: string[];
-      emotion: {
-        primary: string;
-        intensity: 'low' | 'medium' | 'high';
-        confidence: number;
-      };
-      themes: string[];
-    };
-  };
-  created_at: string;
-}
-
 export default function EntriesPage() {
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
   const router = useRouter();

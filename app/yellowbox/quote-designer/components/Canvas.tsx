@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import { CanvasElement, CanvasState } from "../page";
 import { cn } from "@/lib/utils";
-import { Trash2, RotateCw, Move } from "lucide-react";
+import { Trash2, RotateCw } from "lucide-react";
 
 interface CanvasProps {
   state: CanvasState;
@@ -27,7 +27,7 @@ export function Canvas({
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: ["text", "sticker"],
-    drop: (item: any, monitor) => {
+    drop: (item: { type: string; content: string; fontSize?: number; fontFamily?: string; color?: string }, monitor) => {
       const canvasRect = canvasRef.current?.getBoundingClientRect();
       if (!canvasRect) return;
 
@@ -42,7 +42,7 @@ export function Canvas({
       const y = clientOffset.y - canvasRect.top - elementHeight / 2;
 
       onAddElement({
-        type: item.type,
+        type: item.type as "text" | "sticker",
         content: item.content,
         x: Math.max(0, Math.min(x, state.width - elementWidth)),
         y: Math.max(0, Math.min(y, state.height - elementHeight)),

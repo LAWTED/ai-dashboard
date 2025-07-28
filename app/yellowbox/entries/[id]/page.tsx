@@ -13,38 +13,6 @@ import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 import { useYellowboxEntry, useDeleteEntry } from "@/hooks/use-yellowbox-queries";
 import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
 
-interface YellowboxEntryType {
-  id: string;
-  entries: {
-    selectedQuestion?: string;
-    conversationHistory: Array<{
-      type: "user" | "ai";
-      content: string;
-    }>;
-    timeOfDay: "morning" | "daytime" | "evening";
-    conversationCount: number;
-    completedAt: string;
-  };
-  metadata: {
-    currentFont?: string;
-    language?: string;
-    totalMessages: number;
-    aiSummary?: string;
-    enhancedSummary?: {
-      title: string;
-      tags: string[];
-      emotion: {
-        primary: string;
-        intensity: 'low' | 'medium' | 'high';
-        confidence: number;
-      };
-      themes: string[];
-    };
-  };
-  analytics?: MinimalYellowBoxAnalytics;
-  created_at: string;
-}
-
 export default function EntryDetailPage() {
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
   const router = useRouter();
@@ -112,7 +80,7 @@ export default function EntryDetailPage() {
           </div>
         ) : error ? (
           <div className="text-center py-8 text-[#C04635]">
-            {error === "Entry not found" ? t("entryNotFound") : error === "Failed to load entry" ? t("errorLoadingEntry") : error}
+            {String(error)}
           </div>
         ) : entry ? (
           <>
@@ -261,7 +229,7 @@ export default function EntryDetailPage() {
       {isDebugMode && entry && (
         <div className="absolute right-4 top-[0px] w-[640px]">
           <OptimizedAnalyticsDebug
-            analytics={entry.analytics || null}
+            analytics={(entry as { analytics?: MinimalYellowBoxAnalytics }).analytics || null}
             language={lang}
           />
         </div>

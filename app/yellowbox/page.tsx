@@ -350,7 +350,7 @@ export default function Component() {
               isGeneratingSummary={isGeneratingSummary}
               summaryTitle={summaryTitle}
               timeOfDay={timeOfDay}
-              t={t}
+              t={t as (key: string) => string}
             />
           </div>
 
@@ -372,7 +372,6 @@ export default function Component() {
                 conversationHistory={conversationHistory}
                 selectedQuestion={selectedQuestion}
                 isLoading={isLoading}
-                isComposing={isComposing}
                 onAnswerChange={setUserAnswer}
                 onKeyDown={handleKeyDown}
                 onCompositionStart={handleCompositionStart}
