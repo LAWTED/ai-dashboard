@@ -1,18 +1,24 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { VoiceInput } from "@/components/voice-input";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useYellowBoxContext } from "@/contexts/yellowbox-context";
-import { TextEffect } from "@/components/ui/text-effect";
+import { useYellowBoxAuth } from "@/contexts/yellowbox-auth-context";
+import { useYellowBoxUI } from "@/contexts/yellowbox-ui-context";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Button } from "@/components/ui/button";
 import useMeasure from "react-use-measure";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useOptimizedYellowboxAnalytics } from "@/hooks/use-optimized-yellowbox-analytics";
+import { useYellowBoxErrorHandler } from "@/hooks/use-yellowbox-error-handler";
+import { useDiaryResponse, useGenerateSummary, useSaveEntries } from "@/hooks/use-yellowbox-queries";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { ConversationView } from "@/components/yellowbox/ConversationView";
+import { InputSection } from "@/components/yellowbox/InputSection";
+import { SummaryDisplay } from "@/components/yellowbox/SummaryDisplay";
 
 type ConversationMessage = {
   type: "user" | "ai";
@@ -30,12 +36,6 @@ type EnhancedSummary = {
   themes: string[];
 };
 
-type SummaryAPIResponse = {
-  success: boolean;
-  summary: string; // backward compatibility
-  enhanced: EnhancedSummary;
-  language: string;
-};
 
 export default function Component() {
   const [selectedQuestion, setSelectedQuestion] = useState<string>("");
@@ -45,9 +45,6 @@ export default function Component() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
-  const [timeOfDay, setTimeOfDay] = useState<"morning" | "daytime" | "evening">(
-    "daytime"
-  );
   const [conversationCount, setConversationCount] = useState(0);
   const [showInput, setShowInput] = useState(true);
   const [contentRef, bounds] = useMeasure();
@@ -56,8 +53,9 @@ export default function Component() {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const router = useRouter();
-  const { userId, currentFont, isMac, lang, t, translations, getFontClass } = useYellowBoxContext();
-  const previousAnswer = useRef<string>("");
+  const { userId } = useYellowBoxAuth();
+  const { currentFont, isMac, getFontClass, timeOfDay } = useYellowBoxUI();
+  const { lang, t, translations } = useYellowBoxI18n();
 
   // Initialize analytics with session ID
   const sessionId = `${Date.now()}-${Math.random()
@@ -73,36 +71,28 @@ export default function Component() {
     finalizeSession,
   } = useOptimizedYellowboxAnalytics(sessionId, userId);
 
+  const { handleError, createError } = useYellowBoxErrorHandler({ trackError });
+
+  // React Query mutations
+  const diaryResponseMutation = useDiaryResponse();
+  const generateSummaryMutation = useGenerateSummary();
+  const saveEntriesMutation = useSaveEntries();
+
   // Get questions from translations
   const questions = translations.questions;
 
 
-  // Initialize with a question and set default time of day
+  // Initialize with a question based on time of day
   useEffect(() => {
-    // Set default time of day based on current time
-    const now = new Date();
-    const hour = now.getHours();
-    let currentTimeOfDay: "morning" | "daytime" | "evening";
-
-    if (hour < 9) {
-      currentTimeOfDay = "morning";
-    } else if (hour >= 9 && hour < 21) {
-      currentTimeOfDay = "daytime";
-    } else {
-      currentTimeOfDay = "evening";
-    }
-
-    setTimeOfDay(currentTimeOfDay);
-
-    // Set question based on time of day
-    if (currentTimeOfDay === "daytime") {
+    // Set question based on time of day from context
+    if (timeOfDay === "daytime") {
       setSelectedQuestion("Write...");
     } else if (questions.length > 0) {
       const randomQuestion =
         questions[Math.floor(Math.random() * questions.length)];
       setSelectedQuestion(randomQuestion);
     }
-  }, [questions]);
+  }, [questions, timeOfDay]);
 
   const handleAnswerSubmit = async () => {
     if (!userAnswer.trim()) return;
@@ -121,25 +111,12 @@ export default function Component() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/diary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          selectedQuestion,
-          userEntry: userMessage,
-          timeOfDay,
-          conversationCount,
-        }),
+      const data = await diaryResponseMutation.mutateAsync({
+        selectedQuestion,
+        userEntry: userMessage,
+        timeOfDay,
+        conversationCount,
       });
-
-      if (!response.ok) {
-        trackError();
-        throw new Error("Failed to get AI response");
-      }
-
-      const data = await response.json();
 
       // Add AI response to conversation history
       setConversationHistory((prev) => [
@@ -155,8 +132,7 @@ export default function Component() {
         setConversationCount((prev) => prev + 1);
       }
     } catch (error) {
-      console.error("Error:", error);
-      trackError();
+      handleError(error as Error);
       const errorMessage = t("somethingWentWrong") as string;
       setConversationHistory((prev) => [
         ...prev,
@@ -179,24 +155,13 @@ export default function Component() {
     }
 
     try {
-      const response = await fetch("/api/yellowbox/generate-summary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          conversationHistory,
-          language: lang,
-          selectedQuestion,
-          timeOfDay,
-        }),
+      const result = await generateSummaryMutation.mutateAsync({
+        conversationHistory,
+        language: lang,
+        selectedQuestion,
+        timeOfDay,
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate summary");
-      }
-
-      const result: SummaryAPIResponse = await response.json();
+      
       return result.success
         ? { title: result.summary, enhanced: result.enhanced }
         : { title: "" };
@@ -204,7 +169,7 @@ export default function Component() {
       console.error("Error generating summary:", error);
       return { title: "" };
     }
-  }, [conversationHistory, lang, selectedQuestion, timeOfDay]);
+  }, [conversationHistory, lang, selectedQuestion, timeOfDay, generateSummaryMutation]);
 
   const resetDiary = useCallback(async () => {
     // Only generate summary if there's conversation history
@@ -266,24 +231,9 @@ export default function Component() {
           analytics: analytics,
         };
 
-        const response = await fetch("/api/yellowbox/entries", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(entriesData),
-        });
-
-        if (!response.ok) {
-          trackError();
-          throw new Error("Failed to save entries");
-        }
-
-        const result = await response.json();
-        saveResult = result;
+        saveResult = await saveEntriesMutation.mutateAsync(entriesData);
       } catch (error) {
-        console.error("Error saving entries:", error);
-        trackError();
+        handleError(error as Error);
         saveResult = { success: false, error: String(error) };
       }
     }
@@ -315,28 +265,17 @@ export default function Component() {
     lang,
     analytics,
     trackError,
+    createError,
+    handleError,
+    saveEntriesMutation,
   ]);
 
-  // Global keyboard shortcut handler (defined after resetDiary)
-  useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
-        // Cmd/Ctrl+Enter triggers Done functionality globally
-        e.preventDefault();
-        if (conversationHistory.length > 0 && !isGeneratingSummary) {
-          resetDiary();
-        }
-      }
-    };
-
-    // Add event listener
-    document.addEventListener("keydown", handleGlobalKeyDown);
-
-    // Cleanup
-    return () => {
-      document.removeEventListener("keydown", handleGlobalKeyDown);
-    };
-  }, [conversationHistory.length, isGeneratingSummary, resetDiary]);
+  // Use keyboard shortcuts hook
+  useKeyboardShortcuts({
+    onCtrlEnter: resetDiary,
+    conversationHistoryLength: conversationHistory.length,
+    isGeneratingSummary,
+  });
 
   const handleVoiceTranscription = (text: string) => {
     // Track voice input usage
@@ -375,13 +314,13 @@ export default function Component() {
     }
   };
 
-  const handleCompositionStart = () => {
+  const handleCompositionStart = useCallback(() => {
     setIsComposing(true);
-  };
+  }, []);
 
-  const handleCompositionEnd = () => {
+  const handleCompositionEnd = useCallback(() => {
     setIsComposing(false);
-  };
+  }, []);
 
 
 
@@ -406,46 +345,13 @@ export default function Component() {
           </Link>
 
           <div className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.h1
-                key={showSummary ? `summary-${summaryTitle}` : timeOfDay}
-                initial={{
-                  x: -100,
-                  opacity: 0,
-                  filter: "blur(4px)",
-                  scale: 0.8,
-                }}
-                animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
-                exit={{ x: 100, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-                className="text-5xl font-bold leading-tight"
-              >
-                {showSummary ? (
-                  <span className="text-[#C04635] italic">
-                    {isGeneratingSummary
-                      ? t("generatingSummary")
-                      : summaryTitle}
-                  </span>
-                ) : timeOfDay === "morning" ? (
-                  <>
-                    <span className="italic font-semibold">Morning</span>{" "}
-                    Reflection
-                  </>
-                ) : timeOfDay === "evening" ? (
-                  <>
-                    <span className="italic font-semibold">Evening</span>{" "}
-                    Reflection
-                  </>
-                ) : (
-                  <>
-                    {t("titlePart1")}
-                    <span className="italic font-semibold">
-                      {t("titlePart2")}
-                    </span>
-                    {t("titlePart3")}
-                  </>
-                )}
-              </motion.h1>
-            </AnimatePresence>
+            <SummaryDisplay
+              showSummary={showSummary}
+              isGeneratingSummary={isGeneratingSummary}
+              summaryTitle={summaryTitle}
+              timeOfDay={timeOfDay}
+              t={t}
+            />
           </div>
 
           {/* Top divider line */}
@@ -454,82 +360,27 @@ export default function Component() {
           {/* Conversation and Input Container */}
           <div className="max-h-[calc(100vh-300px)] overflow-y-auto space-y-3">
             {/* Conversation History */}
-            {conversationHistory.length > 0 && (
-              <div className="space-y-3">
-                {conversationHistory.map((message, index) => (
-                  <div key={index} className={`text-[#3B3109] text-base`}>
-                    {message.type === "ai" ? (
-                      index === conversationHistory.length - 1 ? (
-                        <TextEffect
-                          key={`ai-${index}`}
-                          preset="fade-in-blur"
-                          speedReveal={1.1}
-                          speedSegment={0.3}
-                          className="text-[#C04635] text-base "
-                          onAnimationComplete={handleAnimationComplete}
-                        >
-                          {message.content}
-                        </TextEffect>
-                      ) : (
-                        <div className="text-[#C04635] text-base ">
-                          {message.content}
-                        </div>
-                      )
-                    ) : (
-                      <div className="whitespace-pre-wrap py-1">
-                        {message.content}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <ConversationView
+              conversationHistory={conversationHistory}
+              onAnimationComplete={handleAnimationComplete}
+            />
 
             {/* Input Section */}
             {showInput ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                className="space-y-4"
-              >
-                <motion.textarea
-                  initial={{ opacity: 0, x: -20, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                  value={userAnswer}
-                  onChange={(e) => {
-                    const newValue = e.target.value;
-                    trackTextChange(newValue, previousAnswer.current);
-                    previousAnswer.current = newValue;
-                    setUserAnswer(newValue);
-                  }}
-                  onKeyDown={(e) => {
-                    trackKeystroke(e.nativeEvent, userAnswer.length);
-                    handleKeyDown(e);
-                  }}
-                  onKeyUp={(e) => {
-                    trackKeystroke(e.nativeEvent, userAnswer.length);
-                  }}
-                  onCompositionStart={handleCompositionStart}
-                  onCompositionEnd={handleCompositionEnd}
-                  placeholder={
-                    conversationHistory.length === 0
-                      ? selectedQuestion
-                      : "Continue your thoughts..."
-                  }
-                  className="w-full py-1 h-32 rounded-lg bg-yellow-400 text-[#3B3109] text-base resize-none focus:outline-none"
-                />
-
-                <motion.div
-                  initial={{ opacity: 0, x: -20, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                  className="flex gap-2 items-center h-10"
-                >
-                  <VoiceInput
-                    onTranscriptionComplete={handleVoiceTranscription}
-                    disabled={isLoading}
-                  />
-                </motion.div>
-              </motion.div>
+              <InputSection
+                userAnswer={userAnswer}
+                conversationHistory={conversationHistory}
+                selectedQuestion={selectedQuestion}
+                isLoading={isLoading}
+                isComposing={isComposing}
+                onAnswerChange={setUserAnswer}
+                onKeyDown={handleKeyDown}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
+                onVoiceTranscription={handleVoiceTranscription}
+                trackKeystroke={trackKeystroke}
+                trackTextChange={trackTextChange}
+              />
             ) : (
               <div className="h-[40px]"></div>
             )}
