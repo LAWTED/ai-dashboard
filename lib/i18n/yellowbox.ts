@@ -51,6 +51,13 @@ export interface YellowboxTranslations {
   generatingSummary: string;
   summaryError: string;
 
+  // Time of day titles
+  morningReflection: string;
+  eveningReflection: string;
+
+  // Language switching
+  switchLanguage: string;
+
   // Entries pages
   myEntries: string;
   noEntries: string;
@@ -71,6 +78,10 @@ export interface YellowboxTranslations {
   generating: string;
   quoteGenerated: string;
   quoteGenerationFailed: string;
+  noEntriesAvailable: string;
+  quoteExported: string;
+  exportFailed: string;
+  designQuote: string;
 }
 
 export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
@@ -125,6 +136,13 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     generatingSummary: '生成摘要中...',
     summaryError: '生成摘要失败',
 
+    // Time of day titles
+    morningReflection: '晨间反思',
+    eveningReflection: '夜间反思',
+
+    // Language switching
+    switchLanguage: 'Switch to English',
+
     // Entries pages
     myEntries: '我的笔记',
     noEntries: '还没有笔记条目',
@@ -144,7 +162,11 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     generateQuote: '生成精彩瞬间',
     generating: '生成中...',
     quoteGenerated: '精彩瞬间已生成并下载！',
-    quoteGenerationFailed: '生成精彩瞬间失败，请稍后重试'
+    quoteGenerationFailed: '生成精彩瞬间失败，请稍后重试',
+    noEntriesAvailable: '没有可用的日记条目',
+    quoteExported: '引言已导出',
+    exportFailed: '导出失败',
+    designQuote: '设计精彩瞬间'
   },
 
   en: {
@@ -198,6 +220,13 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     generatingSummary: 'Generating summary...',
     summaryError: 'Failed to generate summary',
 
+    // Time of day titles
+    morningReflection: 'Morning Reflection',
+    eveningReflection: 'Evening Reflection',
+
+    // Language switching
+    switchLanguage: '切换到中文',
+
     // Entries pages
     myEntries: 'My Entries',
     noEntries: 'No entries yet',
@@ -217,7 +246,11 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     generateQuote: 'Generate Quote',
     generating: 'Generating...',
     quoteGenerated: 'Quote generated and downloaded!',
-    quoteGenerationFailed: 'Failed to generate quote, please try again'
+    quoteGenerationFailed: 'Failed to generate quote, please try again',
+    noEntriesAvailable: 'No diary entries available',
+    quoteExported: 'Quote exported successfully',
+    exportFailed: 'Export failed',
+    designQuote: 'Design Quote'
   }
 };
 
