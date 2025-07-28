@@ -3,27 +3,48 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
-import { YellowBoxProvider, useYellowBoxContext } from "@/contexts/yellowbox-context";
+import { YellowBoxProviders } from "@/contexts/yellowbox-providers";
+import { useYellowBoxAuth } from "@/contexts/yellowbox-auth-context";
+import { useYellowBoxUI } from "@/contexts/yellowbox-ui-context";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
+import { YellowBoxErrorBoundary } from "@/components/yellowbox/YellowBoxErrorBoundary";
+import { ReactQueryProvider } from "@/components/providers/ReactQueryProvider";
 
 // Shared sidebar component
 function SharedSidebar() {
-  const { 
-    currentFont, 
-    lang, 
-    handleLogout, 
-    handleFontToggle, 
-    handleLanguageToggle,
-    getLanguageTooltip,
-    t
-  } = useYellowBoxContext();
+  const { handleLogout } = useYellowBoxAuth();
+  const { currentFont, handleFontToggle, timeOfDay, setTimeOfDay } = useYellowBoxUI();
+  const { lang, handleLanguageToggle, getLanguageTooltip, t } = useYellowBoxI18n();
+
+  const handleTimeOfDayClick = (period: "morning" | "daytime" | "evening") => {
+    setTimeOfDay(period);
+  };
 
   return (
     <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4">
-      {/* Scroll indicator dots (static) */}
+      {/* Time of day indicator dots (interactive) */}
       <div className="flex flex-col items-center space-y-2 mb-4">
-        <div className="size-1.5 rounded-full bg-black"></div>
-        <div className="w-1 h-12 rounded-full bg-[#2AB186]"></div>
-        <div className="size-1.5 rounded-full bg-black"></div>
+        <motion.div
+          className={`size-1.5 rounded-full cursor-pointer ${timeOfDay === "morning" ? "bg-[#2AB186]" : "bg-black"}`}
+          whileTap={{ scale: 1.5 }}
+          transition={{ duration: 0.1 }}
+          onClick={() => handleTimeOfDayClick("morning")}
+          title="Morning"
+        ></motion.div>
+        <motion.div
+          className={`w-1 h-12 rounded-full cursor-pointer ${timeOfDay === "daytime" ? "bg-[#2AB186]" : "bg-black"}`}
+          whileTap={{ scaleX: 1.5 }}
+          transition={{ duration: 0.1 }}
+          onClick={() => handleTimeOfDayClick("daytime")}
+          title="Daytime"
+        ></motion.div>
+        <motion.div
+          className={`size-1.5 rounded-full cursor-pointer ${timeOfDay === "evening" ? "bg-[#2AB186]" : "bg-black"}`}
+          whileTap={{ scale: 1.5 }}
+          transition={{ duration: 0.1 }}
+          onClick={() => handleTimeOfDayClick("evening")}
+          title="Evening"
+        ></motion.div>
       </div>
 
       {/* Font Switcher */}
@@ -107,7 +128,7 @@ function SharedSidebar() {
 
 // Layout content component
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { getFontClass } = useYellowBoxContext();
+  const { getFontClass } = useYellowBoxUI();
 
   return (
     <div className={`min-h-screen relative overflow-hidden bg-black selection:bg-black selection:text-yellow-400 ${getFontClass()}`}>
@@ -138,8 +159,12 @@ export default function YellowboxLayout({
   children: React.ReactNode;
 }) {
   return (
-    <YellowBoxProvider>
-      <LayoutContent>{children}</LayoutContent>
-    </YellowBoxProvider>
+    <ReactQueryProvider>
+      <YellowBoxErrorBoundary>
+        <YellowBoxProviders>
+          <LayoutContent>{children}</LayoutContent>
+        </YellowBoxProviders>
+      </YellowBoxErrorBoundary>
+    </ReactQueryProvider>
   );
 }
