@@ -1,129 +1,370 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Dashboard - Stanford Research Platform
 
-## Getting Started
+A comprehensive AI-powered educational platform built with Next.js 15, featuring multiple research projects and intelligent applications for academic support and personal development.
 
-First, run the development server:
+## 🏗️ Architecture Overview
+
+This repository contains multiple research projects spanning AI-powered educational tools, data analysis systems, and academic support applications, with **YellowBox** being the flagship personal reflection platform.
+
+## 🚀 Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Start development server
 pnpm dev
-# or
-bun dev
+
+# Build for production
+pnpm build
+
+# Run linting
+pnpm lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📋 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Key Projects
 
-## Learn More
+- **🟡 YellowBox** (`/app/yellowbox/`) - AI-powered reflection and journaling platform
+- **🤖 Alice AI** (`/app/(dashboard)/alice/`) - Graduate school guidance chatbot
+- **🎮 PUA Game** (`/app/(dashboard)/pua-game/`) - Social interaction simulation
+- **📄 Paper System** (`/app/paper/`) - Interactive document management
+- **📧 Social Journal** (`/app/social-journal/`) - 3D social interaction platform
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 🟡 YellowBox - Personal Reflection Platform
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+YellowBox is a sophisticated AI-powered reflection and journaling platform that provides users with an interactive diary experience featuring time-based reflection prompts, AI conversations, multilingual support, and creative quote generation capabilities.
 
-## Deploy on Vercel
+## ✨ Key Features
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 🕐 Time-Based Reflection System
+- **Morning Mode**: Goal-setting and intention prompts
+- **Daytime Mode**: Free-form writing ("Write...")  
+- **Evening Mode**: Reflection and gratitude prompts
+- **Interactive Time Indicators**: Click the dots in the sidebar to switch between modes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 🤖 AI-Powered Conversations  
+- Context-aware AI conversations with memory
+- Multiple AI providers (OpenAI, DeepSeek)
+- Streaming responses for real-time interaction
+- Intelligent summary generation
 
-# AI Chatbot (Leader: Lawted)
+### 🎨 Quote Generation & Design
+- AI-powered quote extraction from diary entries
+- 6 professional templates with gradient backgrounds
+- High-quality canvas-based export system
+- Customizable layouts and typography
 
-# **1. Lead Capture**
+### 🌍 Multilingual Support
+- Bilingual implementation (English/Chinese)
+- Dynamic language switching
+- Cultural adaptation for different writing styles
+- Browser language detection
 
-## 1.1 **Complete Stranger (Cold Lead) 初次接触，从零建立信任**
+### 📱 Modern UI/UX
+- Responsive design with mobile-first approach
+- Smooth animations with Framer Motion
+- Interactive time-of-day indicators
+- Professional typography and layouts
 
-### 1.1.1 Scenario
+## 🛠️ Technology Stack
 
-- The student finds us via ads/search (no prior connection).
+### Frontend Technologies
+- **Next.js 15.2.4** with **React 19.0.0** - App Router architecture
+- **TypeScript** - Full type safety throughout the application
+- **Tailwind CSS 4.0** - Utility-first styling with PostCSS
+- **Framer Motion 12.17.0** - Smooth animations and micro-interactions
+- **Radix UI** - Comprehensive accessible component library
 
-### 1.1.2 Opener
+### UI Components & Styling
+```typescript
+// Component libraries used
+@radix-ui/react-dialog, @radix-ui/react-avatar, @radix-ui/react-scroll-area
+@radix-ui/react-select, @radix-ui/react-tabs, @radix-ui/react-tooltip
 
-> Hello同学你好呀～ 是要申请grad school嘛？
->
+// Styling utilities  
+class-variance-authority - Component variants
+tailwind-scrollbar - Custom scrollbar styling
+```
 
-> 我先自我介绍下，我叫Alice，中文名李星煜，本科清华，博士毕业于Stanford，目前在Stanford做research scientist（其实就是俗称的“博士后”～）。
->
+### Backend & Database
+- **Supabase** - Backend-as-a-Service with PostgreSQL
+- **Authentication** - Email/password with session management
+- **Real-time capabilities** - Built-in support for live updates
+- **Row Level Security (RLS)** - Data protection at database level
 
-> 怎么称呼你比较好呀？我给你微信备注上。
->
+### AI Integration
+```typescript
+// AI SDKs
+@ai-sdk/openai     // OpenAI GPT models
+@ai-sdk/deepseek   // DeepSeek models  
+@ai-sdk/react      // React-specific AI utilities
+```
 
-### 1.1.3 If Replied
+### State Management & Data Fetching
+- **React Context API** - Multiple specialized providers
+- **React Query** - Efficient data fetching and caching
+- **Custom Hooks** - Reusable logic patterns
+- **Local Storage** - User preferences persistence
 
-- Store the student’s name in our database;
-- Move to the next stage.
+## 🏗️ Architecture Patterns
 
-### 1.1.4 If Not Replied
+### Context Provider Structure
+```
+YellowboxProviders/
+├── YellowboxI18nProvider    # Internationalization
+├── YellowboxAuthProvider    # Authentication state  
+├── YellowboxUIProvider      # UI preferences & themes
+└── ReactQueryProvider       # Data fetching & caching
+```
 
-> 嗨～ 你好啊同学！之前你是不是在忙来着，看你加我好像是要申grad school的？有什么具体想了解的不，欢迎提问哈！
->
-- If the student doesn’t reply after 2 prompts, drop the lead.
+### Custom Hooks Architecture
+```typescript
+// Data management hooks
+useYellowboxQueries          // React Query integration
+useYellowboxAnalytics        // User behavior tracking
+useYellowboxErrorHandler     // Centralized error handling
+useKeyboardShortcuts         // Keyboard navigation
 
-# **2. Qualification**
+// UI interaction hooks  
+useYellowBoxAuth            // Authentication state
+useYellowBoxUI              // UI preferences & time modes
+useYellowBoxI18n            // Internationalization
+```
 
-## 2.1 **Key Data Points to Capture**
+### Component Organization
+```
+components/yellowbox/
+├── ConversationView.tsx     # Chat interface
+├── InputSection.tsx         # Text input with voice support
+├── SummaryDisplay.tsx       # Dynamic title display
+└── QuoteDesignDialog.tsx    # Quote generation interface
 
-| **Data Field** | **AI Prompt Example** | **Storage Format (CRM)** | **Return** |
-| --- | --- | --- | --- |
-| **Target Degree** | "你是申请PhD吗？还是Master呀？" | **degree_type** (string) | “赞赞！读PhD还是挺香的，哈哈，还可以全奖吃喝玩乐～” |
-| **Timeline** | "你是什么时候打算申呢？“ | **application_cycle** (year) | “Okk！今年申请季的话，学校是9月份就开始开放网申系统了哈，到时你就可以提交申请啦。然后，大部分PhD项目都是12月中截止。不过有些学校ddl超级早～比如Stanford、普林、Michigan是12月1号就截啦。" |
-| **Specific Area** | “你目前科研细分领域有定下来吗？你自己最感兴趣的area或者research keywords这样子～” | **specific_area** (text) | “噢噢，做X方向很酷呀！我们系A就是做这个方向的。” |
-| **Dream Advisors** | “有没有什么你特别喜欢TA科研方向的教授呀～Like your dream advisor这样～” | **dream_advisors** (text) | “哈哈我们有碰到过！之前学术会议的时候。A最近的论文你有看嘛？关于X的，里面有提到挺新的一些方向和contribution。” |
-| **Dream School(s)** | "那选校方面你有什么偏好嘛？学校名气or地理位置什么的。" | **dream_schools** (list/text) | “Ok好呢！我基本上get你喜欢的科研方向和最理想的dream school了。突然想到，给你安利一下，A项目蛮好的，我去年带的学生有申到过，导师是那种真的很nice，很chill、handsoff的导师，不会压榨学生那种～” |
-| **Current Prep** | “你目前准备的情况是怎么样呀？” | **prep** (text) | “嗯嗯。” |
-| **CV/Resume** | “方便把你目前的CV或者简历发来一份不～我看下可能可以更有针对性地帮到你，我们一起brainstorm下怎么申到好的PhD programs。” | **resume** (doc) | “收到！让我来看下然后回你哈～”
+components/ui/
+├── carousel.tsx             # Interactive image carousel
+├── sliding-number.tsx       # Animated number transitions
+└── text-shimmer.tsx         # Loading text effects
+```
 
-- AI parse the doc; |
-| **Current Challenge/ Pain Points** | “你目前自己有什么最迷茫/对于申PhD最担忧的点吗？” | **challenge** (text) | - AI parse the doc; |
-| **Current Institution** |  | **current_school** (string) |  |
-| **GPA** |  | **gpa** (numeric) |  |
-| **Gender** |  | **gender** (binary) |  |
-| **Undergrad Degree** |  | **undergraduate_degree** (string) |  |
-| **Master’s Degree** |  | **master_degree** (string) |  |
-| **Number of Research Experience** |  | **how_many_research** (numeric) |  |
-| **Total Length of Research Experience** |  | **months_research** (numeric) |  |
-| **Research Big Name** |  | **big_name_research** (binary) |  |
-| **Letters of Recommendation** | “对了，之前忘记问，你目前推荐人找得怎么样啦？” | **letter_of_rec** (text) | “需要3位哈。现在找不满也没关系滴。然后如果有超过3位，大部分学校最多支持upload 4-5封推荐信这样子。” |
-| **Family Situation** | “那目前你家里是怎么想的？支持你申PhD吗？或者说他们有什么顾虑是你需要去说服的吗？” | **family_concern** (text) | “嗯嗯，太棒了！你好幸福啊，有这么支持你的family～” |
-| Alternatives | “目前你有没有别的选项呀？如果不去读博的话，打算做什么呢？” | **alternatives** (text) |  |
+## 🗃️ Database Schema
 
-## 2.2 AI Outputs Opportunity Mapping
+### YellowBox Entries Table
+```sql
+yellowbox_entries {
+  id: uuid PRIMARY KEY
+  user_id: uuid REFERENCES auth.users
+  entries: jsonb           -- Conversation history
+  metadata: jsonb          -- UI preferences & analytics
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+```
 
-- AI identifies **tailored pathways** according to each student’s unique concerns and motivations: Low GPA, Weak recommendations, No publications, Visa/ Immigration risks, Imposter syndrome, TOEFL/GRE, Switching fields, Time crunch, SOP/PS struggles, Interview fears Length, Unclear research area, Competitive field, Gap year doubts, School prestige, Burnout PhD lifestyle, Full funding, Dream advisor, Family pressure, Family support.
+### Entry Structure
+```typescript
+interface YellowboxEntry {
+  entries: {
+    selectedQuestion: string
+    conversationHistory: ConversationMessage[]
+    timeOfDay: "morning" | "daytime" | "evening"
+    conversationCount: number
+    completedAt: string
+  }
+  metadata: {
+    currentFont: string
+    language: string
+    totalMessages: number
+    aiSummary?: string
+    enhancedSummary?: EnhancedSummary
+  }
+}
+```
 
-## 2.3 Initial Screening
+## 🔌 API Routes
 
-- if 要转专业来读心理学且教育或实习经历中均无名校背景（中国top 5，或北美top 30），则直接phase out；
-- if GPA < 3.3，则直接phase out；
-- if 学生在3次nudge后不回复，也是直接phase out；
-- others, move to the “immediate empowering” conversation.
+### Core Endpoints
+```typescript
+POST /api/yellowbox/entries          // Save diary entries
+GET  /api/yellowbox/entries          // Retrieve entries with pagination  
+DELETE /api/yellowbox/entries/:id    // Delete specific entries
+POST /api/yellowbox/generate-quote   // AI quote generation
+POST /api/yellowbox/generate-summary // AI summary generation
+```
 
-# **3. Immediate Empowering**
+### AI Integration
+```typescript
+// AI conversation endpoint
+POST /api/yellowbox/diary-response {
+  message: string
+  conversationHistory: ConversationMessage[]
+  selectedQuestion: string
+  timeOfDay: "morning" | "daytime" | "evening"
+}
+```
 
-## 3.1 Logic
+## 🎯 Key Technical Innovations
 
-- If in 2.1 (**Current Challenge/ Pain Points**), the student raises a concern, then, AI (The Alice Chatbot) gives corresponding replies (based on the table below);
-- The chatbot handles mainly: **Research interests, why PhD/Psych (the soul-searching discussion), Dream programs & mentors, PhD lifestyle (honestly sharing pros and cons)**;
-- If students self-report challenge/concern, AI replies with immediate empowering materials;
-- If no self-report challenge/concern, AI prompts in the following order:
-    1. Weak recommendations → [要推荐信的邮件模版] [好推荐信的要点举例]
-    2. GPA concern → [推过往学生靠科研背景提升和会议发表逆袭的案例]
-    3. No publications/ Little research experience → [推过往学生靠科研背景提升和会议发表逆袭的案例]
-    4. Unclear research area → [推过往学生靠科研背景提升和会议发表逆袭的案例] [文书反复修改的截屏记录用于motivate学生多做修改] [自己文书当年改的满篇红色的修改记录去normalize challenges & hardship]
+### Interactive Time-Switching System
+- **Visual Indicators**: Three interactive dots representing different times of day
+- **Dynamic Content**: Title and prompts change based on selected time mode
+- **Smooth Animations**: Framer Motion powered transitions
+- **Context Persistence**: Time preference saved across sessions
 
-## 3.2 Handoff
+### Multilingual Architecture  
+- **Type-Safe Translations**: Full TypeScript support for translation keys
+- **Dynamic Switching**: Language changes without page reload
+- **Cultural Adaptation**: Different writing prompts for different cultures
+- **Browser Detection**: Automatic language selection with user override
 
-### 3.2.1 Trigger
+### AI Conversation Engine
+- **Context Awareness**: Maintains conversation history and context
+- **Streaming Responses**: Real-time AI response rendering
+- **Error Recovery**: Robust error handling with retry mechanisms
+- **Multi-Provider Support**: Easy switching between AI providers
 
-| Scenario | Action |
-| --- | --- |
-| 学生问：“学姐你是在留学机构吗？可以找你做指导吗？” | Forward them the contact of the consulting firm |
-| 学生没有主动提到 | 在发送3个过往学生成功案例后，询问，“是否需要对接专门的机构来聊一聊？” |
+### Canvas-Based Export System
+- **High-DPI Support**: Retina-ready image generation
+- **Professional Templates**: 6 carefully designed quote layouts
+- **Dynamic Typography**: Custom font rendering and spacing
+- **Export Optimization**: Efficient PNG generation with compression
+
+## 🚀 Recent Enhancements
+
+### ✅ Time-Switching Indicators (v2.1)
+- Restored interactive time-of-day switching functionality
+- Added smooth scale animations on user interaction
+- Implemented dynamic title updates based on selected time
+- Enhanced visual feedback with color transitions
+
+### ✅ Improved Internationalization (v2.0)
+- Replaced hardcoded multilingual strings with proper i18n system
+- Added comprehensive translation coverage for all UI elements
+- Implemented type-safe translation keys with TypeScript
+- Enhanced language switching with context preservation
+
+### ✅ Context Architecture Refactoring (v1.9)
+- Modular provider architecture for better separation of concerns
+- Optimized re-rendering with selective context updates
+- Enhanced error handling across all providers
+- Improved TypeScript integration with strict typing
+
+## 🔧 Development Tools
+
+### Code Quality
+```json
+{
+  "typescript": "^5.x",           // Strict type checking
+  "eslint": "^9.x",              // Next.js + React rules
+  "postcss": "^8.x",             // CSS processing
+  "tailwindcss": "^4.x"          // Utility-first styling
+}
+```
+
+### Build & Deployment
+- **PNPM** - Efficient package management
+- **Next.js** - Automatic code splitting and optimization
+- **Vercel** - Seamless deployment with edge functions
+- **PostCSS** - CSS processing and optimization
+
+## 📈 Performance Optimizations
+
+- **React Query** - Intelligent data caching and synchronization
+- **Code Splitting** - Automatic bundle optimization
+- **Image Optimization** - Next.js Image component integration
+- **Lazy Loading** - Component and route-based lazy loading
+- **Memory Management** - Efficient context updates and cleanups
+
+## 🔮 Future Roadmap
+
+### Planned Features
+- [ ] **Real-time Collaboration** - Multi-user diary sharing
+- [ ] **Advanced Analytics** - Personal reflection insights
+- [ ] **Voice Integration** - Voice-to-text diary entries
+- [ ] **Export Formats** - PDF, EPUB, and markdown export
+- [ ] **Offline Support** - Service worker implementation
+- [ ] **Advanced Templates** - More quote design options
+
+### Technical Improvements
+- [ ] **Testing Suite** - Unit, integration, and E2E tests
+- [ ] **Performance Monitoring** - Real-time performance tracking
+- [ ] **API Documentation** - OpenAPI/Swagger documentation
+- [ ] **Enhanced Error Monitoring** - External error tracking
+- [ ] **Advanced State Management** - Migration to Zustand for complex state
+
+---
+
+## 🤖 Alice AI Chatbot System
+
+Alice is an AI-powered graduate school guidance counselor designed to help students navigate the PhD application process.
+
+### Core Features
+- **Lead Qualification** - Automated student assessment
+- **Personalized Guidance** - Tailored advice based on student profiles  
+- **Document Analysis** - CV/Resume parsing and feedback
+- **Application Strategy** - School and advisor recommendations
+
+### Technical Implementation
+- Built on the same Next.js/TypeScript foundation
+- Integrated with multiple AI providers for natural conversations
+- Supabase backend for student data management
+- Advanced conversation flow management
+
+---
+
+## 📦 Installation & Setup
+
+### Prerequisites
+- Node.js 18.x or higher
+- PNPM package manager
+- Supabase account for backend services
+
+### Environment Variables
+```env
+# Database
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# AI Services  
+OPENAI_API_KEY=your_openai_key
+DEEPSEEK_API_KEY=your_deepseek_key
+
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### Development Setup
+```bash
+# Clone repository
+git clone <repository-url>
+cd ai-dashboard
+
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API keys
+
+# Run database migrations (if needed)
+# Configure Supabase schema
+
+# Start development server
+pnpm dev
+```
+
+## 🤝 Contributing
+
+This is a research project at Stanford University. For questions or collaboration opportunities, please reach out through the appropriate academic channels.
+
+## 📄 License
+
+This project is part of Stanford University research activities. Please respect intellectual property and research guidelines.
+
+---
+
+Built with ❤️ at Stanford University | Powered by Next.js, TypeScript & Supabase
