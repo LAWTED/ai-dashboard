@@ -10,7 +10,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sparkles, Download, Shuffle } from "lucide-react";
 import { toast } from "sonner";
-import { useYellowBoxContext } from "@/contexts/yellowbox-context";
+import { useYellowBoxUI } from "@/contexts/yellowbox-ui-context";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
+import { useGenerateQuote } from "@/hooks/use-yellowbox-queries";
 import {
   Carousel,
   CarouselContent,
@@ -138,13 +140,13 @@ export function QuoteDesignDialog({
   const [generatedQuote, setGeneratedQuote] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const { lang, getFontClass } = useYellowBoxContext();
+  const { getFontClass } = useYellowBoxUI();
+  const { lang, t } = useYellowBoxI18n();
+  const generateQuoteMutation = useGenerateQuote();
 
   const generateQuoteFromEntries = useCallback(async () => {
     if (entries.length === 0) {
-      toast.error(
-        lang === "zh" ? "没有可用的日记条目" : "No diary entries available"
-      );
+      toast.error(t("noEntriesAvailable") as string);
       return;
     }
 
@@ -154,45 +156,25 @@ export function QuoteDesignDialog({
       // Select a random entry
       const randomEntry = entries[Math.floor(Math.random() * entries.length)];
 
-      // Get all user messages from the conversation
-      const userMessages = randomEntry.entries.conversationHistory
-        .filter((msg) => msg.type === "user")
-        .map((msg) => msg.content)
-        .join(" ");
 
-      // Call API to generate quote
-      const response = await fetch("/api/yellowbox/generate-quote", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: userMessages,
-          aiSummary: randomEntry.metadata?.aiSummary,
-          emotion: randomEntry.metadata?.enhancedSummary?.emotion?.primary,
-          themes: randomEntry.metadata?.enhancedSummary?.themes,
-          language: lang,
-        }),
+      // Call API to generate quote using React Query
+      const result = await generateQuoteMutation.mutateAsync({
+        entryId: randomEntry.id,
+        template: String(currentTemplateIndex),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate quote");
-      }
-
-      const result = await response.json();
 
       if (result.success) {
         setGeneratedQuote(result.quote);
       } else {
-        throw new Error(result.message || "Failed to generate quote");
+        throw new Error("Failed to generate quote");
       }
     } catch (error) {
       console.error("Error generating quote:", error);
-      toast.error(lang === "zh" ? "生成引言失败" : "Failed to generate quote");
+      // Error handling is done in the hook, but we can show additional context if needed
     } finally {
       setIsGenerating(false);
     }
-  }, [entries, lang]);
+  }, [entries, generateQuoteMutation, currentTemplateIndex, t]);
 
   const regenerateQuote = () => {
     generateQuoteFromEntries();
@@ -200,10 +182,11 @@ export function QuoteDesignDialog({
 
   // Generate initial quote when dialog opens
   useEffect(() => {
-    if (open && !generatedQuote) {
+    if (open && !generatedQuote && entries.length > 0) {
       generateQuoteFromEntries();
     }
-  }, [open, generatedQuote, generateQuoteFromEntries]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, generatedQuote, entries.length]); // Intentionally exclude generateQuoteFromEntries to prevent infinite loop
 
   const exportQuote = async () => {
     const currentTemplate = QUOTE_TEMPLATES[currentTemplateIndex];
@@ -386,12 +369,10 @@ export function QuoteDesignDialog({
       link.href = canvas.toDataURL("image/png");
       link.click();
 
-      toast.success(
-        lang === "zh" ? "引言已导出" : "Quote exported successfully"
-      );
+      toast.success(t("quoteExported") as string);
     } catch (error) {
       console.error("Export error:", error);
-      toast.error(lang === "zh" ? "导出失败" : "Export failed");
+      toast.error(t("exportFailed") as string);
     } finally {
       setIsExporting(false);
     }
@@ -411,7 +392,7 @@ export function QuoteDesignDialog({
         <DialogHeader>
           <DialogTitle className="text-3xl font-bold text-[#3B3109] flex items-center gap-2 mb-2">
             <Sparkles className="w-8 h-8 text-[#C04635]" />
-            {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
+{t("designQuote")}
           </DialogTitle>
 
           {/* Divider */}
