@@ -1,4 +1,4 @@
-import { useYellowBoxContext } from "@/contexts/yellowbox-context";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 import { cn } from "@/lib/utils";
 
 interface CanvasSettingsProps {
@@ -7,7 +7,7 @@ interface CanvasSettingsProps {
 }
 
 export function CanvasSettings({ background, onBackgroundChange }: CanvasSettingsProps) {
-  const { lang } = useYellowBoxContext();
+  const { lang } = useYellowBoxI18n();
 
   const backgrounds = [
     {

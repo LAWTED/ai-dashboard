@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDrag } from "react-dnd";
-import { useYellowBoxContext } from "@/contexts/yellowbox-context";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 import { ChevronDown, ChevronRight, Type, Sparkles, Calendar, MessageSquare, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +48,7 @@ function DraggableItem({ type, content, fontSize, fontFamily, color, icon }: Dra
 }
 
 export function ElementsPanel({ entryData, onAddElement }: ElementsPanelProps) {
-  const { lang, t } = useYellowBoxContext();
+  const { lang, t } = useYellowBoxI18n();
   const [expandedSections, setExpandedSections] = useState({
     text: true,
     stickers: true,

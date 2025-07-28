@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Undo2, Redo2, Trash2 } from "lucide-react";
-import { useYellowBoxContext } from "@/contexts/yellowbox-context";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
+import { useYellowBoxUI } from "@/contexts/yellowbox-ui-context";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Canvas } from "./components/Canvas";
@@ -38,7 +39,8 @@ export interface CanvasState {
 export default function QuoteDesignerPage() {
   const searchParams = useSearchParams();
   const entryId = searchParams.get("entry");
-  const { lang, getFontClass } = useYellowBoxContext();
+  const { lang } = useYellowBoxI18n();
+  const { getFontClass } = useYellowBoxUI();
 
   const [canvasState, setCanvasState] = useState<CanvasState>({
     elements: [],
