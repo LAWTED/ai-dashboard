@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { OptimizedAnalyticsDebug } from "@/components/optimized-yellowbox-analytics-debug";
 import { MinimalYellowBoxAnalytics } from "@/types/yellowbox-analytics";
-import { useYellowBoxContext } from "@/contexts/yellowbox-context";
+import { useYellowBoxUI } from "@/contexts/yellowbox-ui-context";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
+import { useYellowboxEntry, useDeleteEntry } from "@/hooks/use-yellowbox-queries";
 import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
 
-interface YellowboxEntry {
+interface YellowboxEntryType {
   id: string;
   entries: {
     selectedQuestion?: string;
@@ -45,50 +46,22 @@ interface YellowboxEntry {
 }
 
 export default function EntryDetailPage() {
-  const [entry, setEntry] = useState<YellowboxEntry | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const entryId = params.id as string;
   const isDebugMode = searchParams.get('debug') === 'true';
-  const { lang, t, getFontClass } = useYellowBoxContext();
+  const { getFontClass } = useYellowBoxUI();
+  const { lang, t } = useYellowBoxI18n();
+  
+  // Use React Query for data fetching
+  const { data: entry, isLoading, error } = useYellowboxEntry(entryId);
+  const deleteEntryMutation = useDeleteEntry();
+  
+  // Memoize entries array to prevent unnecessary re-renders
+  const entriesArray = useMemo(() => entry ? [entry] : [], [entry]);
 
-  const loadEntry = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-
-      const response = await fetch(`/api/yellowbox/entries?id=${entryId}`, {
-        method: "GET",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to load entry");
-      }
-
-      const result = await response.json();
-      if (result.success && result.data && result.data.length > 0) {
-        setEntry(result.data[0]);
-      } else {
-        setError("Entry not found");
-      }
-    } catch (err) {
-      console.error("Error loading entry:", err);
-      setError("Failed to load entry");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [entryId]);
-
-  useEffect(() => {
-    if (entryId) {
-      loadEntry();
-    }
-  }, [entryId, loadEntry]);
 
 
 
@@ -105,37 +78,11 @@ export default function EntryDetailPage() {
     if (!confirmed) return;
 
     try {
-      setIsDeleting(true);
-
-      const response = await fetch(`/api/yellowbox/entries?id=${entryId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete entry");
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(
-          lang === "zh"
-            ? "条目已成功删除"
-            : "Entry deleted successfully"
-        );
-        router.push("/yellowbox/entries");
-      } else {
-        throw new Error(result.message || "Failed to delete entry");
-      }
+      await deleteEntryMutation.mutateAsync(entryId);
+      router.push("/yellowbox/entries");
     } catch (error) {
+      // Error handling is done in the hook
       console.error("Error deleting entry:", error);
-      toast.error(
-        lang === "zh"
-          ? "删除条目失败"
-          : "Failed to delete entry"
-      );
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -294,12 +241,12 @@ export default function EntryDetailPage() {
             {/* Delete Button */}
             <Button
               onClick={handleDelete}
-              disabled={isDeleting}
+              disabled={deleteEntryMutation.isPending}
               className="bg-red-600 hover:bg-red-700 text-white border-none px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
               title={lang === "zh" ? "删除条目" : "Delete entry"}
             >
               <Trash2 className="w-4 h-4" />
-              {isDeleting
+              {deleteEntryMutation.isPending
                 ? (lang === "zh" ? "删除中..." : "Deleting...")
                 : (lang === "zh" ? "删除" : "Delete")
               }
@@ -325,7 +272,7 @@ export default function EntryDetailPage() {
         <QuoteDesignDialog
           open={isQuoteDialogOpen}
           onOpenChange={setIsQuoteDialogOpen}
-          entries={[entry]}
+          entries={entriesArray}
         />
       )}
     </>

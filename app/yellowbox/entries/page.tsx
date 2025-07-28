@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useYellowBoxContext } from "@/contexts/yellowbox-context";
+import { useYellowBoxUI } from "@/contexts/yellowbox-ui-context";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
+import { useYellowboxEntries, usePrefetchYellowboxData } from "@/hooks/use-yellowbox-queries";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
 
-interface YellowboxEntry {
+interface YellowboxEntryType {
   id: string;
   entries: {
     selectedQuestion?: string;
@@ -42,43 +44,19 @@ interface YellowboxEntry {
 }
 
 export default function EntriesPage() {
-  const [entries, setEntries] = useState<YellowboxEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
   const router = useRouter();
-  const { lang, t, getFontClass } = useYellowBoxContext();
+  const { getFontClass } = useYellowBoxUI();
+  const { lang, t } = useYellowBoxI18n();
+  
+  // Use React Query for data fetching
+  const { data: entries = [], isLoading, error } = useYellowboxEntries();
+  const { prefetchEntry } = usePrefetchYellowboxData();
 
-  const loadEntries = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-
-      const response = await fetch("/api/yellowbox/entries", {
-        method: "GET",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to load entries");
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        setEntries(result.data || []);
-      } else {
-        setError(result.message || "Failed to load entries");
-      }
-    } catch (err) {
-      console.error("Error loading entries:", err);
-      setError("Failed to load entries");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadEntries();
-  }, [loadEntries]);
+  // Prefetch entry data on hover for better UX
+  const handleEntryHover = useCallback((entryId: string) => {
+    prefetchEntry(entryId);
+  }, [prefetchEntry]);
 
   const handleGenerateQuote = async () => {
     if (entries.length === 0) {
@@ -156,9 +134,7 @@ export default function EntriesPage() {
           </div>
         ) : error ? (
           <div className="text-center py-8 text-[#C04635]">
-            {error === "Failed to load entries"
-              ? t("errorLoadingEntries")
-              : error}
+            {t("errorLoadingEntries")}
           </div>
         ) : entries.length === 0 ? (
           <div className="text-center py-8 text-[#3B3109]">
@@ -179,6 +155,7 @@ export default function EntriesPage() {
                 key={entry.id}
                 className="cursor-pointer"
                 onClick={() => router.push(`/yellowbox/entries/${entry.id}`)}
+                onMouseEnter={() => handleEntryHover(entry.id)}
               >
                 {/* Date Header */}
                 <div className="flex items-center justify-between mb-2">
