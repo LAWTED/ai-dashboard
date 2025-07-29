@@ -40,6 +40,31 @@ export function InputSection({
     onAnswerChange(newValue);
   };
 
+  // Helper function to count words (supports Chinese and English)
+  const countWords = (text: string): number => {
+    if (!text || typeof text !== 'string') return 0;
+    const trimmed = text.trim();
+    if (!trimmed) return 0;
+    
+    // Count Chinese characters (each Chinese character counts as one word)
+    const chineseMatches = trimmed.match(/[\u4e00-\u9fff]/g);
+    const chineseCount = chineseMatches ? chineseMatches.length : 0;
+    
+    // Count English words (split by whitespace, filter out Chinese characters)
+    const englishText = trimmed.replace(/[\u4e00-\u9fff]/g, ' ');
+    const englishWords = englishText.split(/\s+/).filter(word => 
+      word.length > 0 && /[a-zA-Z0-9]/.test(word)
+    );
+    const englishCount = englishWords.length;
+    
+    return chineseCount + englishCount;
+  };
+
+  // Calculate stats
+  const characterCount = userAnswer.length;
+  const wordCount = countWords(userAnswer);
+  const estimatedReadTime = Math.max(1, Math.ceil(wordCount / 200)); // 200 words per minute
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     trackKeystroke(e.nativeEvent, userAnswer.length);
     onKeyDown(e);
@@ -75,12 +100,21 @@ export function InputSection({
       <motion.div
         initial={{ opacity: 0, x: -20, filter: "blur(4px)" }}
         animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-        className="flex gap-2 items-center h-10"
+        className="flex gap-2 items-center justify-between h-10"
       >
         <VoiceInput
           onTranscriptionComplete={onVoiceTranscription}
           disabled={isLoading}
         />
+        
+        {/* Character/Word Count Display */}
+        {userAnswer.trim() && (
+          <div className="text-xs text-[#3B3109] opacity-60 flex items-center gap-3">
+            <span>{characterCount} chars</span>
+            <span>{wordCount} words</span>
+            <span>~{estimatedReadTime} min read</span>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );

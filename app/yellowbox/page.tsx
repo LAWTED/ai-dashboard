@@ -7,14 +7,18 @@ import { toast } from "sonner";
 import { useYellowBoxAuth } from "@/contexts/yellowbox-auth-context";
 import { useYellowBoxUI } from "@/contexts/yellowbox-ui-context";
 import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
-import { TextShimmer } from "@/components/ui/text-shimmer";
+import { EnhancedLoading } from "@/components/ui/enhanced-loading";
+import Confetti from "react-confetti";
 import { Button } from "@/components/ui/button";
-import useMeasure from "react-use-measure";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useOptimizedYellowboxAnalytics } from "@/hooks/use-optimized-yellowbox-analytics";
 import { useYellowBoxErrorHandler } from "@/hooks/use-yellowbox-error-handler";
-import { useDiaryResponse, useGenerateSummary, useSaveEntries } from "@/hooks/use-yellowbox-queries";
+import {
+  useDiaryResponse,
+  useGenerateSummary,
+  useSaveEntries,
+} from "@/hooks/use-yellowbox-queries";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { ConversationView } from "@/components/yellowbox/ConversationView";
 import { InputSection } from "@/components/yellowbox/InputSection";
@@ -36,7 +40,6 @@ type EnhancedSummary = {
   themes: string[];
 };
 
-
 export default function Component() {
   const [selectedQuestion, setSelectedQuestion] = useState<string>("");
   const [userAnswer, setUserAnswer] = useState<string>("");
@@ -44,17 +47,22 @@ export default function Component() {
     ConversationMessage[]
   >([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState<
+    "reading" | "thinking" | "responding"
+  >("reading");
   const [isComposing, setIsComposing] = useState(false);
   const [conversationCount, setConversationCount] = useState(0);
   const [showInput, setShowInput] = useState(true);
-  const [contentRef, bounds] = useMeasure();
   const [summaryTitle, setSummaryTitle] = useState<string>("");
   const [, setEnhancedSummary] = useState<EnhancedSummary | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [previousInput, setPreviousInput] = useState<string>("");
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const router = useRouter();
   const { userId } = useYellowBoxAuth();
-  const { currentFont, isMac, getFontClass, timeOfDay } = useYellowBoxUI();
+  const { currentFont, isMac, timeOfDay } = useYellowBoxUI();
   const { lang, t, translations } = useYellowBoxI18n();
 
   // Initialize analytics with session ID
@@ -71,7 +79,7 @@ export default function Component() {
     finalizeSession,
   } = useOptimizedYellowboxAnalytics(sessionId, userId);
 
-  const { handleError, createError } = useYellowBoxErrorHandler({ trackError });
+  const { handleError } = useYellowBoxErrorHandler({ trackError });
 
   // React Query mutations
   const diaryResponseMutation = useDiaryResponse();
@@ -81,6 +89,40 @@ export default function Component() {
   // Get questions from translations
   const questions = translations.questions;
 
+  // Get window size for confetti
+  useEffect(() => {
+    const updateWindowSize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    updateWindowSize();
+    window.addEventListener("resize", updateWindowSize);
+    return () => window.removeEventListener("resize", updateWindowSize);
+  }, []);
+
+  // Auto-save draft functionality
+  useEffect(() => {
+    const savedDraft = localStorage.getItem("yellowbox-draft");
+    if (savedDraft && conversationHistory.length === 0) {
+      setUserAnswer(savedDraft);
+    }
+  }, [conversationHistory.length]);
+
+  useEffect(() => {
+    const saveDraft = () => {
+      if (userAnswer.trim()) {
+        localStorage.setItem("yellowbox-draft", userAnswer);
+      } else {
+        localStorage.removeItem("yellowbox-draft");
+      }
+    };
+
+    const timer = setTimeout(saveDraft, 2000); // Save after 2 seconds of inactivity
+    return () => clearTimeout(timer);
+  }, [userAnswer]);
 
   // Initialize with a question based on time of day
   useEffect(() => {
@@ -109,6 +151,11 @@ export default function Component() {
     ]);
     setUserAnswer("");
     setIsLoading(true);
+    setLoadingStage("reading");
+
+    // Simulate reading stage
+    setTimeout(() => setLoadingStage("thinking"), 500);
+    setTimeout(() => setLoadingStage("responding"), 1500);
 
     try {
       const data = await diaryResponseMutation.mutateAsync({
@@ -161,7 +208,7 @@ export default function Component() {
         selectedQuestion,
         timeOfDay,
       });
-      
+
       return result.success
         ? { title: result.summary, enhanced: result.enhanced }
         : { title: "" };
@@ -169,7 +216,13 @@ export default function Component() {
       console.error("Error generating summary:", error);
       return { title: "" };
     }
-  }, [conversationHistory, lang, selectedQuestion, timeOfDay, generateSummaryMutation]);
+  }, [
+    conversationHistory,
+    lang,
+    selectedQuestion,
+    timeOfDay,
+    generateSummaryMutation,
+  ]);
 
   const resetDiary = useCallback(async () => {
     // Only generate summary if there's conversation history
@@ -200,6 +253,10 @@ export default function Component() {
       setIsGeneratingSummary(false);
       setSummaryTitle(summaryResult.title);
       setEnhancedSummary(summaryResult.enhanced || null);
+
+      // Show confetti for completed entry
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
     } else {
       setIsGeneratingSummary(false);
       setSummaryTitle(t("summaryError") as string);
@@ -264,15 +321,67 @@ export default function Component() {
     currentFont,
     lang,
     analytics,
-    trackError,
-    createError,
     handleError,
     saveEntriesMutation,
   ]);
 
+  // Keyboard shortcut handlers
+  const handleCtrlN = useCallback(() => {
+    // New conversation - reset everything
+    if (
+      window.confirm(
+        "Start a new conversation? Any unsaved changes will be lost."
+      )
+    ) {
+      setUserAnswer("");
+      setConversationHistory([]);
+      setShowInput(true);
+      setShowSummary(false);
+      setConversationCount(0);
+      setSummaryTitle("");
+      localStorage.removeItem("yellowbox-draft");
+
+      // Set new random question
+      if (timeOfDay === "daytime") {
+        setSelectedQuestion("Write...");
+      } else if (questions.length > 0) {
+        const randomQuestion =
+          questions[Math.floor(Math.random() * questions.length)];
+        setSelectedQuestion(randomQuestion);
+      }
+    }
+  }, [timeOfDay, questions]);
+
+  const handleCtrlS = useCallback(() => {
+    // Save draft manually and show toast
+    if (userAnswer.trim()) {
+      localStorage.setItem("yellowbox-draft", userAnswer);
+      toast.success("Draft saved!");
+    }
+  }, [userAnswer]);
+
+  const handleEscape = useCallback(() => {
+    // Clear current input
+    setPreviousInput(userAnswer);
+    setUserAnswer("");
+    localStorage.removeItem("yellowbox-draft");
+  }, [userAnswer]);
+
+  const handleCtrlZ = useCallback(() => {
+    // Undo last input
+    if (previousInput) {
+      setUserAnswer(previousInput);
+      setPreviousInput("");
+    }
+  }, [previousInput]);
+
   // Use keyboard shortcuts hook
   useKeyboardShortcuts({
     onCtrlEnter: resetDiary,
+    onCtrlN: handleCtrlN,
+    onCtrlS: handleCtrlS,
+    onEscape: handleEscape,
+    onCtrlZ: handleCtrlZ,
     conversationHistoryLength: conversationHistory.length,
     isGeneratingSummary,
   });
@@ -322,116 +431,126 @@ export default function Component() {
     setIsComposing(false);
   }, []);
 
-
-
   return (
     <>
-      {/* Yellow Rounded Box */}
-      <motion.div
-        className={`absolute flex flex-col justify-between  left-4 top-4 w-[640px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
-        animate={{
-          height: bounds.height ? bounds.height + 32 : undefined,
-        }}
-      >
-        <div ref={contentRef}>
-          {/* View Entries Link */}
-          <Link href="/yellowbox/entries">
-            <div className="flex items-center gap-2 mb-4 cursor-pointer hover:opacity-70 transition-opacity">
-              <ArrowLeft className="w-3 h-3 text-[#3B3109]" />
-              <span className="text-[#3B3109] text-xs font-medium">
-                {t("myEntries")}
-              </span>
-            </div>
-          </Link>
+      {/* Confetti Effect */}
+      {showConfetti && windowSize.width > 0 && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={200}
+          colors={["#FFC107", "#FFB300", "#FFA000", "#FF8F00", "#FF6F00"]}
+          gravity={0.3}
+        />
+      )}
 
-          <div className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
-            <SummaryDisplay
-              showSummary={showSummary}
-              isGeneratingSummary={isGeneratingSummary}
-              summaryTitle={summaryTitle}
-              timeOfDay={timeOfDay}
-              t={t as (key: string) => string}
-            />
-          </div>
-
-          {/* Top divider line */}
-          <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
-
-          {/* Conversation and Input Container */}
-          <div className="max-h-[calc(100vh-300px)] overflow-y-auto space-y-3">
-            {/* Conversation History */}
-            <ConversationView
-              conversationHistory={conversationHistory}
-              onAnimationComplete={handleAnimationComplete}
-            />
-
-            {/* Input Section */}
-            {showInput ? (
-              <InputSection
-                userAnswer={userAnswer}
-                conversationHistory={conversationHistory}
-                selectedQuestion={selectedQuestion}
-                isLoading={isLoading}
-                onAnswerChange={setUserAnswer}
-                onKeyDown={handleKeyDown}
-                onCompositionStart={handleCompositionStart}
-                onCompositionEnd={handleCompositionEnd}
-                onVoiceTranscription={handleVoiceTranscription}
-                trackKeystroke={trackKeystroke}
-                trackTextChange={trackTextChange}
-              />
-            ) : (
-              <div className="h-[40px]"></div>
-            )}
-          </div>
-
-          {/* Bottom divider line */}
+      {/* Page Content */}
+      {/* View Entries Link */}
+      <Link href="/yellowbox/entries">
+        <div className="flex items-center gap-2 mb-4 cursor-pointer hover:opacity-70 transition-opacity">
           <motion.div
-            layout
-            className="w-full h-px bg-[#E4BE10] my-2"
-          ></motion.div>
-
-          {/* Bottom Navigation */}
-          <motion.div layout className="flex items-center gap-2">
-            <Button
-              onClick={handleAnswerSubmit}
-              disabled={isLoading || !userAnswer.trim()}
-              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed group relative"
-              variant="ghost"
-              size="sm"
-              title={`${t("sparkButton")} (Enter)`}
-            >
-              {isLoading ? (
-                <>
-                  <TextShimmer className="font-medium text-base" duration={1.5}>
-                    {t("thinking") as string}
-                  </TextShimmer>
-                </>
-              ) : (
-                <>
-                  <span>{t("sparkButton")}</span>
-                  <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
-                    ↵
-                  </span>
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={resetDiary}
-              className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 group relative"
-              variant="ghost"
-              size="sm"
-              title={`${t("doneButton")} (${isMac ? "Cmd" : "Ctrl"}+Enter)`}
-            >
-              <span>{t("doneButton")}</span>
-              <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
-                {isMac ? "⌘" : "Ctrl"}+↵
-              </span>
-            </Button>
+            initial={{
+              opacity: 0,
+              x: -10,
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+            }}
+            transition={{
+              delay: 0.3,
+            }}
+          >
+            <ArrowLeft className="w-3 h-3 text-[#3B3109]" />
+          </motion.div>
+          <motion.div
+            layoutId="my-entries-title"
+            className="text-[#3B3109] text-sm font-medium"
+          >
+            {t("myEntries")}
           </motion.div>
         </div>
-      </motion.div>
+      </Link>
 
+      <div className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
+        <SummaryDisplay
+          showSummary={showSummary}
+          isGeneratingSummary={isGeneratingSummary}
+          summaryTitle={summaryTitle}
+          timeOfDay={timeOfDay}
+          t={t as (key: string) => string}
+        />
+      </div>
+
+      {/* Top divider line */}
+      <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
+
+      {/* Conversation and Input Container */}
+      <div className="max-h-[calc(100vh-300px)] overflow-y-auto space-y-3">
+        {/* Conversation History */}
+        <ConversationView
+          conversationHistory={conversationHistory}
+          onAnimationComplete={handleAnimationComplete}
+        />
+
+        {/* Input Section */}
+        {showInput ? (
+          <InputSection
+            userAnswer={userAnswer}
+            conversationHistory={conversationHistory}
+            selectedQuestion={selectedQuestion}
+            isLoading={isLoading}
+            onAnswerChange={setUserAnswer}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
+            onVoiceTranscription={handleVoiceTranscription}
+            trackKeystroke={trackKeystroke}
+            trackTextChange={trackTextChange}
+          />
+        ) : (
+          <div className="h-[40px]"></div>
+        )}
+      </div>
+
+      {/* Bottom divider line */}
+      <motion.div layout className="w-full h-px bg-[#E4BE10] my-2"></motion.div>
+
+      {/* Bottom Navigation */}
+      <motion.div layout className="flex items-center gap-2">
+        <Button
+          onClick={handleAnswerSubmit}
+          disabled={isLoading || !userAnswer.trim()}
+          className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed group relative"
+          variant="ghost"
+          size="sm"
+          title={`${t("sparkButton")} (Enter)`}
+        >
+          {isLoading ? (
+            <EnhancedLoading stage={loadingStage} className="text-[#3B3109]" />
+          ) : (
+            <>
+              <span>{t("sparkButton")}</span>
+              <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
+                ↵
+              </span>
+            </>
+          )}
+        </Button>
+        <Button
+          onClick={resetDiary}
+          className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 group relative"
+          variant="ghost"
+          size="sm"
+          title={`${t("doneButton")} (${isMac ? "Cmd" : "Ctrl"}+Enter)`}
+        >
+          <span>{t("doneButton")}</span>
+          <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
+            {isMac ? "⌘" : "Ctrl"}+↵
+          </span>
+        </Button>
+      </motion.div>
     </>
   );
 }

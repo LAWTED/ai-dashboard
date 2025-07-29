@@ -2,12 +2,20 @@ import { useEffect } from "react";
 
 interface UseKeyboardShortcutsProps {
   onCtrlEnter: () => void;
+  onCtrlN?: () => void;
+  onCtrlS?: () => void;
+  onEscape?: () => void;
+  onCtrlZ?: () => void;
   conversationHistoryLength: number;
   isGeneratingSummary: boolean;
 }
 
 export function useKeyboardShortcuts({
   onCtrlEnter,
+  onCtrlN,
+  onCtrlS,
+  onEscape,
+  onCtrlZ,
   conversationHistoryLength,
   isGeneratingSummary,
 }: UseKeyboardShortcutsProps) {
@@ -19,6 +27,22 @@ export function useKeyboardShortcuts({
         if (conversationHistoryLength > 0 && !isGeneratingSummary) {
           onCtrlEnter();
         }
+      } else if (e.key === "n" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        // Cmd/Ctrl+N for new conversation
+        e.preventDefault();
+        onCtrlN?.();
+      } else if (e.key === "s" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        // Cmd/Ctrl+S for save draft
+        e.preventDefault();
+        onCtrlS?.();
+      } else if (e.key === "Escape") {
+        // Escape to clear input
+        e.preventDefault();
+        onEscape?.();
+      } else if (e.key === "z" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        // Cmd/Ctrl+Z for undo last input
+        e.preventDefault();
+        onCtrlZ?.();
       }
     };
 
@@ -27,5 +51,5 @@ export function useKeyboardShortcuts({
     return () => {
       document.removeEventListener("keydown", handleGlobalKeyDown);
     };
-  }, [conversationHistoryLength, isGeneratingSummary, onCtrlEnter]);
+  }, [conversationHistoryLength, isGeneratingSummary, onCtrlEnter, onCtrlN, onCtrlS, onEscape, onCtrlZ]);
 }
