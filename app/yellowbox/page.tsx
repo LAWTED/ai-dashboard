@@ -519,25 +519,27 @@ export default function Component() {
 
       {/* Bottom Navigation */}
       <motion.div layout className="flex items-center gap-2">
-        <Button
-          onClick={handleAnswerSubmit}
-          disabled={isLoading || !userAnswer.trim()}
-          className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed group relative"
-          variant="ghost"
-          size="sm"
-          title={`${t("sparkButton")} (Enter)`}
-        >
-          {isLoading ? (
-            <EnhancedLoading stage={loadingStage} className="text-[#3B3109]" />
-          ) : (
-            <>
-              <span>{t("sparkButton")}</span>
-              <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
-                ↵
-              </span>
-            </>
-          )}
-        </Button>
+        <motion.div layoutId="write-button" className="flex-1">
+          <Button
+            onClick={handleAnswerSubmit}
+            disabled={isLoading || !userAnswer.trim()}
+            className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 w-full disabled:opacity-50 disabled:cursor-not-allowed group relative"
+            variant="ghost"
+            size="sm"
+            title={`${t("sparkButton")} (Enter)`}
+          >
+            {isLoading ? (
+              <EnhancedLoading stage={loadingStage} className="text-[#3B3109]" />
+            ) : (
+              <>
+                <span>{t("sparkButton")}</span>
+                <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
+                  ↵
+                </span>
+              </>
+            )}
+          </Button>
+        </motion.div>
         <Button
           onClick={resetDiary}
           className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 group relative"

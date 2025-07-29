@@ -180,27 +180,31 @@ export default function EntryDetailPage() {
           {/* Action Buttons */}
           <div className="flex justify-center gap-3 mt-4">
             {/* Design Quote Button */}
-            <Button
-              onClick={() => setIsQuoteDialogOpen(true)}
-              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
-            </Button>
+            <motion.div layoutId="design-quote-button">
+              <Button
+                onClick={() => setIsQuoteDialogOpen(true)}
+                className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
+              </Button>
+            </motion.div>
             
             {/* Delete Button */}
-            <Button
-              onClick={handleDelete}
-              disabled={deleteEntryMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 text-white border-none px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-              title={lang === "zh" ? "删除条目" : "Delete entry"}
-            >
-              <Trash2 className="w-4 h-4" />
-              {deleteEntryMutation.isPending
-                ? (lang === "zh" ? "删除中..." : "Deleting...")
-                : (lang === "zh" ? "删除" : "Delete")
-              }
-            </Button>
+            <motion.div layoutId="delete-button">
+              <Button
+                onClick={handleDelete}
+                disabled={deleteEntryMutation.isPending}
+                className="bg-red-600 hover:bg-red-700 text-white border-none px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                title={lang === "zh" ? "删除条目" : "Delete entry"}
+              >
+                <Trash2 className="w-4 h-4" />
+                {deleteEntryMutation.isPending
+                  ? (lang === "zh" ? "删除中..." : "Deleting...")
+                  : (lang === "zh" ? "删除" : "Delete")
+                }
+              </Button>
+            </motion.div>
           </div>
           </>
         ) : null}
