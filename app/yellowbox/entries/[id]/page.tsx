@@ -4,11 +4,10 @@ import { useState, useMemo } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { OptimizedAnalyticsDebug } from "@/components/optimized-yellowbox-analytics-debug";
 import { MinimalYellowBoxAnalytics } from "@/types/yellowbox-analytics";
-import { useYellowBoxUI } from "@/contexts/yellowbox-ui-context";
 import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 import { useYellowboxEntry, useDeleteEntry } from "@/hooks/use-yellowbox-queries";
 import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
@@ -20,7 +19,6 @@ export default function EntryDetailPage() {
   const searchParams = useSearchParams();
   const entryId = params.id as string;
   const isDebugMode = searchParams.get('debug') === 'true';
-  const { getFontClass } = useYellowBoxUI();
   const { lang, t } = useYellowBoxI18n();
   
   // Use React Query for data fetching
@@ -57,24 +55,21 @@ export default function EntryDetailPage() {
 
   return (
     <>
+      {/* Header - Back to Entries Link */}
+      <Link href="/yellowbox/entries">
+        <div className="flex items-center gap-2 mb-4 cursor-pointer hover:opacity-70 transition-opacity">
+          <ArrowLeft className="w-3 h-3 text-[#3B3109]" />
+          <motion.span 
+            layoutId="my-entries-title"
+            className="text-[#3B3109] text-xs font-medium"
+          >
+            {t("backToEntries")}
+          </motion.span>
+        </div>
+      </Link>
 
-      {/* Yellow Rounded Box */}
-      <div
-        className={`absolute left-4 top-4 w-[640px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
-      >
-        <div>
-          {/* Header - Back to Entries Link */}
-          <Link href="/yellowbox/entries">
-            <div className="flex items-center gap-2 mb-4 cursor-pointer hover:opacity-70 transition-opacity">
-              <ArrowLeft className="w-3 h-3 text-[#3B3109]" />
-              <span className="text-[#3B3109] text-xs font-medium">
-                {t("backToEntries")}
-              </span>
-            </div>
-          </Link>
-
-        {/* Content */}
-        {isLoading ? (
+      {/* Content */}
+      {isLoading ? (
           <div className="text-center py-8 text-[#3B3109]">
             {t("loadingEntry")}
           </div>
@@ -85,19 +80,7 @@ export default function EntryDetailPage() {
         ) : entry ? (
           <>
           <div className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.h1
-                key={entry.id}
-                initial={{
-                  x: -100,
-                  opacity: 0,
-                  filter: "blur(4px)",
-                  scale: 0.8,
-                }}
-                animate={{ x: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
-                exit={{ x: 100, opacity: 0, filter: "blur(4px)", scale: 0.8 }}
-                className="text-5xl font-bold leading-tight"
-              >
+            <h1 className="text-5xl font-bold leading-tight">
                 {entry.metadata?.aiSummary ? (
                   <span className="text-[#C04635] italic">
                     {entry.metadata.aiSummary}
@@ -121,8 +104,7 @@ export default function EntryDetailPage() {
                     {t("titlePart3")}
                   </>
                 )}
-              </motion.h1>
-            </AnimatePresence>
+            </h1>
           </div>
 
           {/* Enhanced Summary Tags and Emotion */}
@@ -222,8 +204,6 @@ export default function EntryDetailPage() {
           </div>
           </>
         ) : null}
-        </div>
-      </div>
 
       {/* Analytics Debug Information */}
       {isDebugMode && entry && (
