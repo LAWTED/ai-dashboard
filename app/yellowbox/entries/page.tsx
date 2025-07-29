@@ -142,13 +142,26 @@ export default function EntriesPage() {
     <>
       {/* Page Content */}
       <div className="max-h-[calc(100vh-32px)] overflow-y-auto">
-        {/* Title */}
-        <motion.div
-          layoutId="my-entries-title"
-          className="text-3xl w-fit font-bold px-2 text-[#3B3109] mb-4 leading-tight"
-        >
-          {t("myEntries")}
-        </motion.div>
+        {/* Header with Title and Export Button */}
+        <div className="flex items-center justify-between mb-4">
+          <motion.div
+            layoutId="my-entries-title"
+            className="text-3xl font-bold px-2 text-[#3B3109] leading-tight"
+          >
+            {t("myEntries")}
+          </motion.div>
+          
+          {/* Export Button */}
+          {entries.length > 0 && (
+            <Button
+              onClick={() => setIsExportDialogOpen(true)}
+              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-3 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">{lang === "zh" ? "导出" : "Export"}</span>
+            </Button>
+          )}
+        </div>
 
         {/* Divider */}
         <div className="w-full h-px bg-[#E4BE10] mb-4"></div>
@@ -391,16 +404,6 @@ export default function EntriesPage() {
             </Button>
           )}
 
-          {/* Export Button */}
-          {entries.length > 0 && (
-            <Button
-              onClick={() => setIsExportDialogOpen(true)}
-              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              {lang === "zh" ? "导出" : "Export"}
-            </Button>
-          )}
 
           {/* Back Button */}
           <Link href="/yellowbox">
