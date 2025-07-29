@@ -518,28 +518,36 @@ export default function Component() {
       <motion.div layout className="w-full h-px bg-[#E4BE10] my-2"></motion.div>
 
       {/* Bottom Navigation */}
-      <motion.div layout className="flex items-center gap-2">
-        <motion.div layoutId="write-button" className="flex-1">
-          <Button
-            onClick={handleAnswerSubmit}
-            disabled={isLoading || !userAnswer.trim()}
-            className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 w-full disabled:opacity-50 disabled:cursor-not-allowed group relative"
-            variant="ghost"
-            size="sm"
-            title={`${t("sparkButton")} (Enter)`}
-          >
-            {isLoading ? (
-              <EnhancedLoading stage={loadingStage} className="text-[#3B3109]" />
-            ) : (
-              <>
-                <span>{t("sparkButton")}</span>
-                <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
-                  ↵
-                </span>
-              </>
-            )}
-          </Button>
-        </motion.div>
+      <motion.div 
+        layout 
+        className="flex items-center gap-2"
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ 
+          delay: 0.4, // Start when height animation is nearly finished
+          duration: 0.3,
+          ease: "easeOut"
+        }}
+      >
+        <Button
+          onClick={handleAnswerSubmit}
+          disabled={isLoading || !userAnswer.trim()}
+          className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed group relative"
+          variant="ghost"
+          size="sm"
+          title={`${t("sparkButton")} (Enter)`}
+        >
+          {isLoading ? (
+            <EnhancedLoading stage={loadingStage} className="text-[#3B3109]" />
+          ) : (
+            <>
+              <span>{t("sparkButton")}</span>
+              <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
+                ↵
+              </span>
+            </>
+          )}
+        </Button>
         <Button
           onClick={resetDiary}
           className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 group relative"

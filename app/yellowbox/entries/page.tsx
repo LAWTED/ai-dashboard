@@ -392,33 +392,37 @@ export default function EntriesPage() {
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-center gap-3 mt-4">
+        <motion.div 
+          className="flex justify-center gap-3 mt-4"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ 
+            delay: 0.4, // Start when height animation is nearly finished
+            duration: 0.3,
+            ease: "easeOut"
+          }}
+        >
           {/* Generate Quote Button */}
           {entries.length > 0 && (
-            <motion.div layoutId="design-quote-button">
-              <Button
-                onClick={handleGenerateQuote}
-                className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Sparkles className="w-4 h-4" />
-                {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
-              </Button>
-            </motion.div>
+            <Button
+              onClick={handleGenerateQuote}
+              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
+            </Button>
           )}
-
 
           {/* Back Button */}
           <Link href="/yellowbox">
-            <motion.div layoutId="write-button">
-              <Button
-                variant="ghost"
-                className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-6"
-              >
-                {t("backToWrite")}
-              </Button>
-            </motion.div>
+            <Button
+              variant="ghost"
+              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-6"
+            >
+              {t("backToWrite")}
+            </Button>
           </Link>
-        </div>
+        </motion.div>
       </div>
 
       {/* Quote Design Dialog */}
