@@ -177,40 +177,42 @@ export default function EntryDetailPage() {
             className="w-full h-px bg-[#E4BE10] my-2"
           ></motion.div>
 
-          {/* Action Buttons */}
-          <motion.div 
-            className="flex justify-center gap-3 mt-4"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ 
-              delay: 0.4, // Start when height animation is nearly finished
-              duration: 0.3,
-              ease: "easeOut"
-            }}
-          >
-            {/* Design Quote Button */}
-            <Button
-              onClick={() => setIsQuoteDialogOpen(true)}
-              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          {/* Action Buttons - positioned to slide in from container bottom */}
+          <div className="relative mt-4 overflow-hidden">
+            <motion.div 
+              className="flex justify-center gap-3"
+              initial={{ y: 60 }}
+              animate={{ y: 0 }}
+              transition={{ 
+                delay: 0.4, // Start when height animation is nearly finished
+                duration: 0.3,
+                ease: "easeOut"
+              }}
             >
-              <Sparkles className="w-4 h-4" />
-              {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
-            </Button>
-            
-            {/* Delete Button */}
-            <Button
-              onClick={handleDelete}
-              disabled={deleteEntryMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 text-white border-none px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-              title={lang === "zh" ? "删除条目" : "Delete entry"}
-            >
-              <Trash2 className="w-4 h-4" />
-              {deleteEntryMutation.isPending
-                ? (lang === "zh" ? "删除中..." : "Deleting...")
-                : (lang === "zh" ? "删除" : "Delete")
-              }
-            </Button>
-          </motion.div>
+              {/* Design Quote Button */}
+              <Button
+                onClick={() => setIsQuoteDialogOpen(true)}
+                className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
+              </Button>
+              
+              {/* Delete Button */}
+              <Button
+                onClick={handleDelete}
+                disabled={deleteEntryMutation.isPending}
+                className="bg-red-600 hover:bg-red-700 text-white border-none px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                title={lang === "zh" ? "删除条目" : "Delete entry"}
+              >
+                <Trash2 className="w-4 h-4" />
+                {deleteEntryMutation.isPending
+                  ? (lang === "zh" ? "删除中..." : "Deleting...")
+                  : (lang === "zh" ? "删除" : "Delete")
+                }
+              </Button>
+            </motion.div>
+          </div>
           </>
         ) : null}
 
