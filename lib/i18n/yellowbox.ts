@@ -82,6 +82,9 @@ export interface YellowboxTranslations {
   quoteExported: string;
   exportFailed: string;
   designQuote: string;
+
+  // Stats
+  writingStats: string;
 }
 
 export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
@@ -166,7 +169,10 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     noEntriesAvailable: '没有可用的日记条目',
     quoteExported: '引言已导出',
     exportFailed: '导出失败',
-    designQuote: '设计精彩瞬间'
+    designQuote: '设计精彩瞬间',
+
+    // Stats
+    writingStats: '写作统计'
   },
 
   en: {
@@ -250,7 +256,10 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     noEntriesAvailable: 'No diary entries available',
     quoteExported: 'Quote exported successfully',
     exportFailed: 'Export failed',
-    designQuote: 'Design Quote'
+    designQuote: 'Design Quote',
+
+    // Stats
+    writingStats: 'Writing Stats'
   }
 };
 
