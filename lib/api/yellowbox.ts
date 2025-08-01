@@ -3,6 +3,7 @@
 export interface ConversationMessage {
   type: "user" | "ai";
   content: string;
+  images?: string[]; // Array of image URLs from Supabase
 }
 
 export interface YellowboxEntry {
@@ -38,6 +39,7 @@ export interface DiaryRequest {
   userEntry: string;
   timeOfDay: "morning" | "daytime" | "evening";
   conversationCount: number;
+  images?: string[]; // Array of image URLs from Supabase
 }
 
 export interface DiaryResponse {
@@ -100,7 +102,7 @@ export interface QuoteResponse {
 export const yellowboxApi = {
   // Get diary AI response
   async getDiaryResponse(data: DiaryRequest): Promise<DiaryResponse> {
-    const response = await fetch("/api/diary", {
+    const response = await fetch("/api/yellowbox/diary", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
