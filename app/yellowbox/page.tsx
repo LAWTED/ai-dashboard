@@ -473,7 +473,7 @@ export default function Component() {
         </div>
       </Link>
 
-      <div className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
+      <div className="text-3xl md:text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
         <SummaryDisplay
           showSummary={showSummary}
           isGeneratingSummary={isGeneratingSummary}
@@ -487,14 +487,16 @@ export default function Component() {
       <div className="w-full h-px bg-[#E4BE10] mb-2"></div>
 
       {/* Conversation and Input Container */}
-      <div className="max-h-[calc(100vh-300px)] overflow-y-auto space-y-3">
-        {/* Conversation History */}
-        <ConversationView
-          conversationHistory={conversationHistory}
-          onAnimationComplete={handleAnimationComplete}
-        />
+      <div className="space-y-3">
+        {/* Conversation History with scroll */}
+        <div className="max-h-[calc(100vh-350px)] md:max-h-[calc(100vh-400px)] overflow-y-auto">
+          <ConversationView
+            conversationHistory={conversationHistory}
+            onAnimationComplete={handleAnimationComplete}
+          />
+        </div>
 
-        {/* Input Section */}
+        {/* Input Section - fixed position */}
         {showInput ? (
           <InputSection
             userAnswer={userAnswer}
@@ -532,7 +534,7 @@ export default function Component() {
         <Button
           onClick={handleAnswerSubmit}
           disabled={isLoading || !userAnswer.trim()}
-          className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed group relative"
+          className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-2 md:px-4 py-2 text-[#3B3109] text-sm md:text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 disabled:opacity-50 disabled:cursor-not-allowed group relative"
           variant="ghost"
           size="sm"
           title={`${t("sparkButton")} (Enter)`}
@@ -542,7 +544,7 @@ export default function Component() {
           ) : (
             <>
               <span>{t("sparkButton")}</span>
-              <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
+              <span className="ml-1 md:ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity hidden sm:inline">
                 ↵
               </span>
             </>
@@ -550,13 +552,13 @@ export default function Component() {
         </Button>
         <Button
           onClick={resetDiary}
-          className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-4 py-2 text-[#3B3109] text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 group relative"
+          className="flex items-center justify-center bg-yellow-400 border border-[#E4BE10] rounded-md px-2 md:px-4 py-2 text-[#3B3109] text-sm md:text-base font-medium cursor-pointer hover:bg-yellow-300 flex-1 group relative"
           variant="ghost"
           size="sm"
           title={`${t("doneButton")} (${isMac ? "Cmd" : "Ctrl"}+Enter)`}
         >
           <span>{t("doneButton")}</span>
-          <span className="ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity">
+          <span className="ml-1 md:ml-2 text-xs opacity-60 group-hover:opacity-80 transition-opacity hidden sm:inline">
             {isMac ? "⌘" : "Ctrl"}+↵
           </span>
         </Button>

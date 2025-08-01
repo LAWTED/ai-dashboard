@@ -25,7 +25,7 @@ export function RightSidePanel() {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 20 }}
         transition={{ duration: 0.3, ease: [0.165, 0.84, 0.44, 1] }}
-        className="fixed right-4 top-4 w-80 bg-yellow-400 rounded-2xl p-4 max-h-[calc(100vh-32px)] overflow-y-auto z-20"
+        className="hidden lg:block fixed right-4 top-4 w-80 bg-yellow-400 rounded-2xl p-4 max-h-[calc(100vh-32px)] overflow-y-auto z-20"
       >
         {/* Panel Title */}
         <div className="text-2xl font-bold text-[#3B3109] mb-4">

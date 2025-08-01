@@ -25,9 +25,9 @@ function SharedSidebar() {
   };
 
   return (
-    <div className="absolute right-0 bottom-0 w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-4">
+    <div className="absolute right-0 bottom-0 w-10 md:w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-2 md:py-4">
       {/* Time of day indicator dots (interactive) */}
-      <div className="flex flex-col items-center space-y-2 mb-4">
+      <div className="flex flex-col items-center space-y-1 md:space-y-2 mb-2 md:mb-4">
         <motion.div
           className={`size-1.5 rounded-full cursor-pointer ${
             timeOfDay === "morning" ? "bg-[#2AB186]" : "bg-black"
@@ -38,7 +38,7 @@ function SharedSidebar() {
           title="Morning"
         ></motion.div>
         <motion.div
-          className={`w-1 h-12 rounded-full cursor-pointer ${
+          className={`w-1 h-8 md:h-12 rounded-full cursor-pointer ${
             timeOfDay === "daytime" ? "bg-[#2AB186]" : "bg-black"
           }`}
           whileTap={{ scaleX: 1.5 }}
@@ -60,7 +60,7 @@ function SharedSidebar() {
       {/* Font Switcher */}
       <Button
         onClick={handleFontToggle}
-        className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
+        className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-2 md:mb-3 p-0 h-auto bg-transparent border-none"
         title={`Current: ${
           currentFont === "serif"
             ? "Serif (Georgia)"
@@ -79,7 +79,7 @@ function SharedSidebar() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <span
-              className={`text-lg font-medium ${
+              className={`text-base md:text-lg font-medium ${
                 currentFont === "serif"
                   ? "font-serif"
                   : currentFont === "sans"
@@ -96,7 +96,7 @@ function SharedSidebar() {
       {/* Language Switcher */}
       <Button
         onClick={handleLanguageToggle}
-        className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-3 p-0 h-auto bg-transparent border-none"
+        className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-2 md:mb-3 p-0 h-auto bg-transparent border-none"
         title={getLanguageTooltip()}
         variant="ghost"
       >
@@ -109,7 +109,7 @@ function SharedSidebar() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <span
-              className={`text-lg font-medium ${
+              className={`text-base md:text-lg font-medium ${
                 currentFont === "serif"
                   ? "font-serif"
                   : currentFont === "sans"
@@ -130,7 +130,7 @@ function SharedSidebar() {
         title={t("logout") as string}
         variant="ghost"
       >
-        <LogOut className="!w-5 !h-5" />
+        <LogOut className="!w-4 !h-4 md:!w-5 md:!h-5" />
       </Button>
     </div>
   );

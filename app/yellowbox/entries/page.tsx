@@ -140,59 +140,57 @@ export default function EntriesPage() {
 
   return (
     <>
-      {/* Page Content */}
-      <div className="max-h-[calc(100vh-32px)] overflow-y-auto">
-        {/* Header with Title and Export Button */}
-        <div className="flex items-center justify-between mb-4">
-          <motion.div
-            layoutId="my-entries-title"
-            className="text-3xl font-bold px-2 text-[#3B3109] leading-tight"
-          >
-            {t("myEntries")}
-          </motion.div>
-          
-          {/* Export Button */}
-          {entries.length > 0 && (
-            <Button
-              onClick={() => setIsExportDialogOpen(true)}
-              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-3 py-2 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">{lang === "zh" ? "导出" : "Export"}</span>
-            </Button>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="w-full h-px bg-[#E4BE10] mb-4"></div>
-
-        {/* Search and Filters */}
+      {/* Header with Title and Export Button - Fixed */}
+      <div className="flex items-center justify-between mb-4">
+        <motion.div
+          layoutId="my-entries-title"
+          className="text-2xl md:text-3xl font-bold px-2 text-[#3B3109] leading-tight"
+        >
+          {t("myEntries")}
+        </motion.div>
+        
+        {/* Export Button */}
         {entries.length > 0 && (
-          <div className="mb-4 space-y-3">
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#3B3109] opacity-60" />
-              <input
-                type="text"
-                placeholder={
-                  lang === "zh" ? "搜索条目内容..." : "Search entries..."
-                }
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 rounded-lg bg-yellow-300 text-[#3B3109] placeholder-[#3B3109] placeholder-opacity-60 focus:outline-none focus:ring-2 focus:ring-[#E4BE10]"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#3B3109] opacity-60 hover:opacity-100"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+          <Button
+            onClick={() => setIsExportDialogOpen(true)}
+            className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-2 md:px-3 py-2 rounded-lg transition-colors flex items-center gap-1 md:gap-2"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">{lang === "zh" ? "导出" : "Export"}</span>
+          </Button>
+        )}
+      </div>
 
-            {/* Quick Filter Tags */}
-            {(allTags.length > 0 || allEmotions.length > 0) && (
+      {/* Divider */}
+      <div className="w-full h-px bg-[#E4BE10] mb-4"></div>
+
+      {/* Search and Filters - Fixed */}
+      {entries.length > 0 && (
+        <div className="mb-4 space-y-3">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#3B3109] opacity-60" />
+            <input
+              type="text"
+              placeholder={
+                lang === "zh" ? "搜索条目内容..." : "Search entries..."
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 rounded-lg bg-yellow-300 text-[#3B3109] placeholder-[#3B3109] placeholder-opacity-60 focus:outline-none focus:ring-2 focus:ring-[#E4BE10]"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#3B3109] opacity-60 hover:opacity-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+            {/* Quick Filter Tags - Hidden */}
+            {false && (allTags.length > 0 || allEmotions.length > 0) && (
               <div className="flex flex-wrap gap-2">
                 {/* Tag filters */}
                 {allTags.slice(0, 5).map((tag) => (
@@ -263,6 +261,8 @@ export default function EntriesPage() {
           </div>
         )}
 
+      {/* Scrollable Content Area */}
+      <div className="max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-220px)] overflow-y-auto">
         {/* Content */}
         {isLoading ? (
           <div className="text-center py-8 text-[#3B3109]">
@@ -390,8 +390,9 @@ export default function EntriesPage() {
             ))}
           </div>
         )}
+      </div>
 
-        {/* Action Buttons */}
+      {/* Action Buttons - Fixed at bottom */}
         <motion.div 
           className="flex justify-center gap-3 mt-4"
           initial={{ y: 50, opacity: 0 }}
@@ -406,7 +407,7 @@ export default function EntriesPage() {
           {entries.length > 0 && (
             <Button
               onClick={handleGenerateQuote}
-              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-3 md:px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm md:text-base"
             >
               <Sparkles className="w-4 h-4" />
               {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
@@ -417,13 +418,12 @@ export default function EntriesPage() {
           <Link href="/yellowbox">
             <Button
               variant="ghost"
-              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-6"
+              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 md:px-6 text-sm md:text-base"
             >
               {t("backToWrite")}
             </Button>
           </Link>
         </motion.div>
-      </div>
 
       {/* Quote Design Dialog */}
       <QuoteDesignDialog
