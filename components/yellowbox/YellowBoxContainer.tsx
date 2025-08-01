@@ -19,28 +19,22 @@ export function YellowBoxContainer({ children, className = "" }: YellowBoxContai
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
-    
+
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
   return (
     <motion.div
-      className={`absolute left-2 md:left-4 top-2 md:top-4 w-[calc(100vw-16px)] md:w-[640px] max-w-[640px] bg-yellow-400 rounded-2xl p-3 md:p-4 ${getFontClass()} ${className}`}
+      className={`absolute left-2 md:left-4 top-2 md:top-4 bottom-4 w-[calc(100vw-16px)] md:w-[640px] max-w-[640px] bg-yellow-400 rounded-2xl p-3 md:p-4 overflow-hidden ${getFontClass()} ${className}`}
       animate={{
         height: bounds.height ? bounds.height + (isMobile ? 24 : 32) : undefined,
       }}
-      transition={{
-        height: {
-          type: "spring",
-          stiffness: 400,
-          damping: 30,
-          mass: 0.8,
-        }
+      style={{
+        maxHeight: 'calc(100vh - 32px)'
       }}
-      layout
     >
       <div ref={contentRef}>
         {children}
