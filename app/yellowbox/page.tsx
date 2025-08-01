@@ -27,6 +27,7 @@ import { SummaryDisplay } from "@/components/yellowbox/SummaryDisplay";
 type ConversationMessage = {
   type: "user" | "ai";
   content: string;
+  images?: string[];
 };
 
 type EnhancedSummary = {
@@ -48,7 +49,7 @@ export default function Component() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState<
-    "reading" | "thinking" | "responding"
+    "reading" | "uploading" | "thinking" | "responding"
   >("reading");
   const [isComposing, setIsComposing] = useState(false);
   const [conversationCount, setConversationCount] = useState(0);
@@ -60,6 +61,7 @@ export default function Component() {
   const [previousInput, setPreviousInput] = useState<string>("");
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const router = useRouter();
   const { userId } = useYellowBoxAuth();
   const { currentFont, isMac, timeOfDay } = useYellowBoxUI();
@@ -144,14 +146,50 @@ export default function Component() {
     // Force end current writing segment before submission
     forceEndCurrentSegment(userMessage);
 
-    // Add user message to conversation history
-    setConversationHistory((prev) => [
-      ...prev,
-      { type: "user", content: userMessage },
-    ]);
-    setUserAnswer("");
     setIsLoading(true);
     setLoadingStage("reading");
+
+    let finalImages: string[] | undefined = undefined;
+
+    // Upload images to Supabase if there are any selected images
+    if (selectedImages.length > 0) {
+      setLoadingStage("uploading");
+      try {
+        const { uploadDataUrlsToSupabase } = await import(
+          "@/lib/storage/image-upload"
+        );
+        const uploadResults = await uploadDataUrlsToSupabase(selectedImages);
+
+        // Filter successful uploads and maintain order
+        const successfulUploads: string[] = [];
+        uploadResults.forEach((result, index) => {
+          if (result.success && result.url) {
+            successfulUploads[index] = result.url;
+          } else {
+            // Keep the data URL if upload failed to maintain layoutId consistency
+            successfulUploads[index] = selectedImages[index];
+          }
+        });
+
+        if (successfulUploads.length > 0) {
+          finalImages = successfulUploads;
+        } else {
+          // If no uploads succeeded, still continue but log the issue
+          console.warn("No images were successfully uploaded");
+        }
+      } catch (error) {
+        console.error("Error uploading images:", error);
+        // Continue without images if upload fails
+      }
+    }
+
+    // Add user message to conversation history with final image URLs
+    setConversationHistory((prev) => [
+      ...prev,
+      { type: "user", content: userMessage, images: finalImages },
+    ]);
+    setUserAnswer("");
+    setSelectedImages([]);
 
     // Simulate reading stage
     setTimeout(() => setLoadingStage("thinking"), 500);
@@ -163,6 +201,7 @@ export default function Component() {
         userEntry: userMessage,
         timeOfDay,
         conversationCount,
+        images: finalImages,
       });
 
       // Add AI response to conversation history
@@ -503,11 +542,13 @@ export default function Component() {
             conversationHistory={conversationHistory}
             selectedQuestion={selectedQuestion}
             isLoading={isLoading}
+            selectedImages={selectedImages}
             onAnswerChange={setUserAnswer}
             onKeyDown={handleKeyDown}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
             onVoiceTranscription={handleVoiceTranscription}
+            onImageSelect={setSelectedImages}
             trackKeystroke={trackKeystroke}
             trackTextChange={trackTextChange}
           />
@@ -520,15 +561,16 @@ export default function Component() {
       <motion.div layout className="w-full h-px bg-[#E4BE10] my-2"></motion.div>
 
       {/* Bottom Navigation */}
-      <motion.div 
-        layout 
+      <motion.div
+        layout
         className="flex items-center gap-2"
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ 
+        transition={{
           delay: 0.4, // Start when height animation is nearly finished
-          duration: 0.3,
-          ease: "easeOut"
+          layout: {
+            delay: 0,
+          },
         }}
       >
         <Button

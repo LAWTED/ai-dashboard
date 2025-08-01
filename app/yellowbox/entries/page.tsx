@@ -14,6 +14,7 @@ import { Sparkles, Download, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
 import { ExportDialog } from "@/components/yellowbox/ExportDialog";
+import { LoadingWithPuppy } from "@/components/ui/loading-with-puppy";
 
 export default function EntriesPage() {
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
@@ -148,7 +149,7 @@ export default function EntriesPage() {
         >
           {t("myEntries")}
         </motion.div>
-        
+
         {/* Export Button */}
         {entries.length > 0 && (
           <Button
@@ -262,11 +263,11 @@ export default function EntriesPage() {
         )}
 
       {/* Scrollable Content Area */}
-      <div className="max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-220px)] overflow-y-auto">
+      <div className="max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-280px)] overflow-y-auto overflow-hidden">
         {/* Content */}
         {isLoading ? (
-          <div className="text-center py-8 text-[#3B3109]">
-            {t("loadingEntries")}
+          <div className="text-center py-8">
+            <LoadingWithPuppy className="text-[#3B3109]" />
           </div>
         ) : error ? (
           <div className="text-center py-8 text-[#C04635]">
@@ -392,15 +393,17 @@ export default function EntriesPage() {
         )}
       </div>
 
-      {/* Action Buttons - Fixed at bottom */}
-        <motion.div 
-          className="flex justify-center gap-3 mt-4"
-          initial={{ y: 50, opacity: 0 }}
+      {/* Action Buttons - positioned to slide up from container bottom */}
+      <div className="relative mt-4 overflow-hidden">
+        <motion.div
+          className="flex justify-center gap-3"
+          initial={{ y: "100%", opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ 
-            delay: 0.4, // Start when height animation is nearly finished
-            duration: 0.3,
-            ease: "easeOut"
+          transition={{
+            delay: 0.4,
+            layout: {
+              delay: 0,
+            },
           }}
         >
           {/* Generate Quote Button */}
@@ -424,6 +427,7 @@ export default function EntriesPage() {
             </Button>
           </Link>
         </motion.div>
+      </div>
 
       {/* Quote Design Dialog */}
       <QuoteDesignDialog
