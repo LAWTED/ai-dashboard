@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { VoiceInput } from "@/components/voice-input";
 import React, { useMemo } from "react";
-import { uploadImageToSupabase } from "@/lib/storage/image-upload";
 import { toast } from "sonner";
 import { ImageIcon, X } from "lucide-react";
 import Image from "next/image";

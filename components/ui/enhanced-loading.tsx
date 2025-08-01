@@ -88,7 +88,7 @@ export function EnhancedLoading({
             {getStageIcon()}
           </motion.span>
           <TextShimmer className="font-medium text-base" duration={duration}>
-            {stageText || "Loading..."}
+            {(stageText || "Loading...") as string}
           </TextShimmer>
         </>
       )}

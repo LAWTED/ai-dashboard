@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Types for conversation messages
+interface ConversationMessage {
+  type: 'user' | 'ai';
+  content: string;
+  images?: string[];
+}
+
 // Helper function to upload data URLs to Supabase Storage
 async function uploadDataUrlToSupabase(dataUrl: string): Promise<string> {
   try {
@@ -51,7 +58,7 @@ async function uploadDataUrlToSupabase(dataUrl: string): Promise<string> {
 }
 
 // Helper function to process conversation history and upload images
-async function processConversationImages(conversationHistory: any[]): Promise<any[]> {
+async function processConversationImages(conversationHistory: ConversationMessage[]): Promise<ConversationMessage[]> {
   const processedHistory = [];
   
   for (const message of conversationHistory) {
