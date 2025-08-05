@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { OptimizedAnalyticsDebug } from "@/components/optimized-yellowbox-analyt
 import { MinimalYellowBoxAnalytics } from "@/types/yellowbox-analytics";
 import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 import { useYellowboxEntry, useDeleteEntry } from "@/hooks/use-yellowbox-queries";
-import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
+import QuoteDesignCanvas from "@/components/yellowbox/quote-design-canvas";
 import { LoadingWithPuppy } from "@/components/ui/loading-with-puppy";
 
 export default function EntryDetailPage() {
@@ -27,8 +27,8 @@ export default function EntryDetailPage() {
   const { data: entry, isLoading, error } = useYellowboxEntry(entryId);
   const deleteEntryMutation = useDeleteEntry();
 
-  // Memoize entries array to prevent unnecessary re-renders
-  const entriesArray = useMemo(() => entry ? [entry] : [], [entry]);
+  // Memoize entries array to prevent unnecessary re-renders (kept for potential future use)
+  // const entriesArray = useMemo(() => entry ? [entry] : [], [entry]);
 
   const handleDelete = async () => {
     if (!entry) return;
@@ -263,12 +263,13 @@ export default function EntryDetailPage() {
         </div>
       )}
 
-      {/* Quote Design Dialog */}
+      {/* Quote Design Canvas */}
       {entry && (
-        <QuoteDesignDialog
+        <QuoteDesignCanvas
           open={isQuoteDialogOpen}
           onOpenChange={setIsQuoteDialogOpen}
-          entries={entriesArray}
+          entry={entry}
+          language={lang}
         />
       )}
     </>
