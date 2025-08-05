@@ -203,18 +203,16 @@ export default function QuoteDesignCanvas({
   // 键盘事件处理
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      console.log('Key pressed:', event.key, 'Selected element:', selectedElementId);
       if ((event.key === 'Delete' || event.key === 'Backspace') && selectedElementId) {
         event.preventDefault();
         event.stopPropagation();
-        console.log('Deleting element:', selectedElementId);
         deleteElement(selectedElementId);
       }
     };
 
     // 只在对话框打开时监听键盘事件
     if (open) {
-      document.addEventListener('keydown', handleKeyDown, true); // 使用捕获阶段
+      document.addEventListener('keydown', handleKeyDown, true);
       return () => {
         document.removeEventListener('keydown', handleKeyDown, true);
       };
@@ -271,11 +269,9 @@ export default function QuoteDesignCanvas({
                 }
               }}
               onKeyDown={(e) => {
-                console.log('Canvas keydown:', e.key, 'Selected:', selectedElementId);
                 if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElementId) {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Deleting from canvas:', selectedElementId);
                   deleteElement(selectedElementId);
                 }
               }}
