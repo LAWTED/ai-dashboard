@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Type, Image as ImageIcon, Smile } from "lucide-react";
 import Image from "next/image";
+import HolographicImageSticker from "./HolographicImageSticker";
 
 interface CanvasElement {
   id: string;
-  type: 'text' | 'image' | 'emoji';
+  type: 'text' | 'image' | 'emoji' | 'image_sticker';
   content: string;
   position: { x: number; y: number };
   style?: {
@@ -24,6 +25,8 @@ interface CanvasElement {
     borderRadius?: number;
     // emoji样式
     emojiSize?: number;
+    // 图片贴纸样式
+    stickerSize?: number;
   };
 }
 
@@ -70,6 +73,14 @@ const EMOJI_LIST = [
   "🎉", "🎊", "🎈", "🎁", "🎀", "🎯", "🎨", "🎭", "🎪", "🎵"
 ];
 
+const IMAGE_STICKERS = [
+  {
+    id: 'holographic-lightning',
+    name: 'Holographic Lightning',
+    url: 'https://holographic-sticker.vercel.app/light.png'
+  }
+];
+
 export default function QuoteDesignCanvas({
   open,
   onOpenChange,
@@ -80,7 +91,8 @@ export default function QuoteDesignCanvas({
 
   const [canvasElements, setCanvasElements] = useState<CanvasElement[]>([]);
   const [activeTab, setActiveTab] = useState<'text' | 'image' | 'emoji'>('text');
-  const [draggedItem, setDraggedItem] = useState<{item: TextSegment | ImageItem | string, type: 'text' | 'image' | 'emoji'} | null>(null);
+  const [activeStickerTab, setActiveStickerTab] = useState<'emoji' | 'image_sticker'>('emoji');
+  const [draggedItem, setDraggedItem] = useState<{item: TextSegment | ImageItem | string | typeof IMAGE_STICKERS[0], type: 'text' | 'image' | 'emoji' | 'image_sticker'} | null>(null);
   const [dropZoneActive, setDropZoneActive] = useState(false);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 
@@ -123,11 +135,11 @@ export default function QuoteDesignCanvas({
   const images = extractImages();
 
   // 添加元素到画布
-  const addToCanvas = (item: TextSegment | ImageItem | string, type: 'text' | 'image' | 'emoji', position?: { x: number; y: number }) => {
+  const addToCanvas = (item: TextSegment | ImageItem | string | typeof IMAGE_STICKERS[0], type: 'text' | 'image' | 'emoji' | 'image_sticker', position?: { x: number; y: number }) => {
     const newElement: CanvasElement = {
       id: `canvas-${Math.random().toString(36).substring(2, 11)}`,
       type,
-      content: typeof item === 'string' ? item : type === 'image' ? (item as ImageItem).url : (item as TextSegment).content,
+      content: typeof item === 'string' ? item : type === 'image' ? (item as ImageItem).url : type === 'image_sticker' ? (item as typeof IMAGE_STICKERS[0]).url : (item as TextSegment).content,
       position: position || { x: 50, y: 50 + canvasElements.length * 60 },
       style: type === 'text' ? {
         fontSize: 16,
@@ -141,6 +153,8 @@ export default function QuoteDesignCanvas({
         borderRadius: 8
       } : type === 'emoji' ? {
         emojiSize: 32
+      } : type === 'image_sticker' ? {
+        stickerSize: 200
       } : undefined
     };
 
@@ -232,8 +246,11 @@ export default function QuoteDesignCanvas({
         }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="fixed inset-0 z-50 bg-yellow-50"
-        style={{ zIndex: 9999 }}
+        className="fixed inset-0 bg-yellow-50"
+        style={{ 
+          zIndex: 99999,
+          transformStyle: 'flat'  // 重置 3D 样式，确保全屏正常工作
+        }}
       >
         <div className="flex h-screen">
           {/* 左侧画布区域 - 3/4 宽度 */}
@@ -498,6 +515,45 @@ export default function QuoteDesignCanvas({
                       )}
                     </div>
                   )}
+
+                  {element.type === 'image_sticker' && (
+                    <div className="relative">
+                      <div 
+                        className={`transition-all duration-200 ${
+                          selectedElementId === element.id ? 'ring-2 ring-blue-400 ring-offset-0 rounded-lg' : 'ring-2 ring-transparent'
+                        }`}
+                        style={{
+                          width: (element.style?.stickerSize || 200) + 'px',
+                          height: (element.style?.stickerSize || 200) + 'px'
+                        }}
+                      >
+                        <HolographicImageSticker className="cursor-move w-full h-full" />
+                      </div>
+
+                      {/* 图片贴纸编辑控制面板 */}
+                      {selectedElementId === element.id && (
+                        <div className="absolute -top-12 -right-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 flex items-center gap-3 z-20">
+                          {/* 大小 */}
+                          <div className="flex flex-col items-center">
+                            <label className="text-xs text-gray-600 mb-1">Size</label>
+                            <input
+                              type="range"
+                              min="64"
+                              max="300"
+                              value={element.style?.stickerSize || 200}
+                              onChange={(e) => updateElementStyle(element.id, { stickerSize: parseInt(e.target.value) })}
+                              className="w-16 h-4"
+                            />
+                          </div>
+
+                          {/* 大小数值显示 */}
+                          <div className="text-xs text-gray-600 font-mono">
+                            {element.style?.stickerSize || 200}px
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               ))}
 
@@ -653,24 +709,74 @@ export default function QuoteDesignCanvas({
               {activeTab === 'emoji' && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-[#3B3109] mb-3">
-                    {language === 'zh' ? 'Emoji 贴纸' : 'Emoji Stickers'}
+                    {language === 'zh' ? '贴纸' : 'Stickers'}
                   </h3>
-                  <div className="grid grid-cols-5 gap-2">
-                    {EMOJI_LIST.map((emoji, index) => (
-                      <motion.button
-                        key={index}
-                        className="aspect-square bg-white rounded-lg border-2 border-yellow-200 hover:border-yellow-300 text-2xl flex items-center justify-center cursor-move"
-                        draggable
-                        onDragStart={() => setDraggedItem({ item: emoji, type: 'emoji' })}
-                        onDragEnd={() => setDraggedItem(null)}
-                        onClick={() => addToCanvas(emoji, 'emoji')}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        {emoji}
-                      </motion.button>
-                    ))}
+
+                  {/* 子标签选择 */}
+                  <div className="flex bg-yellow-300 rounded-lg p-1 mb-3">
+                    <button
+                      onClick={() => setActiveStickerTab('emoji')}
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        activeStickerTab === 'emoji'
+                          ? 'bg-yellow-400 text-[#3B3109] shadow-sm'
+                          : 'text-[#3B3109]/70 hover:text-[#3B3109]'
+                      }`}
+                    >
+                      Emoji
+                    </button>
+                    <button
+                      onClick={() => setActiveStickerTab('image_sticker')}
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        activeStickerTab === 'image_sticker'
+                          ? 'bg-yellow-400 text-[#3B3109] shadow-sm'
+                          : 'text-[#3B3109]/70 hover:text-[#3B3109]'
+                      }`}
+                    >
+                      {language === 'zh' ? '图片' : 'Images'}
+                    </button>
                   </div>
+
+                  {/* Emoji 贴纸 */}
+                  {activeStickerTab === 'emoji' && (
+                    <div className="grid grid-cols-5 gap-2">
+                      {EMOJI_LIST.map((emoji, index) => (
+                        <motion.button
+                          key={index}
+                          className="aspect-square bg-white rounded-lg border-2 border-yellow-200 hover:border-yellow-300 text-2xl flex items-center justify-center cursor-move"
+                          draggable
+                          onDragStart={() => setDraggedItem({ item: emoji, type: 'emoji' })}
+                          onDragEnd={() => setDraggedItem(null)}
+                          onClick={() => addToCanvas(emoji, 'emoji')}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          {emoji}
+                        </motion.button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 图片贴纸 */}
+                  {activeStickerTab === 'image_sticker' && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {IMAGE_STICKERS.map((sticker) => (
+                        <motion.div
+                          key={sticker.id}
+                          className="aspect-square bg-white rounded-lg border-2 border-yellow-200 hover:border-yellow-300 cursor-move overflow-hidden flex items-center justify-center p-2"
+                          draggable
+                          onDragStart={() => setDraggedItem({ item: sticker, type: 'image_sticker' })}
+                          onDragEnd={() => setDraggedItem(null)}
+                          onClick={() => addToCanvas(sticker, 'image_sticker')}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <div className="w-full h-full">
+                            <HolographicImageSticker className="w-full h-full" />
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

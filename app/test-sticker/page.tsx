@@ -5,7 +5,7 @@ const HolographicCard = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [showGlare, setShowGlare] = useState(true);
-  const cardRef = useRef(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Simple animation sequence
@@ -18,7 +18,7 @@ const HolographicCard = () => {
   }, []);
 
   useEffect(() => {
-    const handlePointerMove = (e) => {
+    const handlePointerMove = (e: PointerEvent) => {
       if (!isActive) return;
 
       const element = cardRef.current;
@@ -34,14 +34,14 @@ const HolographicCard = () => {
       const pointerY = Math.max(-1, Math.min(1, ratioY * 2));
 
       // Update CSS variables on document root for global access
-      document.documentElement.style.setProperty("--pointer-x", pointerX);
-      document.documentElement.style.setProperty("--pointer-y", pointerY);
+      document.documentElement.style.setProperty("--pointer-x", pointerX.toString());
+      document.documentElement.style.setProperty("--pointer-y", pointerY.toString());
 
       // Update lighting position
       const fePointLight = document.querySelector("fePointLight");
       if (fePointLight) {
-        fePointLight.setAttribute("x", Math.floor(posX));
-        fePointLight.setAttribute("y", Math.floor(posY));
+        fePointLight.setAttribute("x", Math.floor(posX).toString());
+        fePointLight.setAttribute("y", Math.floor(posY).toString());
       }
     };
 
@@ -52,8 +52,8 @@ const HolographicCard = () => {
     const centerY = window.innerHeight / 2;
     const fePointLight = document.querySelector("fePointLight");
     if (fePointLight) {
-      fePointLight.setAttribute("x", centerX);
-      fePointLight.setAttribute("y", centerY);
+      fePointLight.setAttribute("x", centerX.toString());
+      fePointLight.setAttribute("y", centerY.toString());
     }
 
     return () => document.removeEventListener("pointermove", handlePointerMove);

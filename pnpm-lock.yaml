@@ -98,6 +98,9 @@ importers:
       framer-motion:
         specifier: ^12.17.0
         version: 12.17.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      holographic-sticker:
+        specifier: ^1.0.4
+        version: 1.0.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       https-proxy-agent:
         specifier: ^7.0.6
         version: 7.0.6
@@ -2126,6 +2129,12 @@ packages:
 
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
+
+  holographic-sticker@1.0.4:
+    resolution: {integrity: sha512-Argh6oN0Tb+7cqUDyRYYZiZxDDrya59FuHJhmJSUha7XAsANM2YXITYNkkkpnoFShe6OrTNm5XBkZ0Dm60cCvA==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
 
   html-url-attributes@3.0.1:
     resolution: {integrity: sha512-ol6UPyBWqsrO6EJySPz2O7ZSr856WDrEzM5zMqp+FJJLGMW35cLYmmZnl0vztAZxRUoNZJFTCohfjuIJ8I4QBQ==}
@@ -5452,6 +5461,11 @@ snapshots:
   hoist-non-react-statics@3.3.2:
     dependencies:
       react-is: 16.13.1
+
+  holographic-sticker@1.0.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   html-url-attributes@3.0.1: {}
 
