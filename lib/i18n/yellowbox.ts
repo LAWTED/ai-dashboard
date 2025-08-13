@@ -39,6 +39,15 @@ export interface YellowboxTranslations {
   anErrorOccurred: string;
   access: string;
   login: string;
+  
+  // Password reset
+  forgotPassword: string;
+  resetPassword: string;
+  sendResetEmail: string;
+  sending: string;
+  passwordResetSent: string;
+  backToSignIn: string;
+  emailRequired: string;
 
   // Errors and messages
   somethingWentWrong: string;
@@ -127,6 +136,15 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     anErrorOccurred: '发生错误',
     access: '访问',
     login: '登录',
+    
+    // Password reset
+    forgotPassword: '忘记密码？',
+    resetPassword: '重置密码',
+    sendResetEmail: '发送重置邮件',
+    sending: '发送中...',
+    passwordResetSent: '重置密码邮件已发送！',
+    backToSignIn: '返回登录',
+    emailRequired: '请输入邮箱地址',
 
     // Errors and messages
     somethingWentWrong: '出了点问题，请重试。',
@@ -214,6 +232,15 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     anErrorOccurred: 'An error occurred',
     access: 'Access',
     login: 'Login',
+    
+    // Password reset
+    forgotPassword: 'Forgot password?',
+    resetPassword: 'Reset Password',
+    sendResetEmail: 'Send Reset Email',
+    sending: 'Sending...',
+    passwordResetSent: 'Password reset email sent!',
+    backToSignIn: 'Back to sign in',
+    emailRequired: 'Email is required',
 
     // Errors and messages
     somethingWentWrong: 'Something went wrong. Please try again.',

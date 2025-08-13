@@ -11,6 +11,7 @@ import { YellowBoxErrorBoundary } from "@/components/yellowbox/YellowBoxErrorBou
 import { ReactQueryProvider } from "@/components/providers/ReactQueryProvider";
 import { YellowBoxContainer } from "@/components/yellowbox/YellowBoxContainer";
 import { RightSidePanel } from "@/components/yellowbox/RightSidePanel";
+import { usePathname } from "next/navigation";
 
 // Shared sidebar component
 function SharedSidebar() {
@@ -139,6 +140,8 @@ function SharedSidebar() {
 // Layout content component
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { getFontClass } = useYellowBoxUI();
+  const pathname = usePathname();
+  const isLoginPage = pathname === "/yellowbox/login";
 
   return (
     <div
@@ -154,9 +157,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         animate={{ opacity: 1 }}
       />
 
-      {/* Shared YellowBox Container with page content */}
+      {/* Content - conditional container */}
       <div className="relative z-10">
-        <YellowBoxContainer>{children}</YellowBoxContainer>
+        {isLoginPage ? children : <YellowBoxContainer>{children}</YellowBoxContainer>}
       </div>
 
       {/* Right side panel */}

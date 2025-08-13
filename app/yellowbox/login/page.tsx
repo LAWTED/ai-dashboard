@@ -14,6 +14,10 @@ export default function YellowboxLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
+  const [isSettingNewPassword, setIsSettingNewPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [currentFont, setCurrentFont] = useState<"serif" | "sans" | "mono">(
     "serif"
   );
@@ -25,6 +29,64 @@ export default function YellowboxLoginPage() {
   const router = useRouter();
   const supabase = createClient();
   const { t, lang, setLang } = useYellowboxTranslation();
+
+  useEffect(() => {
+    const checkAuthAndSession = async () => {
+      // Check URL parameters for password reset
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlHash = window.location.hash;
+      const isRecovery = urlParams.get('type') === 'recovery' || urlHash.includes('type=recovery');
+      const hasError = urlParams.get('error');
+      
+      console.log('URL check:', { 
+        search: window.location.search, 
+        hash: window.location.hash, 
+        isRecovery,
+        hasError 
+      });
+
+      // Show error if auth failed
+      if (hasError === 'auth_failed') {
+        setError('Authentication failed. Please try again.');
+        return;
+      }
+
+      // Check for password reset session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (isRecovery) {
+        if (session?.user) {
+          console.log('Password reset session detected');
+          setIsSettingNewPassword(true);
+          // Clean up URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          return;
+        } else {
+          console.log('Recovery URL but no session - redirecting to reset');
+          setError('Session expired. Please request a new password reset.');
+          return;
+        }
+      }
+
+      // Regular auth check
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        router.push("/yellowbox");
+      }
+    };
+    
+    checkAuthAndSession();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session);
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsSettingNewPassword(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router, supabase]);
 
   useEffect(() => {
     const updateTime = () => {
@@ -76,13 +138,51 @@ export default function YellowboxLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      if (isSignUp) {
+      if (isSettingNewPassword) {
+        // Set new password flow
+        if (!newPassword.trim()) {
+          setError("New password is required");
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          setError("Passwords do not match");
+          return;
+        }
+        if (newPassword.length < 6) {
+          setError("Password must be at least 6 characters");
+          return;
+        }
+
+        const { error } = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+
+        if (error) throw error;
+
+        toast.success("Password updated successfully!");
+        router.push("/yellowbox");
+      } else if (isResetPassword) {
+        // Reset password flow
+        if (!email.trim()) {
+          setError(t("emailRequired") as string);
+          return;
+        }
+
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/callback?next=/yellowbox/login`,
+        });
+
+        if (error) throw error;
+        toast.success(t("passwordResetSent") as string);
+        setIsResetPassword(false);
+      } else if (isSignUp) {
+        if (!email.trim() || !password.trim()) return;
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -94,6 +194,8 @@ export default function YellowboxLoginPage() {
         if (error) throw error;
         toast.success(t("checkEmail") as string);
       } else {
+        if (!email.trim() || !password.trim()) return;
+
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -117,59 +219,81 @@ export default function YellowboxLoginPage() {
 
   return (
     <>
-
       {/* Yellow Rounded Box */}
       <div
-        className={`absolute left-4 top-4 w-[640px] bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
+        className={`absolute left-4 top-4 w-[640px]  bg-yellow-400 rounded-2xl p-4 ${getFontClass()}`}
       >
         <div className="flex items-center mb-1">
           {lang === "zh" ? (
             <AnimatePresence mode="wait" initial={false}>
               <motion.h1
-                key={isSignUp ? "注册" : "登入"}
+                key={
+                  isSettingNewPassword
+                    ? "设置新密码"
+                    : isResetPassword
+                    ? "重置密码"
+                    : isSignUp
+                    ? "注册"
+                    : "登入"
+                }
                 initial={{
-                  y: isSignUp ? -20 : 20,
+                  y: -20,
                   opacity: 0,
                   filter: "blur(4px)",
                 }}
                 animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
                 exit={{
-                  y: isSignUp ? -20 : 20,
+                  y: 20,
                   opacity: 0,
                   filter: "blur(4px)",
                 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="text-5xl font-bold text-[#3B3109] leading-tight"
               >
-                {isSignUp ? "注册" : "登入"}
+                {isSettingNewPassword
+                  ? "设置新密码"
+                  : isResetPassword
+                  ? "重置密码"
+                  : isSignUp
+                  ? "注册"
+                  : "登入"}
               </motion.h1>
             </AnimatePresence>
           ) : (
-            <>
-              <h1 className="text-5xl font-bold text-[#3B3109] leading-tight mr-3">
-                Sign
-              </h1>
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={isSignUp ? "up" : "in"}
-                  initial={{
-                    y: isSignUp ? -20 : 20,
-                    opacity: 0,
-                    filter: "blur(4px)",
-                  }}
-                  animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                  exit={{
-                    y: isSignUp ? -20 : 20,
-                    opacity: 0,
-                    filter: "blur(4px)",
-                  }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="text-5xl font-bold text-[#3B3109] leading-tight"
-                >
-                  {isSignUp ? "up" : "in"}
-                </motion.span>
-              </AnimatePresence>
-            </>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.h1
+                key={
+                  isSettingNewPassword
+                    ? "Set New Password"
+                    : isResetPassword
+                    ? "Reset Password"
+                    : isSignUp
+                    ? "Sign up"
+                    : "Sign in"
+                }
+                initial={{
+                  y: -20,
+                  opacity: 0,
+                  filter: "blur(4px)",
+                }}
+                animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                exit={{
+                  y: 20,
+                  opacity: 0,
+                  filter: "blur(4px)",
+                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="text-5xl font-bold text-[#3B3109] leading-tight"
+              >
+                {isSettingNewPassword
+                  ? "Set New Password"
+                  : isResetPassword
+                  ? "Reset Password"
+                  : isSignUp
+                  ? "Sign up"
+                  : "Sign in"}
+              </motion.h1>
+            </AnimatePresence>
           )}
         </div>
 
@@ -179,33 +303,67 @@ export default function YellowboxLoginPage() {
         <div className="space-y-4">
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Input */}
-            <div className="space-y-2">
-              <div className="text-black text-sm">{t("email")}</div>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("emailPlaceholder") as string}
-                className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
-                style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
-                required
-              />
-            </div>
+            {/* Email Input - hidden when setting new password */}
+            {!isSettingNewPassword && (
+              <div className="space-y-2">
+                <div className="text-black text-sm">{t("email")}</div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t("emailPlaceholder") as string}
+                  className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
+                  style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
+                  required
+                />
+              </div>
+            )}
 
-            {/* Password Input */}
-            <div className="space-y-2">
-              <div className="text-black text-sm">{t("password")}</div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("passwordPlaceholder") as string}
-                className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
-                style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
-                required
-              />
-            </div>
+            {/* Regular Password Input - hidden during reset or when setting new password */}
+            {!isResetPassword && !isSettingNewPassword && (
+              <div className="space-y-2">
+                <div className="text-black text-sm">{t("password")}</div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t("passwordPlaceholder") as string}
+                  className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
+                  style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
+                  required
+                />
+              </div>
+            )}
+
+            {/* New Password Inputs - shown when setting new password */}
+            {isSettingNewPassword && (
+              <>
+                <div className="space-y-2">
+                  <div className="text-black text-sm">New Password</div>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
+                    style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="text-black text-sm">Confirm Password</div>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    className="w-full p-3 rounded-lg bg-yellow-400 text-black text-sm resize-none focus:outline-none placeholder:text-black/25"
+                    style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
+                    required
+                  />
+                </div>
+              </>
+            )}
 
             {/* Error Message */}
             {error && <div className="text-red-600 text-sm">{error}</div>}
@@ -213,7 +371,11 @@ export default function YellowboxLoginPage() {
             {/* Submit Button */}
             <div className="flex gap-2 items-center h-10">
               <AnimatePresence initial={false}>
-                {email.trim() && password.trim() && (
+                {(isSettingNewPassword
+                  ? newPassword.trim() && confirmPassword.trim()
+                  : isResetPassword
+                  ? email.trim()
+                  : email.trim() && password.trim()) && (
                   <motion.button
                     initial={{
                       opacity: 0,
@@ -240,7 +402,15 @@ export default function YellowboxLoginPage() {
                     style={{ border: "1px solid rgba(0, 0, 0, 0.15)" }}
                   >
                     {isLoading
-                      ? t("signingIn")
+                      ? isSettingNewPassword
+                        ? "Updating..."
+                        : isResetPassword
+                        ? t("sending")
+                        : t("signingIn")
+                      : isSettingNewPassword
+                      ? "Update Password"
+                      : isResetPassword
+                      ? t("sendResetEmail")
                       : isSignUp
                       ? t("signUpButton")
                       : t("signInButton")}
@@ -250,15 +420,43 @@ export default function YellowboxLoginPage() {
             </div>
           </form>
 
-          {/* Toggle Sign Up/Sign In */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-black text-sm hover:underline"
-            >
-              {isSignUp ? t("hasAccount") : t("noAccount")}
-            </button>
+          {/* Navigation Links */}
+          <div className="text-center space-y-2">
+            {isSettingNewPassword ? (
+              <div className="text-black text-sm">
+                Setting up your new password...
+              </div>
+            ) : !isResetPassword ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-black text-sm hover:underline block w-full"
+                >
+                  {isSignUp ? t("hasAccount") : t("noAccount")}
+                </button>
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    onClick={() => setIsResetPassword(true)}
+                    className="text-black text-sm hover:underline block w-full"
+                  >
+                    {t("forgotPassword")}
+                  </button>
+                )}
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsResetPassword(false);
+                  setError(null);
+                }}
+                className="text-black text-sm hover:underline block w-full"
+              >
+                {t("backToSignIn")}
+              </button>
+            )}
           </div>
         </div>
 
