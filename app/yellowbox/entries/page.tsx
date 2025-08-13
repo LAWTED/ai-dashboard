@@ -10,14 +10,12 @@ import {
   useYellowboxEntries,
   usePrefetchYellowboxData,
 } from "@/hooks/use-yellowbox-queries";
-import { Sparkles, Download, Search, X } from "lucide-react";
+import { Download, Search, X } from "lucide-react";
 import { toast } from "sonner";
-import { QuoteDesignDialog } from "@/components/yellowbox/quote-design-dialog";
 import { ExportDialog } from "@/components/yellowbox/ExportDialog";
 import { LoadingWithPuppy } from "@/components/ui/loading-with-puppy";
 
 export default function EntriesPage() {
-  const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -86,15 +84,6 @@ export default function EntriesPage() {
     [prefetchEntry]
   );
 
-  const handleGenerateQuote = async () => {
-    if (entries.length === 0) {
-      toast.error(lang === "zh" ? "没有找到任何条目" : "No entries found");
-      return;
-    }
-
-    // Open the quote design dialog
-    setIsQuoteDialogOpen(true);
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -406,16 +395,6 @@ export default function EntriesPage() {
             },
           }}
         >
-          {/* Generate Quote Button */}
-          {entries.length > 0 && (
-            <Button
-              onClick={handleGenerateQuote}
-              className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-3 md:px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm md:text-base"
-            >
-              <Sparkles className="w-4 h-4" />
-              {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
-            </Button>
-          )}
 
           {/* Back Button */}
           <Link href="/yellowbox">
@@ -429,12 +408,6 @@ export default function EntriesPage() {
         </motion.div>
       </div>
 
-      {/* Quote Design Dialog */}
-      <QuoteDesignDialog
-        open={isQuoteDialogOpen}
-        onOpenChange={setIsQuoteDialogOpen}
-        entries={entries}
-      />
 
       {/* Export Dialog */}
       <ExportDialog

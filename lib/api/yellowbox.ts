@@ -88,15 +88,6 @@ export interface SaveEntriesRequest {
   analytics: unknown;
 }
 
-export interface QuoteRequest {
-  entryId: string;
-  template?: string;
-}
-
-export interface QuoteResponse {
-  quote: string;
-  success: boolean;
-}
 
 // API functions
 export const yellowboxApi = {
@@ -195,20 +186,4 @@ export const yellowboxApi = {
     return response.json();
   },
 
-  // Generate quote
-  async generateQuote(data: QuoteRequest): Promise<QuoteResponse> {
-    const response = await fetch("/api/yellowbox/generate-quote", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to generate quote: ${response.status}`);
-    }
-
-    return response.json();
-  },
 };

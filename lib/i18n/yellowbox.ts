@@ -82,15 +82,6 @@ export interface YellowboxTranslations {
   conversation: string;
   messages: string;
 
-  // Quote generation
-  generateQuote: string;
-  generating: string;
-  quoteGenerated: string;
-  quoteGenerationFailed: string;
-  noEntriesAvailable: string;
-  quoteExported: string;
-  exportFailed: string;
-  designQuote: string;
 
   // Stats
   writingStats: string;
@@ -179,15 +170,6 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     conversation: '对话记录',
     messages: '条消息',
 
-    // Quote generation
-    generateQuote: '生成精彩瞬间',
-    generating: '生成中...',
-    quoteGenerated: '精彩瞬间已生成并下载！',
-    quoteGenerationFailed: '生成精彩瞬间失败，请稍后重试',
-    noEntriesAvailable: '没有可用的日记条目',
-    quoteExported: '引言已导出',
-    exportFailed: '导出失败',
-    designQuote: '设计精彩瞬间',
 
     // Stats
     writingStats: '写作统计'
@@ -275,15 +257,6 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     conversation: 'Conversation',
     messages: 'messages',
 
-    // Quote generation
-    generateQuote: 'Generate Quote',
-    generating: 'Generating...',
-    quoteGenerated: 'Quote generated and downloaded!',
-    quoteGenerationFailed: 'Failed to generate quote, please try again',
-    noEntriesAvailable: 'No diary entries available',
-    quoteExported: 'Quote exported successfully',
-    exportFailed: 'Export failed',
-    designQuote: 'Design Quote',
 
     // Stats
     writingStats: 'Writing Stats'
