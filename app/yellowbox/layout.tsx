@@ -12,6 +12,7 @@ import { ReactQueryProvider } from "@/components/providers/ReactQueryProvider";
 import { YellowBoxContainer } from "@/components/yellowbox/YellowBoxContainer";
 import { RightSidePanel } from "@/components/yellowbox/RightSidePanel";
 import { usePathname } from "next/navigation";
+import { Toaster } from "sonner";
 
 // Shared sidebar component
 function SharedSidebar() {
@@ -167,6 +168,18 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
       {/* Shared sidebar */}
       <SharedSidebar />
+
+      {/* Toast notifications */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#FEF3C7',
+            border: '2px solid #F59E0B',
+            color: '#3B3109',
+          },
+        }}
+      />
     </div>
   );
 }
