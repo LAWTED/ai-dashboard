@@ -58,7 +58,6 @@ export class QuoteImageStickerShapeUtil extends BaseBoxShapeUtil<QuoteImageStick
     const {
       w,
       h,
-      stickerId,
       stickerName,
     } = shape.props;
 

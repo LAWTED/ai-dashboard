@@ -11,7 +11,6 @@ import {
   usePrefetchYellowboxData,
 } from "@/hooks/use-yellowbox-queries";
 import { Download, Search, X } from "lucide-react";
-import { toast } from "sonner";
 import { ExportDialog } from "@/components/yellowbox/ExportDialog";
 import { LoadingWithPuppy } from "@/components/ui/loading-with-puppy";
 

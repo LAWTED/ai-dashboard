@@ -6,9 +6,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'Inter', sans-serif;
-  --font-serif: 'Georgia', serif;
-  --font-mono: 'Courier New', monospace;
+  --font-sans: "Inter", sans-serif;
+  --font-serif: "Georgia", serif;
+  --font-mono: "Courier New", monospace;
   --font-londrina: var(--font-londrina-solid);
   --font-shantell: var(--font-shantell-sans);
   --font-comic-neue: var(--font-comic-neue);
@@ -123,9 +123,6 @@
   body {
     @apply bg-background text-foreground;
   }
-  button, [role=button] {
-    cursor: pointer;
-  }
 }
 
 /* Safari safe area support */
@@ -147,8 +144,13 @@
 /* Pixel Art Styles for PUA Game Mobile */
 .pixel-bg {
   background-color: #f0f0f0;
-  background-image:
-    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.1) 20px
+  );
 }
 
 .pixel-text {
@@ -159,37 +161,27 @@
 
 .pixel-panel {
   border: 4px solid #000;
-  box-shadow:
-    0 0 0 4px #fff,
-    0 0 0 8px #000,
-    8px 8px 0 4px rgba(0,0,0,0.2);
+  box-shadow: 0 0 0 4px #fff, 0 0 0 8px #000, 8px 8px 0 4px rgba(0, 0, 0, 0.2);
   image-rendering: pixelated;
 }
 
 .pixel-button {
   font-family: "Courier New", monospace;
   border: 2px solid #000;
-  box-shadow:
-    0 0 0 2px #fff,
-    0 0 0 4px #000,
-    4px 4px 0 4px rgba(0,0,0,0.2);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000, 4px 4px 0 4px rgba(0, 0, 0, 0.2);
   image-rendering: pixelated;
   transition: all 0.1s;
 }
 
 .pixel-button:active {
   transform: translate(2px, 2px);
-  box-shadow:
-    0 0 0 2px #fff,
-    0 0 0 4px #000,
-    2px 2px 0 2px rgba(0,0,0,0.2);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000, 2px 2px 0 2px rgba(0, 0, 0, 0.2);
 }
 
 .pixel-card {
   border: 2px solid #000;
   background: #fff;
-  box-shadow:
-    2px 2px 0 2px rgba(0,0,0,0.2);
+  box-shadow: 2px 2px 0 2px rgba(0, 0, 0, 0.2);
   image-rendering: pixelated;
 }
 
@@ -198,10 +190,7 @@
   height: 100px;
   background: white;
   border: 4px solid #000;
-  box-shadow:
-    0 0 0 4px #fff,
-    0 0 0 8px #000,
-    8px 8px 0 8px rgba(0,0,0,0.2);
+  box-shadow: 0 0 0 4px #fff, 0 0 0 8px #000, 8px 8px 0 8px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -211,10 +200,7 @@
 
 .pixel-dice:active:not(:disabled) {
   transform: translate(2px, 2px);
-  box-shadow:
-    0 0 0 4px #fff,
-    0 0 0 8px #000,
-    6px 6px 0 6px rgba(0,0,0,0.2);
+  box-shadow: 0 0 0 4px #fff, 0 0 0 8px #000, 6px 6px 0 6px rgba(0, 0, 0, 0.2);
 }
 
 .pixel-dice:disabled {
@@ -229,3 +215,46 @@
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+
+/* tldraw cursor fix - 使用原生的 CSS 变量 */
+.tldraw-canvas {
+  cursor: var(--tl-cursor) !important;
+}
+
+/* tldraw 圆角样式 */
+.tldraw-container .tl-container {
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+.tldraw-container .tl-canvas {
+  border-radius: 0.5rem !important;
+}
+
+/* 隐藏 tldraw 不需要的 UI 元素，但保留重要功能 */
+.tldraw-container .tlui-zoom-menu,
+.tldraw-container .tlui-help-menu,
+.tldraw-container .tlui-actions-menu,
+.tldraw-container .tlui-main-menu,
+.tldraw-container .tlui-helper-buttons,
+.tldraw-container .tlui-navigation-panel,
+.tldraw-container .tlui-minimap {
+  display: none !important;
+}
+
+/* 确保样式面板显示 - 用于颜色、字体等修改 */
+.tldraw-container .tlui-style-panel {
+  display: block !important;
+}
+
+/* 确保右键菜单和快速操作栏显示 */
+.tldraw-container .tlui-context-menu {
+  display: block !important;
+  z-index: 1000 !important;
+}
+
+.tldraw-container .tlui-quick-actions {
+  display: flex !important;
+  z-index: 999 !important;
+}
+
