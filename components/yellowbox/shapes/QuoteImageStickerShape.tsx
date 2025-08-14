@@ -7,6 +7,7 @@ import {
   T,
   TLBaseShape,
   resizeBox,
+  TLResizeInfo,
 } from 'tldraw';
 import HolographicImageSticker from '../HolographicImageSticker';
 
@@ -104,10 +105,6 @@ export class QuoteImageStickerShapeUtil extends BaseBoxShapeUtil<QuoteImageStick
           >
             <HolographicImageSticker 
               className="w-full h-full object-contain"
-              style={{
-                userSelect: 'none',
-                pointerEvents: 'none',
-              }}
             />
           </div>
         </div>
@@ -132,7 +129,7 @@ export class QuoteImageStickerShapeUtil extends BaseBoxShapeUtil<QuoteImageStick
   }
 
   // Handle resizing
-  override onResize = (shape: QuoteImageStickerShape, info: any) => {
+  override onResize = (shape: QuoteImageStickerShape, info: TLResizeInfo<QuoteImageStickerShape>) => {
     const resizedShape = resizeBox(shape, info);
     // Keep aspect ratio square for stickers
     const size = Math.min(resizedShape.props.w, resizedShape.props.h);

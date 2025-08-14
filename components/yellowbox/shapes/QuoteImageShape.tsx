@@ -7,6 +7,7 @@ import {
   T,
   TLBaseShape,
   resizeBox,
+  TLResizeInfo,
 } from 'tldraw';
 
 // Define the quote image shape type
@@ -166,7 +167,7 @@ export class QuoteImageShapeUtil extends BaseBoxShapeUtil<QuoteImageShape> {
   }
 
   // Handle resizing
-  override onResize = (shape: QuoteImageShape, info: any) => {
+  override onResize = (shape: QuoteImageShape, info: TLResizeInfo<QuoteImageShape>) => {
     return resizeBox(shape, info);
   };
 

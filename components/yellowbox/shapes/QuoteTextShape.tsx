@@ -2,16 +2,12 @@
 
 import {
   BaseBoxShapeUtil,
-  DefaultColorTheme,
   HTMLContainer,
   Rectangle2d,
-  ShapeUtil,
   T,
   TLBaseShape,
-  TLDefaultColorTheme,
   resizeBox,
-  structuredClone,
-  getDefaultColorTheme,
+  TLResizeInfo,
 } from 'tldraw';
 
 // Define the quote text shape type
@@ -175,7 +171,7 @@ export class QuoteTextShapeUtil extends BaseBoxShapeUtil<QuoteTextShape> {
   }
 
   // Handle resizing
-  override onResize = (shape: QuoteTextShape, info: any) => {
+  override onResize = (shape: QuoteTextShape, info: TLResizeInfo<QuoteTextShape>) => {
     return resizeBox(shape, info);
   };
 

@@ -6,7 +6,6 @@ import {
   type DiaryRequest, 
   type SummaryRequest, 
   type SaveEntriesRequest, 
-  type QuoteRequest,
   type YellowboxEntry 
 } from '@/lib/api/yellowbox';
 
@@ -98,15 +97,6 @@ export function useDeleteEntry() {
   });
 }
 
-export function useGenerateQuote() {
-  return useMutation({
-    mutationFn: yellowboxApi.generateQuote,
-    onError: (error) => {
-      console.error('Quote generation error:', error);
-      toast.error('Failed to generate quote');
-    },
-  });
-}
 
 // Optimistic update hooks for better UX
 export function useOptimisticEntries() {
