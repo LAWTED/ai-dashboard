@@ -120,8 +120,8 @@ const CustomToolbar = (props: React.ComponentProps<typeof DefaultToolbar>) => {
   return (
     <DefaultToolbar {...props}>
       <DefaultToolbarContent />
-      <TldrawUiMenuItem 
-        {...tools['sticker']} 
+      <TldrawUiMenuItem
+        {...tools['sticker']}
         isSelected={isStickerSelected}
         icon={<Heart size={16} />}
       />
@@ -166,14 +166,14 @@ export default function TldrawQuoteCanvas({
     const canvasHeight = 800;
     const gridSize = 20; // 网格大小
     const occupiedCells = new Set<string>();
-    
+
     // 检查位置是否被占用
     const isPositionOccupied = (x: number, y: number, width: number, height: number) => {
       const startGridX = Math.floor(x / gridSize);
       const startGridY = Math.floor(y / gridSize);
       const endGridX = Math.floor((x + width) / gridSize);
       const endGridY = Math.floor((y + height) / gridSize);
-      
+
       for (let gx = startGridX; gx <= endGridX; gx++) {
         for (let gy = startGridY; gy <= endGridY; gy++) {
           if (occupiedCells.has(`${gx},${gy}`)) {
@@ -183,28 +183,28 @@ export default function TldrawQuoteCanvas({
       }
       return false;
     };
-    
+
     // 标记位置为已占用
     const markPositionOccupied = (x: number, y: number, width: number, height: number) => {
       const startGridX = Math.floor(x / gridSize);
       const startGridY = Math.floor(y / gridSize);
       const endGridX = Math.floor((x + width) / gridSize);
       const endGridY = Math.floor((y + height) / gridSize);
-      
+
       for (let gx = startGridX; gx <= endGridX; gx++) {
         for (let gy = startGridY; gy <= endGridY; gy++) {
           occupiedCells.add(`${gx},${gy}`);
         }
       }
     };
-    
+
     // 找到适合的位置
     const findNextPosition = (preferredX: number, preferredY: number, width: number, height: number) => {
       // 先尝试首选位置
       if (!isPositionOccupied(preferredX, preferredY, width, height)) {
         return { x: preferredX, y: preferredY };
       }
-      
+
       // 如果首选位置被占用，使用螺旋搜索
       const maxRadius = Math.max(canvasWidth, canvasHeight) / gridSize;
       for (let radius = 1; radius < maxRadius; radius++) {
@@ -212,26 +212,26 @@ export default function TldrawQuoteCanvas({
           const radian = (angle * Math.PI) / 180;
           const testX = preferredX + Math.cos(radian) * radius * gridSize;
           const testY = preferredY + Math.sin(radian) * radius * gridSize;
-          
-          if (testX >= 50 && testY >= 80 && 
-              testX + width <= canvasWidth - 50 && 
+
+          if (testX >= 50 && testY >= 80 &&
+              testX + width <= canvasWidth - 50 &&
               testY + height <= canvasHeight - 50 &&
               !isPositionOccupied(testX, testY, width, height)) {
             return { x: testX, y: testY };
           }
         }
       }
-      
+
       // 如果仍然找不到，返回随机位置
       return {
         x: Math.random() * (canvasWidth - width - 100) + 50,
         y: Math.random() * (canvasHeight - height - 100) + 80
       };
     };
-    
+
     return { findNextPosition, markPositionOccupied };
   }, []);
-  
+
   // 自动加载日记内容到画布
   const loadDiaryContentToCanvas = useCallback(() => {
     if (!editor || !entry || hasInitializedContent) return;
@@ -239,7 +239,7 @@ export default function TldrawQuoteCanvas({
     // 检查是否有保存的设计
     const storageKey = `tldraw-quote-${entry.id}`;
     const savedData = localStorage.getItem(storageKey);
-    
+
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
@@ -274,7 +274,7 @@ export default function TldrawQuoteCanvas({
       const titleWidth = 450;
       const titleHeight = 60;
       const titlePos = findNextPosition(150, 80, titleWidth, titleHeight);
-      
+
       const titleShapeId = createShapeId();
       editor.createShape({
         id: titleShapeId,
@@ -410,46 +410,72 @@ export default function TldrawQuoteCanvas({
     // 4. 添加随机信封图片
     const envelopeNumber = Math.floor(Math.random() * 5) + 1; // 1-5 随机选择
     const envelopeUrl = `/envelope/${envelopeNumber}.png`;
-    
-    try {
-      // 创建信封 asset
-      const envelopeAssetId = AssetRecordType.createId();
-      editor.createAssets([{
-        id: envelopeAssetId,
-        type: 'image',
-        typeName: 'asset',
-        meta: {},
-        props: {
-          name: `envelope-${envelopeNumber}`,
-          src: envelopeUrl,
-          w: 120,
-          h: 120,
-          mimeType: 'image/png',
-          isAnimated: false,
-        }
-      }]);
 
-      // 创建信封图片形状 - 放在左下角
-      const envelopeShapeId = createShapeId();
-      const envelopePos = findNextPosition(50, 600, 120, 120);
-      editor.createShape({
-        id: envelopeShapeId,
-        type: 'image',
-        x: envelopePos.x,
-        y: envelopePos.y,
-        props: {
-          w: 120,
-          h: 120,
-          assetId: envelopeAssetId,
-        },
-      });
+    // 动态加载图片获取真实尺寸
+    const img = new Image();
+    img.onload = () => {
+      try {
+        // 创建信封 asset - 使用图片的真实尺寸
+        const envelopeAssetId = AssetRecordType.createId();
+        const envelopeWidth = img.naturalWidth;
+        const envelopeHeight = img.naturalHeight;
+        
+        editor.createAssets([{
+          id: envelopeAssetId,
+          type: 'image',
+          typeName: 'asset',
+          meta: {},
+          props: {
+            name: `envelope-${envelopeNumber}`,
+            src: envelopeUrl,
+            w: envelopeWidth,
+            h: envelopeHeight,
+            mimeType: 'image/png',
+            isAnimated: false,
+          }
+        }]);
 
-      markPositionOccupied(envelopePos.x, envelopePos.y, 120, 120);
-    } catch (error) {
-      console.warn('Failed to create envelope image:', error);
+        // 创建信封图片形状 - 放在左下角，使用真实尺寸
+        const envelopeShapeId = createShapeId();
+        const envelopePos = findNextPosition(50, 600, envelopeWidth, envelopeHeight);
+        editor.createShape({
+          id: envelopeShapeId,
+          type: 'image',
+          x: envelopePos.x,
+          y: envelopePos.y,
+          props: {
+            w: envelopeWidth,
+            h: envelopeHeight,
+            assetId: envelopeAssetId,
+          },
+        });
+
+        markPositionOccupied(envelopePos.x, envelopePos.y, envelopeWidth, envelopeHeight);
+      } catch (error) {
+        console.warn('Failed to create envelope image:', error);
+        // fallback: 使用 text 形状显示信封 emoji
+        const envelopeShapeId = createShapeId();
+        const envelopePos = findNextPosition(50, 600, 100, 100);
+        editor.createShape({
+          id: envelopeShapeId,
+          type: 'text',
+          x: envelopePos.x,
+          y: envelopePos.y,
+          props: {
+            size: 'xl',
+            color: 'yellow',
+            font: 'draw',
+            autoSize: true,
+            richText: toRichText('📮'),
+          },
+        });
+      }
+    };
+
+    img.onerror = () => {
       // fallback: 使用 text 形状显示信封 emoji
       const envelopeShapeId = createShapeId();
-      const envelopePos = findNextPosition(50, 600, 120, 120);
+      const envelopePos = findNextPosition(50, 600, 100, 100);
       editor.createShape({
         id: envelopeShapeId,
         type: 'text',
@@ -463,7 +489,9 @@ export default function TldrawQuoteCanvas({
           richText: toRichText('📮'),
         },
       });
-    }
+    };
+
+    img.src = envelopeUrl;
 
     setHasInitializedContent(true);
   }, [editor, entry, hasInitializedContent, createSmartLayout]);
@@ -471,17 +499,17 @@ export default function TldrawQuoteCanvas({
   // 自动保存功能
   const autoSave = useCallback(() => {
     if (!editor || !entry) return;
-    
+
     try {
       const canvasData = editor.getSnapshot();
       const storageKey = `tldraw-quote-${entry.id}`;
-      
+
       localStorage.setItem(storageKey, JSON.stringify({
         data: canvasData,
         timestamp: Date.now(),
         entryId: entry.id
       }));
-      
+
       console.log('Auto-saved canvas state');
     } catch (error) {
       console.error('Auto-save failed:', error);
@@ -558,12 +586,12 @@ export default function TldrawQuoteCanvas({
       >
         <div className="relative h-screen">
           {/* 右下角控制面板 - 模仿 yellowbox layout 样式 */}
-          <div className="absolute right-0 bottom-0 w-10 md:w-12 bg-yellow-400 rounded-tl-lg flex flex-col items-center py-2 md:py-4 z-20">
+          <div className="absolute right-0 bottom-12 w-10 md:w-12 bg-yellow-400 rounded-l-lg flex flex-col items-center py-2 md:py-4 z-20">
             {/* 导出按钮 */}
             <Button
               onClick={async () => {
                 if (!editor) return;
-                
+
                 setIsExporting(true);
                 try {
                   // 导出为 PNG
@@ -580,27 +608,27 @@ export default function TldrawQuoteCanvas({
                     padding: 16,
                     scale: 2 // 高质量导出
                   });
-                  
+
                   if (svgResult) {
                     // 使用 data URL 创建 canvas，避免 CORS 问题
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     const img = new Image();
-                    
+
                     // 设置 crossOrigin 属性避免污染 canvas
                     img.crossOrigin = 'anonymous';
-                    
+
                     img.onload = () => {
                       canvas.width = img.naturalWidth;
                       canvas.height = img.naturalHeight;
-                      
+
                       // 白色背景
                       if (ctx) {
                         ctx.fillStyle = '#ffffff';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         ctx.drawImage(img, 0, 0);
                       }
-                      
+
                       // 下载 PNG
                       canvas.toBlob((blob) => {
                         if (blob) {
@@ -612,16 +640,16 @@ export default function TldrawQuoteCanvas({
                           a.click();
                           document.body.removeChild(a);
                           URL.revokeObjectURL(url);
-                          
+
                           console.log('Canvas exported as PNG');
                         }
                       }, 'image/png');
                     };
-                    
+
                     img.onerror = () => {
                       console.error('Failed to load SVG image');
                     };
-                    
+
                     // 使用 data URL 避免 CORS 问题
                     const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgResult.svg)}`;
                     img.src = svgDataUrl;
