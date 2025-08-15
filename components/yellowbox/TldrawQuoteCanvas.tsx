@@ -407,6 +407,64 @@ export default function TldrawQuoteCanvas({
       });
     });
 
+    // 4. 添加随机信封图片
+    const envelopeNumber = Math.floor(Math.random() * 5) + 1; // 1-5 随机选择
+    const envelopeUrl = `/envelope/${envelopeNumber}.png`;
+    
+    try {
+      // 创建信封 asset
+      const envelopeAssetId = AssetRecordType.createId();
+      editor.createAssets([{
+        id: envelopeAssetId,
+        type: 'image',
+        typeName: 'asset',
+        meta: {},
+        props: {
+          name: `envelope-${envelopeNumber}`,
+          src: envelopeUrl,
+          w: 120,
+          h: 120,
+          mimeType: 'image/png',
+          isAnimated: false,
+        }
+      }]);
+
+      // 创建信封图片形状 - 放在左下角
+      const envelopeShapeId = createShapeId();
+      const envelopePos = findNextPosition(50, 600, 120, 120);
+      editor.createShape({
+        id: envelopeShapeId,
+        type: 'image',
+        x: envelopePos.x,
+        y: envelopePos.y,
+        props: {
+          w: 120,
+          h: 120,
+          assetId: envelopeAssetId,
+        },
+      });
+
+      markPositionOccupied(envelopePos.x, envelopePos.y, 120, 120);
+    } catch (error) {
+      console.warn('Failed to create envelope image:', error);
+      // fallback: 使用 text 形状显示信封 emoji
+      const envelopeShapeId = createShapeId();
+      const envelopePos = findNextPosition(50, 600, 120, 120);
+      editor.createShape({
+        id: envelopeShapeId,
+        type: 'text',
+        x: envelopePos.x,
+        y: envelopePos.y,
+        props: {
+          size: 'xl',
+          color: 'yellow',
+          font: 'draw',
+          autoSize: true,
+          richText: toRichText('📮'),
+        },
+      });
+    }
+
     setHasInitializedContent(true);
   }, [editor, entry, hasInitializedContent, createSmartLayout]);
 
