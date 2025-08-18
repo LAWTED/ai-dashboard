@@ -33,7 +33,7 @@ type ConversationMessage = {
 type EnhancedSummary = {
   title: string;
   tags: string[];
-  values: string[];
+  values?: string[];
   emotion: {
     primary: string;
     intensity: "low" | "medium" | "high";

@@ -119,20 +119,7 @@ export default function EntryDetailPage() {
                 </div>
               )}
 
-              {/* Emotion - hidden */}
-              {false && (
-                <div className="flex items-center gap-2 text-sm text-[#3B3109] opacity-75">
-                  <span className="capitalize">{entry.metadata.enhancedSummary.emotion.primary}</span>
-                  <span className="text-xs">•</span>
-                  <span className="capitalize">{entry.metadata.enhancedSummary.emotion.intensity} intensity</span>
-                  {entry.metadata.enhancedSummary.themes.length > 0 && (
-                    <>
-                      <span className="text-xs">•</span>
-                      <span className="text-xs">{entry.metadata.enhancedSummary.themes.join(", ")}</span>
-                    </>
-                  )}
-                </div>
-              )}
+              {/* Emotion - hidden for now */}
             </div>
           )}
 

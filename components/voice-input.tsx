@@ -22,7 +22,25 @@ export function VoiceInput({
   onTranscriptionComplete,
   disabled = false,
 }: VoiceInputProps) {
-  const { t } = useYellowBoxI18n();
+  // Try to use yellowbox i18n, but fallback to English if not available
+  let t: (key: string) => string;
+  try {
+    const yellowboxI18n = useYellowBoxI18n();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    t = (key: string) => yellowboxI18n.t(key as any) as string;
+  } catch {
+    // Fallback to English when not in yellowbox context
+    t = (key: string) => {
+      const fallbacks: Record<string, string> = {
+        recordingStarted: 'Recording started, click stop to finish',
+        recordingCompleted: 'Speech recognition completed',
+        recordingFailed: 'Speech recognition failed, please try again',
+        recordingTooLarge: 'Recording too large, please record shorter audio',
+        microphoneAccessDenied: 'Cannot access microphone, please check permissions'
+      };
+      return fallbacks[key] || key;
+    };
+  }
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSupported, setIsSupported] = useState(false);

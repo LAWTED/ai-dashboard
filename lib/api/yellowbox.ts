@@ -23,6 +23,7 @@ export interface YellowboxEntry {
     enhancedSummary?: {
       title: string;
       tags: string[];
+      values?: string[];
       emotion: {
         primary: string;
         intensity: 'low' | 'medium' | 'high';
@@ -59,6 +60,7 @@ export interface SummaryResponse {
   enhanced: {
     title: string;
     tags: string[];
+    values?: string[];
     emotion: {
       primary: string;
       intensity: "low" | "medium" | "high";

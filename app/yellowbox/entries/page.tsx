@@ -20,7 +20,7 @@ export default function EntriesPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
   const router = useRouter();
-  const { lang, t } = useYellowBoxI18n();
+  const { t } = useYellowBoxI18n();
 
   // Use React Query for data fetching
   const { data: entries = [], isLoading, error } = useYellowboxEntries();
@@ -349,20 +349,7 @@ export default function EntriesPage() {
                       </div>
                     )}
 
-                    {/* Emotion indicator - hidden */}
-                    {false && (
-                      <div className="text-xs text-[#3B3109] opacity-60">
-                        <span className="capitalize">
-                          {entry.metadata.enhancedSummary.emotion.primary}
-                        </span>
-                        {entry.metadata.enhancedSummary.emotion.intensity !==
-                          "medium" && (
-                          <span className="ml-1 opacity-75">
-                            ({entry.metadata.enhancedSummary.emotion.intensity})
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {/* Emotion indicator - hidden for now */}
                   </div>
                 )}
 

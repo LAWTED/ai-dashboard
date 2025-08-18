@@ -184,7 +184,7 @@ export function StatsCards({ entries, className = "" }: StatsCardsProps) {
     <div className={`grid grid-cols-2 gap-3 mb-6 ${className}`}>
       {statsCards.map((card, index) => (
         <motion.div
-          key={card.title}
+          key={Array.isArray(card.title) ? card.title.join('') : card.title}
           custom={index}
           initial="hidden"
           animate="visible"
@@ -194,13 +194,13 @@ export function StatsCards({ entries, className = "" }: StatsCardsProps) {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="text-xs text-[#3B3109] opacity-75 mb-1">
-                {card.title}
+                {Array.isArray(card.title) ? card.title.join('') : card.title}
               </div>
               <div className="text-lg font-bold text-[#3B3109] mb-1">
                 {card.value}
               </div>
               <div className="text-xs text-[#3B3109] opacity-60">
-                {card.subtitle}
+                {Array.isArray(card.subtitle) ? card.subtitle.join('') : card.subtitle}
               </div>
             </div>
             <card.icon className={`w-5 h-5 ${card.color} opacity-60`} />
