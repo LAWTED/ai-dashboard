@@ -203,6 +203,7 @@ export default function Component() {
         timeOfDay,
         conversationCount,
         images: finalImages,
+        conversationHistory,
       });
 
       // Add AI response to conversation history

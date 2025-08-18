@@ -4,7 +4,7 @@ import { generateText } from 'ai';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userEntry, selectedQuestion, timeOfDay, conversationCount, images } = await request.json();
+    const { userEntry, selectedQuestion, timeOfDay, conversationCount, images, conversationHistory = [] } = await request.json();
 
     if (!userEntry || !selectedQuestion) {
       return NextResponse.json(
@@ -73,13 +73,33 @@ Mindful Reflection (1-2 sentences):Acknowledge their presence and follow with a 
 Question (1-2 sentence):First, tell the user that we can come back to this win later if the user asks for it. Second, tell the user that but for now, let's switch gears and dive into something else -- which is the stressor or challenge they experience today. Ask in the format of a question from a friend.`;
     }
 
-    // Prepare messages for AI SDK with multimodal support
+    // Prepare messages for AI SDK with conversation history and multimodal support
     const messages = [];
     
+    // Add conversation history first
+    for (const historyMessage of conversationHistory) {
+      if (historyMessage.type === 'user') {
+        if (historyMessage.images && historyMessage.images.length > 0) {
+          const content = [
+            { type: 'text', text: historyMessage.content },
+            ...historyMessage.images.map((imageUrl: string) => ({
+              type: 'image' as const,
+              image: imageUrl
+            }))
+          ];
+          messages.push({ role: 'user' as const, content });
+        } else {
+          messages.push({ role: 'user' as const, content: historyMessage.content });
+        }
+      } else if (historyMessage.type === 'ai') {
+        messages.push({ role: 'assistant' as const, content: historyMessage.content });
+      }
+    }
+    
+    // Add the current user message
     if (images && images.length > 0) {
-      // Create multimodal message with text and images
       const content = [
-        { type: 'text', text: `Question: ${selectedQuestion}\nUser's answer: ${userEntry}` },
+        { type: 'text', text: userEntry },
         ...images.map((imageUrl: string) => ({
           type: 'image' as const,
           image: imageUrl
@@ -87,11 +107,7 @@ Question (1-2 sentence):First, tell the user that we can come back to this win l
       ];
       messages.push({ role: 'user' as const, content });
     } else {
-      // Text-only message
-      messages.push({ 
-        role: 'user' as const, 
-        content: `Question: ${selectedQuestion}\nUser's answer: ${userEntry}` 
-      });
+      messages.push({ role: 'user' as const, content: userEntry });
     }
 
     const result = await generateText({
