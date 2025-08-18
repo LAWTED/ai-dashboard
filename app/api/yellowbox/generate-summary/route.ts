@@ -12,6 +12,7 @@ type ConversationMessage = {
 const SummarySchema = z.object({
   title: z.string().describe('A concise title summarizing the main theme (5-8 words)'),
   tags: z.array(z.string()).max(5).describe('Up to 5 relevant tags/keywords'),
+  values: z.array(z.string()).max(3).describe('Up to 3 core values reflected in this entry (e.g., authenticity, connection, boundaries, autonomy, balance, growth, creativity)'),
   emotion: z.object({
     primary: z.string().describe('Primary emotion detected (e.g., happy, reflective, anxious, grateful, etc.)'),
     intensity: z.enum(['low', 'medium', 'high']).describe('Emotional intensity level'),
@@ -66,8 +67,9 @@ export async function POST(request: NextRequest) {
 
 Requirements:
 - Analyze the conversation content to understand core themes and emotional states
-- Generate a concise title of 5-8 words capturing the most important theme
+- Generate a concise title of 5–8 words capturing the most important theme
 - Identify up to 5 relevant tags/keywords
+- Identify up to 3 core values reflected in this entry (authenticity, connection, boundaries, autonomy, balance, growth, creativity, etc.)
 - Analyze primary emotion and emotional intensity
 - Identify up to 3 main topics or themes discussed
 - Style should be natural and warm, avoiding overly formal language

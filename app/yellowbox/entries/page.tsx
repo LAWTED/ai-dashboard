@@ -330,40 +330,43 @@ export default function EntriesPage() {
                 {/* Enhanced Summary Info */}
                 {entry.metadata?.enhancedSummary && (
                   <div className="mb-2 space-y-1.5">
-                    {/* Tags - show first 3 */}
-                    {entry.metadata.enhancedSummary.tags.length > 0 && (
+                    {/* Values - only show if values field exists */}
+                    {entry.metadata.enhancedSummary.values && entry.metadata.enhancedSummary.values.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {entry.metadata.enhancedSummary.tags
+                        {entry.metadata.enhancedSummary.values
                           .slice(0, 3)
-                          .map((tag, index) => (
+                          .map((value, index) => (
                             <span
                               key={index}
-                              className="inline-block px-1.5 py-0.5 text-xs rounded-full bg-[#E4BE10] text-[#3B3109] font-medium"
+                              className="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-yellow-200 text-[#3B3109] border border-[#E4BE10] font-medium"
                             >
-                              #{tag}
+                              <span className="w-1 h-1 bg-[#C04635] rounded-full mr-1"></span>
+                              {value}
                             </span>
                           ))}
-                        {entry.metadata.enhancedSummary.tags.length > 3 && (
+                        {entry.metadata.enhancedSummary.values.length > 3 && (
                           <span className="text-xs text-[#3B3109] opacity-50">
-                            +{entry.metadata.enhancedSummary.tags.length - 3}{" "}
+                            +{entry.metadata.enhancedSummary.values.length - 3}{" "}
                             more
                           </span>
                         )}
                       </div>
                     )}
 
-                    {/* Emotion indicator */}
-                    <div className="text-xs text-[#3B3109] opacity-60">
-                      <span className="capitalize">
-                        {entry.metadata.enhancedSummary.emotion.primary}
-                      </span>
-                      {entry.metadata.enhancedSummary.emotion.intensity !==
-                        "medium" && (
-                        <span className="ml-1 opacity-75">
-                          ({entry.metadata.enhancedSummary.emotion.intensity})
+                    {/* Emotion indicator - hidden */}
+                    {false && (
+                      <div className="text-xs text-[#3B3109] opacity-60">
+                        <span className="capitalize">
+                          {entry.metadata.enhancedSummary.emotion.primary}
                         </span>
-                      )}
-                    </div>
+                        {entry.metadata.enhancedSummary.emotion.intensity !==
+                          "medium" && (
+                          <span className="ml-1 opacity-75">
+                            ({entry.metadata.enhancedSummary.emotion.intensity})
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

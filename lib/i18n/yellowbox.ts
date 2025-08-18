@@ -85,6 +85,21 @@ export interface YellowboxTranslations {
 
   // Stats
   writingStats: string;
+  thisWeek: string;
+  totalWords: string;
+  writingStreak: string;
+  uniqueValues: string;
+  entries: string;
+  entry: string;
+  minRead: string;
+  day: string;
+  days: string;
+  inARow: string;
+  uniqueValue: string;
+  discovered: string;
+  discoveringPatterns: string;
+  chars: string;
+  words: string;
 }
 
 export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
@@ -172,7 +187,22 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
 
 
     // Stats
-    writingStats: '写作统计'
+    writingStats: '写作统计',
+    thisWeek: '本周',
+    totalWords: '总字数',
+    writingStreak: '写作连续',
+    uniqueValues: '价值观',
+    entries: '条目',
+    entry: '条目',
+    minRead: '分钟阅读',
+    day: '天',
+    days: '天',
+    inARow: '连续',
+    uniqueValue: '个价值观',
+    discovered: '已发现',
+    discoveringPatterns: '探索模式中',
+    chars: '字符',
+    words: '词'
   },
 
   en: {
@@ -259,7 +289,22 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
 
 
     // Stats
-    writingStats: 'Writing Stats'
+    writingStats: 'Writing Stats',
+    thisWeek: 'This Week',
+    totalWords: 'Total Words',
+    writingStreak: 'Writing Streak',
+    uniqueValues: 'Unique Values',
+    entries: 'entries',
+    entry: 'entry',
+    minRead: 'min read',
+    day: 'day',
+    days: 'days',
+    inARow: 'in a row',
+    uniqueValue: 'unique value',
+    discovered: 'discovered',
+    discoveringPatterns: 'Discovering patterns',
+    chars: 'chars',
+    words: 'words'
   }
 };
 

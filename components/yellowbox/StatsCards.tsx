@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Calendar, FileText, Clock, TrendingUp } from "lucide-react";
+import { Calendar, FileText, TrendingUp, Heart } from "lucide-react";
 import { YellowboxEntry } from "@/lib/api/yellowbox";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 
 interface StatsCardsProps {
   entries: YellowboxEntry[];
@@ -10,6 +11,7 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ entries, className = "" }: StatsCardsProps) {
+  const { t } = useYellowBoxI18n();
   // Helper function to count words in text (supports Chinese and English)
   const countWords = (text: string): number => {
     if (!text || typeof text !== 'string') return 0;
@@ -60,6 +62,32 @@ export function StatsCards({ entries, className = "" }: StatsCardsProps) {
         timeOfDayCount[a[0]] > timeOfDayCount[b[0]] ? a : b
       )?.[0] || "daytime";
     })(),
+    topValueThemes: (() => {
+      const valueCounts = entries.reduce((acc, entry) => {
+        if (!entry.metadata?.enhancedSummary?.values) return acc;
+        
+        entry.metadata.enhancedSummary.values.forEach(value => {
+          acc[value] = (acc[value] || 0) + 1;
+        });
+        return acc;
+      }, {} as Record<string, number>);
+      
+      return Object.entries(valueCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 2)
+        .map(([value]) => value);
+    })(),
+    totalUniqueValues: (() => {
+      const allValues = new Set<string>();
+      entries.forEach(entry => {
+        if (entry.metadata?.enhancedSummary?.values) {
+          entry.metadata.enhancedSummary.values.forEach(value => {
+            allValues.add(value);
+          });
+        }
+      });
+      return allValues.size;
+    })(),
     averageWordsPerEntry: entries.length > 0 ? Math.round(
       entries.reduce((total, entry) => {
         if (!entry.entries?.conversationHistory) return total;
@@ -103,23 +131,6 @@ export function StatsCards({ entries, className = "" }: StatsCardsProps) {
     })()
   };
 
-  const getTimeOfDayLabel = (timeOfDay: string) => {
-    switch (timeOfDay) {
-      case "morning": return "Morning";
-      case "evening": return "Evening";
-      case "daytime": 
-      default: return "Daytime";
-    }
-  };
-
-  const getTimeOfDayEmoji = (timeOfDay: string) => {
-    switch (timeOfDay) {
-      case "morning": return "🌅";
-      case "evening": return "🌙";
-      case "daytime": 
-      default: return "☀️";
-    }
-  };
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -136,32 +147,32 @@ export function StatsCards({ entries, className = "" }: StatsCardsProps) {
 
   const statsCards = [
     {
-      title: "This Week",
+      title: t("thisWeek"),
       value: stats.thisWeekEntries,
-      subtitle: `${stats.thisWeekEntries} ${stats.thisWeekEntries === 1 ? 'entry' : 'entries'}`,
+      subtitle: `${stats.thisWeekEntries} ${stats.thisWeekEntries === 1 ? t("entry") : t("entries")}`,
       icon: Calendar,
       color: "text-green-600"
     },
     {
-      title: "Total Words",
+      title: t("totalWords"),
       value: stats.totalWords.toLocaleString(),
-      subtitle: `~${Math.ceil(stats.totalWords / 200)} min read`,
+      subtitle: `~${Math.ceil(stats.totalWords / 200)} ${t("minRead")}`,
       icon: FileText,
       color: "text-blue-600"
     },
     {
-      title: "Writing Streak",
+      title: t("writingStreak"),
       value: stats.currentStreak,
-      subtitle: `${stats.currentStreak} ${stats.currentStreak === 1 ? 'day' : 'days'} in a row`,
+      subtitle: `${stats.currentStreak} ${stats.currentStreak === 1 ? t("day") : t("days")} ${t("inARow")}`,
       icon: TrendingUp,
       color: "text-purple-600"
     },
     {
-      title: "Favorite Time",
-      value: getTimeOfDayEmoji(stats.mostCommonTimeOfDay),
-      subtitle: getTimeOfDayLabel(stats.mostCommonTimeOfDay),
-      icon: Clock,
-      color: "text-orange-600"
+      title: t("uniqueValues"),
+      value: stats.totalUniqueValues,
+      subtitle: `${stats.totalUniqueValues} ${stats.totalUniqueValues === 1 ? t("uniqueValue") : t("uniqueValues")} ${t("discovered")}`,
+      icon: Heart,
+      color: "text-rose-600"
     }
   ];
 

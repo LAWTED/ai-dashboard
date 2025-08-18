@@ -105,35 +105,38 @@ export default function EntryDetailPage() {
             </h1>
           </div>
 
-          {/* Enhanced Summary Tags and Emotion */}
+          {/* Enhanced Summary Values and Emotion */}
           {entry.metadata?.enhancedSummary && (
             <div className="mb-3 space-y-2 flex-shrink-0">
-              {/* Tags */}
-              {entry.metadata.enhancedSummary.tags.length > 0 && (
+              {/* Values - only show if values field exists */}
+              {entry.metadata.enhancedSummary.values && entry.metadata.enhancedSummary.values.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {entry.metadata.enhancedSummary.tags.map((tag, index) => (
+                  {entry.metadata.enhancedSummary.values.map((value, index) => (
                     <span
                       key={index}
-                      className="inline-block px-2 py-0.5 text-xs rounded-full bg-[#E4BE10] text-[#3B3109] font-medium"
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-200 text-[#3B3109] border border-[#E4BE10]"
                     >
-                      #{tag}
+                      <span className="w-1.5 h-1.5 bg-[#C04635] rounded-full mr-1.5"></span>
+                      {value}
                     </span>
                   ))}
                 </div>
               )}
 
-              {/* Emotion */}
-              <div className="flex items-center gap-2 text-sm text-[#3B3109] opacity-75">
-                <span className="capitalize">{entry.metadata.enhancedSummary.emotion.primary}</span>
-                <span className="text-xs">•</span>
-                <span className="capitalize">{entry.metadata.enhancedSummary.emotion.intensity} intensity</span>
-                {entry.metadata.enhancedSummary.themes.length > 0 && (
-                  <>
-                    <span className="text-xs">•</span>
-                    <span className="text-xs">{entry.metadata.enhancedSummary.themes.join(", ")}</span>
-                  </>
-                )}
-              </div>
+              {/* Emotion - hidden */}
+              {false && (
+                <div className="flex items-center gap-2 text-sm text-[#3B3109] opacity-75">
+                  <span className="capitalize">{entry.metadata.enhancedSummary.emotion.primary}</span>
+                  <span className="text-xs">•</span>
+                  <span className="capitalize">{entry.metadata.enhancedSummary.emotion.intensity} intensity</span>
+                  {entry.metadata.enhancedSummary.themes.length > 0 && (
+                    <>
+                      <span className="text-xs">•</span>
+                      <span className="text-xs">{entry.metadata.enhancedSummary.themes.join(", ")}</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

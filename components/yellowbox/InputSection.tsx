@@ -6,6 +6,7 @@ import React, { useMemo } from "react";
 import { toast } from "sonner";
 import { ImageIcon, X } from "lucide-react";
 import Image from "next/image";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 
 interface InputSectionProps {
   userAnswer: string;
@@ -38,6 +39,7 @@ export function InputSection({
   trackKeystroke,
   trackTextChange,
 }: InputSectionProps) {
+  const { t } = useYellowBoxI18n();
   const previousAnswer = React.useRef<string>("");
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -215,9 +217,9 @@ export function InputSection({
         {/* Character/Word Count Display */}
         {userAnswer.trim() && (
           <div className="text-xs text-[#3B3109] opacity-60 flex items-center gap-3">
-            <span>{characterCount} chars</span>
-            <span>{wordCount} words</span>
-            <span>~{estimatedReadTime} min read</span>
+            <span>{characterCount} {t("chars")}</span>
+            <span>{wordCount} {t("words")}</span>
+            <span>~{estimatedReadTime} {t("minRead")}</span>
           </div>
         )}
       </motion.div>

@@ -33,6 +33,7 @@ type ConversationMessage = {
 type EnhancedSummary = {
   title: string;
   tags: string[];
+  values: string[];
   emotion: {
     primary: string;
     intensity: "low" | "medium" | "high";
@@ -55,7 +56,7 @@ export default function Component() {
   const [conversationCount, setConversationCount] = useState(0);
   const [showInput, setShowInput] = useState(true);
   const [summaryTitle, setSummaryTitle] = useState<string>("");
-  const [, setEnhancedSummary] = useState<EnhancedSummary | null>(null);
+  const [enhancedSummary, setEnhancedSummary] = useState<EnhancedSummary | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [previousInput, setPreviousInput] = useState<string>("");
@@ -519,6 +520,7 @@ export default function Component() {
           summaryTitle={summaryTitle}
           timeOfDay={timeOfDay}
           t={t as (key: string) => string}
+          valueTags={enhancedSummary?.values || []}
         />
       </div>
 
