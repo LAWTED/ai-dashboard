@@ -44,6 +44,11 @@ const items = [
     icon: GraduationCap,
   },
   {
+    title: "Professor Chat",
+    url: "/professor-chat",
+    icon: MessageSquare,
+  },
+  {
     title: "OpenHatch",
     url: "/openhatch",
     icon: Globe,
