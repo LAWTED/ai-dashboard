@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Plus, 
   MessageCircle, 
@@ -14,7 +15,10 @@ import {
   Check,
   ArrowLeft,
   Download,
-  Trash2
+  Trash2,
+  Upload,
+  FileText,
+  X
 } from "lucide-react";
 import { WeChatChat, Message } from "@/components/ui/wechat-chat";
 
@@ -90,12 +94,23 @@ export default function ProfessorChatPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('default');
   
   // Add professor state
+  const [addMode, setAddMode] = useState<'search' | 'custom'>('search');
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null);
   const [authorDetails, setAuthorDetails] = useState<AuthorDetails | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
+  // Custom professor state
+  const [customProfessor, setCustomProfessor] = useState({
+    name: '',
+    institution: '',
+    bio: '',
+    expertise: '',
+  });
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isProcessingFiles, setIsProcessingFiles] = useState(false);
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -396,15 +411,53 @@ export default function ProfessorChatPage() {
         setMessages(parsedMessages);
       } catch (error) {
         console.error("Failed to load chat history:", error);
-        showWelcomeMessage(newProfessor);
+        showWelcomeMessage();
       }
     } else {
-      showWelcomeMessage(newProfessor);
+      showWelcomeMessage();
     }
   };
 
-  const showWelcomeMessage = (professor: Professor) => {
-    const welcomeMessage = `Hi there! I'm Professor ${professor.name} from ${professor.institution}\\Great to meet you\\What would you like to chat about today? My research, academic life, or anything else you're curious about~`;
+  const showWelcomeMessage = () => {
+    // Get current hour for time-aware greetings
+    const currentHour = new Date().getHours();
+    const isMorning = currentHour >= 9 && currentHour < 12;
+    const isAfternoon = currentHour >= 12 && currentHour < 17;
+    const isEvening = currentHour >= 17 && currentHour < 20;
+
+    // Office hours style welcome message templates
+    const welcomeTemplates = [
+      // Time-aware templates
+      ...(isMorning ? [
+        `Come in, come in!\\Great to see you during office hours\\How did last week's readings go for you?`,
+        `Hey! Good morning\\I was just reviewing some student work\\What's on your mind this week?`
+      ] : []),
+      ...(isAfternoon ? [
+        `Good afternoon! Nice to see you\\How's your semester project coming along?\\Any challenges you want to discuss?`,
+        `Hey there! Perfect timing for office hours\\I was hoping someone would stop by\\What can I help you with today?`
+      ] : []),
+      ...(isEvening ? [
+        `Evening office hours - I like dedicated students!\\How's everything going with your coursework?`,
+        `Good evening! Working late I see\\What's been keeping you busy this week?`
+      ] : []),
+      
+      // General office hours templates focused on academics and guidance
+      `Welcome to office hours!\\I always enjoy these one-on-one chats\\How's the semester treating you so far?`,
+      `Great to see you! Come sit down\\Any questions about last week's material?\\Or maybe something about your career path?`,
+      `Hey there! I was just finishing up some grading\\Perfect timing\\What would you like to discuss today?`,
+      `Come on in!\\Office hours are my favorite part of the week\\How are you finding the coursework?`,
+      `Good to see you during office hours\\I hope you're settling into the semester well\\What's on your mind?`,
+      `Welcome! I was hoping students would take advantage of office hours more\\What brings you by today?`,
+      `Hey! Grab a seat\\I love getting to know my students better\\How are you doing with everything this semester?`,
+      `Nice to see you! Office hours are for whatever you need\\Academic questions, career advice, or just checking in\\What would help you most?`,
+      `Come in! I was just thinking about some interesting connections to our recent discussions\\But first, how are things going for you?`,
+      `Great timing! I always keep office hours open for students like you\\What's been challenging or exciting you lately?`
+    ];
+
+    // Select random message
+    const randomIndex = Math.floor(Math.random() * welcomeTemplates.length);
+    const welcomeMessage = welcomeTemplates[randomIndex];
+
     setMessages([]);
     displayAssistantResponse(welcomeMessage);
   };
@@ -422,10 +475,10 @@ export default function ProfessorChatPage() {
         setMessages(parsedMessages);
       } catch (error) {
         console.error("Failed to load chat history:", error);
-        showWelcomeMessage(professor);
+        showWelcomeMessage();
       }
     } else {
-      showWelcomeMessage(professor);
+      showWelcomeMessage();
     }
   };
 
@@ -464,7 +517,115 @@ export default function ProfessorChatPage() {
     const chatHistoryKey = `professor-chat-history-${selectedProfessor.id}`;
     localStorage.removeItem(chatHistoryKey);
     
-    showWelcomeMessage(selectedProfessor);
+    showWelcomeMessage();
+  };
+
+  // File upload functionality
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const validFiles = files.filter(file => {
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+      
+      if (file.size > maxSize) {
+        alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+        return false;
+      }
+      
+      if (!validTypes.includes(file.type)) {
+        alert(`File ${file.name} has an unsupported format. Only PDF, DOC, DOCX, and TXT files are allowed.`);
+        return false;
+      }
+      
+      return true;
+    });
+    
+    setUploadedFiles(prev => [...prev, ...validFiles]);
+    // Reset the input value to allow re-uploading the same file
+    event.target.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Create custom professor
+  const createCustomProfessor = async () => {
+    if (!customProfessor.name.trim() || !customProfessor.institution.trim()) {
+      alert('Please fill in the professor name and institution.');
+      return;
+    }
+
+    setIsProcessingFiles(true);
+
+    try {
+      // Process uploaded files if any
+      let fileContents = '';
+      if (uploadedFiles.length > 0) {
+        // For demo purposes, we'll just extract the file names
+        // In a real implementation, you'd want to extract text content from PDFs, DOCs, etc.
+        const fileList = uploadedFiles.map(file => file.name).join(', ');
+        fileContents = `Supporting materials: ${fileList}`;
+      }
+
+      // Create professor with custom details
+      const customProfessorData = {
+        id: `custom_${Date.now()}`,
+        name: customProfessor.name,
+        institution: customProfessor.institution,
+        works_count: 0,
+        cited_by_count: 0,
+        selectedAt: new Date().toISOString(),
+        fullDetails: {
+          display_name: customProfessor.name,
+          works_count: 0,
+          cited_by_count: 0,
+          summary_stats: { h_index: 0, i10_index: 0 },
+          affiliations: [{
+            institution: { display_name: customProfessor.institution },
+            years: [new Date().getFullYear()]
+          }],
+          topics: customProfessor.expertise ? 
+            customProfessor.expertise.split(',').map(topic => ({ display_name: topic.trim() })) : [],
+          biography: customProfessor.bio,
+          expertise: customProfessor.expertise,
+          uploadedMaterials: fileContents
+        }
+      };
+
+      // Save to localStorage
+      const savedProfessors = JSON.parse(localStorage.getItem("professor-chat-list") || "[]");
+      savedProfessors.push(customProfessorData);
+      localStorage.setItem("professor-chat-list", JSON.stringify(savedProfessors));
+      setProfessors(savedProfessors);
+
+      // Start chat with new custom professor
+      setSelectedProfessor(customProfessorData);
+      setViewMode('chat');
+      
+      // Reset form
+      setCustomProfessor({ name: '', institution: '', bio: '', expertise: '' });
+      setUploadedFiles([]);
+      
+      // Show welcome message using office hours style
+      const officeHoursWelcome = [
+        `Welcome to my office hours!\\Great to finally meet you\\How's your semester going so far?`,
+        `Come in, come in!\\I'm glad you decided to stop by\\What's on your mind today?`,
+        `Hey there! Welcome to office hours\\I always enjoy getting to know my students better\\How are things going?`,
+        `Good to see you during office hours!\\I hope you're finding your studies engaging\\What can I help you with?`,
+        `Welcome! I was just thinking about some interesting topics\\Perfect timing\\What would you like to discuss today?`
+      ];
+      const randomIndex = Math.floor(Math.random() * officeHoursWelcome.length);
+      const welcomeMessage = officeHoursWelcome[randomIndex];
+      setMessages([]);
+      displayAssistantResponse(welcomeMessage);
+
+    } catch (error) {
+      console.error('Error creating custom professor:', error);
+      alert('Failed to create custom professor. Please try again.');
+    } finally {
+      setIsProcessingFiles(false);
+    }
   };
 
   // Save messages to localStorage
@@ -593,73 +754,221 @@ export default function ProfessorChatPage() {
               {/* Search Form */}
               <div className="w-1/2 border-r border-gray-200 bg-white flex flex-col">
                 <div className="p-6 border-b border-gray-200">
-                  <div>
-                    <Label htmlFor="search">Professor Name</Label>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Input
-                        id="search"
-                        placeholder="Enter professor name..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            searchAuthors();
-                          }
-                        }}
-                      />
-                      <Button
-                        onClick={searchAuthors}
-                        disabled={isSearching || !searchQuery.trim()}
-                      >
-                        {isSearching ? "Searching..." : "Search"}
-                        {!isSearching && <Search className="ml-2 h-4 w-4" />}
-                      </Button>
-                    </div>
+                  {/* Mode Toggle */}
+                  <div className="flex gap-1 mb-4 p-1 bg-gray-100 rounded-lg">
+                    <Button
+                      size="sm"
+                      variant={addMode === 'search' ? 'default' : 'ghost'}
+                      onClick={() => setAddMode('search')}
+                      className="flex-1"
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      Search Database
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={addMode === 'custom' ? 'default' : 'ghost'}
+                      onClick={() => setAddMode('custom')}
+                      className="flex-1"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Create Custom
+                    </Button>
                   </div>
+
+                  {addMode === 'search' ? (
+                    <div>
+                      <Label htmlFor="search">Professor Name</Label>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Input
+                          id="search"
+                          placeholder="Enter professor name..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              searchAuthors();
+                            }
+                          }}
+                        />
+                        <Button
+                          onClick={searchAuthors}
+                          disabled={isSearching || !searchQuery.trim()}
+                        >
+                          {isSearching ? "Searching..." : "Search"}
+                          {!isSearching && <Search className="ml-2 h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="custom-name">Professor Name *</Label>
+                        <Input
+                          id="custom-name"
+                          placeholder="Enter professor name..."
+                          value={customProfessor.name}
+                          onChange={(e) => setCustomProfessor(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="custom-institution">Institution *</Label>
+                        <Input
+                          id="custom-institution"
+                          placeholder="Enter institution name..."
+                          value={customProfessor.institution}
+                          onChange={(e) => setCustomProfessor(prev => ({ ...prev, institution: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="custom-bio">Biography</Label>
+                        <Textarea
+                          id="custom-bio"
+                          placeholder="Enter professor's background and achievements..."
+                          value={customProfessor.bio}
+                          onChange={(e) => setCustomProfessor(prev => ({ ...prev, bio: e.target.value }))}
+                          rows={3}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="custom-expertise">Research Areas/Expertise</Label>
+                        <Textarea
+                          id="custom-expertise"
+                          placeholder="Enter research areas, expertise, and interests..."
+                          value={customProfessor.expertise}
+                          onChange={(e) => setCustomProfessor(prev => ({ ...prev, expertise: e.target.value }))}
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Search Results */}
-                {authors.length > 0 && (
-                  <div className="flex-1 p-6 overflow-y-auto">
-                    <Label className="mb-3 block">Search Results:</Label>
-                    <div className="space-y-2">
-                      {authors.map((author) => (
-                        <div
-                          key={author.id}
-                          className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                            selectedAuthor?.id === author.id
-                              ? "border-blue-500 bg-blue-50"
-                              : "hover:bg-gray-50 border-gray-200"
-                          }`}
-                          onClick={() => selectAuthor(author)}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="font-medium">{author.display_name}</div>
-                              <div className="text-sm text-gray-600 flex items-center gap-4">
-                                <span className="flex items-center gap-1">
-                                  <BookOpen className="h-3 w-3" />
-                                  {author.works_count} publications
-                                </span>
-                                <span>{author.cited_by_count} citations</span>
-                              </div>
-                              {author.last_known_institutions && author.last_known_institutions.length > 0 && (
-                                <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                                  <Building className="h-3 w-3" />
-                                  {author.last_known_institutions[0].display_name}
-                                  {author.last_known_institutions[0].country_code && (
-                                    <span>({author.last_known_institutions[0].country_code})</span>
-                                  )}
+                {/* Search Results / File Upload Area */}
+                {addMode === 'search' ? (
+                  authors.length > 0 && (
+                    <div className="flex-1 p-6 overflow-y-auto">
+                      <Label className="mb-3 block">Search Results:</Label>
+                      <div className="space-y-2">
+                        {authors.map((author) => (
+                          <div
+                            key={author.id}
+                            className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                              selectedAuthor?.id === author.id
+                                ? "border-blue-500 bg-blue-50"
+                                : "hover:bg-gray-50 border-gray-200"
+                            }`}
+                            onClick={() => selectAuthor(author)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="font-medium">{author.display_name}</div>
+                                <div className="text-sm text-gray-600 flex items-center gap-4">
+                                  <span className="flex items-center gap-1">
+                                    <BookOpen className="h-3 w-3" />
+                                    {author.works_count} publications
+                                  </span>
+                                  <span>{author.cited_by_count} citations</span>
                                 </div>
+                                {author.last_known_institutions && author.last_known_institutions.length > 0 && (
+                                  <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                                    <Building className="h-3 w-3" />
+                                    {author.last_known_institutions[0].display_name}
+                                    {author.last_known_institutions[0].country_code && (
+                                      <span>({author.last_known_institutions[0].country_code})</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              {selectedAuthor?.id === author.id && (
+                                <Check className="h-5 w-5 text-blue-500" />
                               )}
                             </div>
-                            {selectedAuthor?.id === author.id && (
-                              <Check className="h-5 w-5 text-blue-500" />
-                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  /* File Upload Area */
+                  <div className="flex-1 p-6 overflow-y-auto">
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="mb-3 block">Upload Supporting Materials (Optional)</Label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                          <input
+                            type="file"
+                            multiple
+                            accept=".pdf,.doc,.docx,.txt"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            id="file-upload"
+                          />
+                          <label
+                            htmlFor="file-upload"
+                            className="cursor-pointer flex flex-col items-center gap-2"
+                          >
+                            <Upload className="h-8 w-8 text-gray-400" />
+                            <div className="text-sm text-gray-600">
+                              <span className="font-medium text-blue-600 hover:text-blue-500">
+                                Click to upload files
+                              </span>{" "}
+                              or drag and drop
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              PDF, DOC, DOCX, TXT up to 10MB each
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Uploaded Files List */}
+                      {uploadedFiles.length > 0 && (
+                        <div>
+                          <Label className="mb-2 block">Uploaded Files:</Label>
+                          <div className="space-y-2">
+                            {uploadedFiles.map((file, index) => (
+                              <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                                <FileText className="h-4 w-4 text-gray-500" />
+                                <span className="flex-1 text-sm truncate">{file.name}</span>
+                                <span className="text-xs text-gray-500">
+                                  {(file.size / 1024 / 1024).toFixed(1)}MB
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => removeFile(index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      ))}
+                      )}
+
+                      {isProcessingFiles && (
+                        <div className="text-center">
+                          <div className="text-sm text-gray-600">Processing files...</div>
+                        </div>
+                      )}
+
+                      {/* Create Professor Button */}
+                      <div className="pt-4 border-t border-gray-200">
+                        <Button
+                          onClick={createCustomProfessor}
+                          disabled={true}
+                          className="w-full"
+                          size="lg"
+                        >
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Create & Start Chat (Coming Soon)
+                        </Button>
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                          File processing backend is under development
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -668,11 +977,69 @@ export default function ProfessorChatPage() {
               {/* Professor Details */}
               <div className="w-1/2 bg-gray-50 flex flex-col">
                 <div className="flex-1 min-h-0 p-6 overflow-y-auto">
-                {isLoadingDetails ? (
-                  <div className="flex items-center justify-center h-40">
-                    <p className="text-gray-500">Loading professor details...</p>
-                  </div>
-                ) : authorDetails ? (
+                {addMode === 'custom' ? (
+                  /* Custom Professor Preview */
+                  customProfessor.name.trim() && customProfessor.institution.trim() ? (
+                    <div className="space-y-6">
+                      <div className="bg-white rounded-lg p-4">
+                        <h3 className="text-xl font-semibold mb-2">{customProfessor.name}</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-1">
+                            <Building className="h-4 w-4" />
+                            <span className="font-medium">Institution:</span> {customProfessor.institution}
+                          </div>
+                        </div>
+                      </div>
+
+                      {customProfessor.bio && (
+                        <div className="bg-white rounded-lg p-4">
+                          <h4 className="font-medium mb-2">Biography</h4>
+                          <p className="text-sm text-gray-600">{customProfessor.bio}</p>
+                        </div>
+                      )}
+
+                      {customProfessor.expertise && (
+                        <div className="bg-white rounded-lg p-4">
+                          <h4 className="font-medium mb-2">Research Areas & Expertise</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {customProfessor.expertise.split(',').map((area, index) => (
+                              <span
+                                key={index}
+                                className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs"
+                              >
+                                {area.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {uploadedFiles.length > 0 && (
+                        <div className="bg-white rounded-lg p-4">
+                          <h4 className="font-medium mb-2">Supporting Materials</h4>
+                          <div className="space-y-1">
+                            {uploadedFiles.map((file, index) => (
+                              <div key={index} className="text-xs text-gray-600 flex items-center gap-1">
+                                <FileText className="h-3 w-3" />
+                                {file.name}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-40">
+                      <p className="text-gray-500">Fill in professor details to see preview</p>
+                    </div>
+                  )
+                ) : (
+                  /* Database Search Results */
+                  isLoadingDetails ? (
+                    <div className="flex items-center justify-center h-40">
+                      <p className="text-gray-500">Loading professor details...</p>
+                    </div>
+                  ) : authorDetails ? (
                   <div className="space-y-6">
                     <div className="bg-white rounded-lg p-4">
                       <h3 className="text-xl font-semibold mb-2">{authorDetails.display_name}</h3>
@@ -742,10 +1109,11 @@ export default function ProfessorChatPage() {
                       Start Chat with Professor
                     </Button>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-center h-40">
-                    <p className="text-gray-500">Select a professor to see details</p>
-                  </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-40">
+                      <p className="text-gray-500">Select a professor to see details</p>
+                    </div>
+                  )
                 )}
                 </div>
               </div>
