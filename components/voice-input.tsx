@@ -11,6 +11,7 @@ import {
   validateAudioFile,
   DEFAULT_AUDIO_CONFIG,
 } from "@/lib/audio-utils";
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 
 interface VoiceInputProps {
   onTranscriptionComplete: (text: string) => void;
@@ -21,6 +22,7 @@ export function VoiceInput({
   onTranscriptionComplete,
   disabled = false,
 }: VoiceInputProps) {
+  const { t } = useYellowBoxI18n();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
@@ -56,13 +58,13 @@ export function VoiceInput({
 
         if (data.success && data.transcription) {
           onTranscriptionComplete(data.transcription);
-          toast.success("语音识别完成");
+          toast.success(t("recordingCompleted") as string);
         } else {
           throw new Error("Invalid response format");
         }
       } catch (error) {
         console.error("Error processing audio:", error);
-        toast.error("语音识别失败，请重试");
+        toast.error(t("recordingFailed") as string);
       } finally {
         setIsProcessing(false);
       }
@@ -104,7 +106,7 @@ export function VoiceInput({
 
         // Validate audio file
         if (!validateAudioFile(audioBlob)) {
-          toast.error("录音文件过大，请重新录制较短的音频");
+          toast.error(t("recordingTooLarge") as string);
           setIsProcessing(false);
           return;
         }
@@ -116,10 +118,10 @@ export function VoiceInput({
       // Start recording
       mediaRecorder.start();
       setIsRecording(true);
-      toast.info("录音开始，点击停止按钮结束录音");
+      toast.info(t("recordingStarted") as string);
     } catch (error) {
       console.error("Error starting recording:", error);
-      toast.error("无法访问麦克风，请检查权限设置");
+      toast.error(t("microphoneAccessDenied") as string);
     }
   }, [processAudio]);
 

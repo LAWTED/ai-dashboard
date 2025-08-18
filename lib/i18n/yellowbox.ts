@@ -100,6 +100,25 @@ export interface YellowboxTranslations {
   discoveringPatterns: string;
   chars: string;
   words: string;
+
+  // Voice input
+  recordingStarted: string;
+  recordingCompleted: string;
+  recordingFailed: string;
+  recordingTooLarge: string;
+  microphoneAccessDenied: string;
+
+  // Entry management
+  confirmDelete: string;
+  designQuote: string;
+  deleteEntry: string;
+  deleting: string;
+  delete: string;
+  export: string;
+  searchEntries: string;
+  noMatchingEntries: string;
+  clearSearch: string;
+  daytime: string;
 }
 
 export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
@@ -202,7 +221,26 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     discovered: '已发现',
     discoveringPatterns: '探索模式中',
     chars: '字符',
-    words: '词'
+    words: '词',
+
+    // Voice input
+    recordingStarted: '录音开始，点击停止按钮结束录音',
+    recordingCompleted: '语音识别完成',
+    recordingFailed: '语音识别失败，请重试',
+    recordingTooLarge: '录音文件过大，请重新录制较短的音频',
+    microphoneAccessDenied: '无法访问麦克风，请检查权限设置',
+
+    // Entry management
+    confirmDelete: '确定要删除这个条目吗？此操作无法撤销。',
+    designQuote: '设计精彩瞬间',
+    deleteEntry: '删除条目',
+    deleting: '删除中...',
+    delete: '删除',
+    export: '导出',
+    searchEntries: '搜索条目内容...',
+    noMatchingEntries: '没有找到符合条件的条目',
+    clearSearch: '清除搜索',
+    daytime: '日间'
   },
 
   en: {
@@ -304,7 +342,26 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     discovered: 'discovered',
     discoveringPatterns: 'Discovering patterns',
     chars: 'chars',
-    words: 'words'
+    words: 'words',
+
+    // Voice input
+    recordingStarted: 'Recording started, click stop to finish',
+    recordingCompleted: 'Speech recognition completed',
+    recordingFailed: 'Speech recognition failed, please try again',
+    recordingTooLarge: 'Recording too large, please record shorter audio',
+    microphoneAccessDenied: 'Cannot access microphone, please check permissions',
+
+    // Entry management
+    confirmDelete: 'Are you sure you want to delete this entry? This action cannot be undone.',
+    designQuote: 'Design Quote',
+    deleteEntry: 'Delete entry',
+    deleting: 'Deleting...',
+    delete: 'Delete',
+    export: 'Export',
+    searchEntries: 'Search entries...',
+    noMatchingEntries: 'No entries match your search criteria',
+    clearSearch: 'Clear Search',
+    daytime: 'Daytime'
   }
 };
 

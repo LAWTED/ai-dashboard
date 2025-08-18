@@ -34,11 +34,7 @@ export default function EntryDetailPage() {
     if (!entry) return;
 
     // Show confirmation dialog
-    const confirmed = window.confirm(
-      lang === "zh"
-        ? "确定要删除这个条目吗？此操作无法撤销。"
-        : "Are you sure you want to delete this entry? This action cannot be undone."
-    );
+    const confirmed = window.confirm(t("confirmDelete") as string);
 
     if (!confirmed) return;
 
@@ -235,7 +231,7 @@ export default function EntryDetailPage() {
                 className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
-                {lang === "zh" ? "设计精彩瞬间" : "Design Quote"}
+                {t("designQuote")}
               </Button>
 
               {/* Delete Button */}
@@ -243,12 +239,12 @@ export default function EntryDetailPage() {
                 onClick={handleDelete}
                 disabled={deleteEntryMutation.isPending}
                 className="bg-red-600 hover:bg-red-700 text-white border-none px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                title={lang === "zh" ? "删除条目" : "Delete entry"}
+                title={t("deleteEntry") as string}
               >
                 <Trash2 className="w-4 h-4" />
                 {deleteEntryMutation.isPending
-                  ? (lang === "zh" ? "删除中..." : "Deleting...")
-                  : (lang === "zh" ? "删除" : "Delete")
+                  ? t("deleting")
+                  : t("delete")
                 }
               </Button>
             </motion.div>

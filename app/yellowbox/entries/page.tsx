@@ -101,7 +101,7 @@ export default function EntriesPage() {
         return "Evening";
       case "daytime":
       default:
-        return lang === "zh" ? "日间" : "Daytime";
+        return t("daytime") as string;
     }
   };
 
@@ -145,7 +145,7 @@ export default function EntriesPage() {
             className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-2 md:px-3 py-2 rounded-lg transition-colors flex items-center gap-1 md:gap-2"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{lang === "zh" ? "导出" : "Export"}</span>
+            <span className="hidden sm:inline">{t("export")}</span>
           </Button>
         )}
       </div>
@@ -161,9 +161,7 @@ export default function EntriesPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#3B3109] opacity-60" />
             <input
               type="text"
-              placeholder={
-                lang === "zh" ? "搜索条目内容..." : "Search entries..."
-              }
+              placeholder={t("searchEntries") as string}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-10 py-2 rounded-lg bg-yellow-300 text-[#3B3109] placeholder-[#3B3109] placeholder-opacity-60 focus:outline-none focus:ring-2 focus:ring-[#E4BE10]"
@@ -278,9 +276,7 @@ export default function EntriesPage() {
             ) : (
               <>
                 <p className="mb-4">
-                  {lang === "zh"
-                    ? "没有找到符合条件的条目"
-                    : "No entries match your search criteria"}
+                  {t("noMatchingEntries")}
                 </p>
                 <Button
                   onClick={() => {
@@ -291,7 +287,7 @@ export default function EntriesPage() {
                   variant="ghost"
                   className="bg-yellow-300 hover:bg-yellow-200 text-[#3B3109] border border-[#E4BE10]"
                 >
-                  {lang === "zh" ? "清除搜索" : "Clear Search"}
+                  {t("clearSearch")}
                 </Button>
               </>
             )}
