@@ -45,7 +45,15 @@ export function WeChatChat({
 
   return (
     <div className={`flex flex-col w-full h-full ${className}`}>
-      <div className="flex-1 overflow-y-auto p-2 sm:p-4 border rounded-lg bg-[#ebebeb] mb-2 sm:mb-4">
+      <div 
+        className="flex-1 overflow-y-auto p-2 sm:p-4 border rounded-lg mb-2 sm:mb-4"
+        style={{
+          backgroundImage: "url('/chat-background.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
+        }}
+      >
         {/* Container message scroll area */}
         <div className="flex flex-col w-full">
           {/* Optional model info area */}

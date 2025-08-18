@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Building, BookOpen, GraduationCap } from "lucide-react";
+import { ArrowLeft, Download, Building, BookOpen, GraduationCap, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { WeChatChat, Message } from "@/components/ui/wechat-chat";
 
@@ -18,6 +18,11 @@ type Professor = {
   fullDetails?: Record<string, unknown>;
 };
 
+type UserQueue = {
+  messages: string[];
+  lastMessageTime: number;
+};
+
 export default function ProfessorChatDetailPage({
   params,
 }: {
@@ -26,7 +31,72 @@ export default function ProfessorChatDetailPage({
   const [professor, setProfessor] = useState<Professor | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [typing, setTyping] = useState(false);
   const [professorId, setProfessorId] = useState<string>("");
+  const [userQueue, setUserQueue] = useState<UserQueue>({
+    messages: [],
+    lastMessageTime: 0,
+  });
+  const [processingQueue, setProcessingQueue] = useState(false);
+
+  // Typing animation speed (milliseconds per character)
+  const TYPING_SPEED = 20;
+  // Queue waiting time (milliseconds)
+  const QUEUE_WAITING_TIME = 1500;
+
+  // Display assistant response with typing animation (similar to Alice)
+  const displayAssistantResponse = async (response: string) => {
+    setTyping(true);
+
+    // Check if response contains backslash separators
+    if (response.includes("\\")) {
+      // Split by backslash and filter out empty parts
+      const parts = response
+        .split("\\")
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+
+        // Calculate typing delay based on character length
+        const typingDelay = part.length * TYPING_SPEED;
+
+        // Wait for typing animation
+        await new Promise((resolve) => setTimeout(resolve, typingDelay));
+
+        // Add this part of the response
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: part,
+            timestamp: Date.now(),
+          },
+        ]);
+
+        // Small pause between message parts
+        if (i < parts.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      }
+    } else {
+      // Single message without separators
+      const typingDelay = response.length * TYPING_SPEED;
+      await new Promise((resolve) => setTimeout(resolve, typingDelay));
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: response,
+          timestamp: Date.now(),
+        },
+      ]);
+    }
+
+    setTyping(false);
+  };
 
   // Resolve params
   useEffect(() => {
@@ -58,12 +128,10 @@ export default function ProfessorChatDetailPage({
           }
         } else {
           // Add welcome message
-          const welcomeMessage: Message = {
-            role: "assistant",
-            content: `Hello! I'm Professor ${foundProfessor.name} from ${foundProfessor.institution}. I'm happy to discuss my research, answer questions about academia, or chat about topics in my field. How can I help you today?`,
-            timestamp: Date.now(),
-          };
-          setMessages([welcomeMessage]);
+          const welcomeMessage = `Hi there! I'm Professor ${foundProfessor.name} from ${foundProfessor.institution}\\Great to meet you\\What would you like to chat about today? My research, academic life, or anything else you're curious about~`;
+          
+          // Use the display function for the welcome message too
+          displayAssistantResponse(welcomeMessage);
         }
       }
     };
@@ -79,29 +147,32 @@ export default function ProfessorChatDetailPage({
     }
   }, [messages, professorId, professor]);
 
-  const handleSendMessage = async (userMessage: string) => {
-    if (!userMessage.trim() || !professor) return;
-
-    const timestamp = Date.now();
-
-    // Add user message
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "user",
-        content: userMessage,
-        timestamp,
-      },
-    ]);
-
+  // Process user queue and send to API
+  const processUserQueue = useCallback(async () => {
+    if (processingQueue || !professor) return;
+    
+    setProcessingQueue(true);
     setLoading(true);
 
     try {
-      // Get conversation history (exclude the latest user message we just added)
-      const conversationHistory = messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
+      // Get all messages from queue
+      const userMessages = [...userQueue.messages];
+
+      // Clear the queue
+      setUserQueue({ messages: [], lastMessageTime: 0 });
+
+      // Merge messages if multiple
+      const mergedMessage = userMessages.length > 1 
+        ? userMessages.join(" ") 
+        : userMessages[0];
+
+      // Get conversation history (excluding the queued messages)
+      const conversationHistory = messages
+        .slice(0, -userMessages.length) // Remove the queued user messages
+        .map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
 
       const response = await fetch("/api/professor-chat", {
         method: "POST",
@@ -109,7 +180,7 @@ export default function ProfessorChatDetailPage({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: userMessage,
+          message: mergedMessage,
           professorId: professorId,
           conversationHistory,
           professorDetails: professor.fullDetails,
@@ -119,14 +190,8 @@ export default function ProfessorChatDetailPage({
       const data = await response.json();
 
       if (data.success) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: data.response,
-            timestamp: Date.now(),
-          },
-        ]);
+        // Use the new display function for segmented responses
+        await displayAssistantResponse(data.response);
       } else {
         throw new Error(data.message);
       }
@@ -142,7 +207,50 @@ export default function ProfessorChatDetailPage({
       ]);
     } finally {
       setLoading(false);
+      setProcessingQueue(false);
     }
+  }, [processingQueue, professor, userQueue.messages, messages, professorId]);
+
+  // Monitor queue and auto-process
+  useEffect(() => {
+    if (userQueue.messages.length === 0 || processingQueue || loading || typing) {
+      return;
+    }
+
+    const timeSinceLastMessage = Date.now() - userQueue.lastMessageTime;
+    
+    if (timeSinceLastMessage >= QUEUE_WAITING_TIME) {
+      processUserQueue();
+    } else {
+      const remainingTime = QUEUE_WAITING_TIME - timeSinceLastMessage;
+      const timer = setTimeout(() => {
+        processUserQueue();
+      }, remainingTime);
+
+      return () => clearTimeout(timer);
+    }
+  }, [userQueue, processingQueue, loading, typing, processUserQueue]);
+
+  const handleSendMessage = async (userMessage: string) => {
+    if (!userMessage.trim() || !professor) return;
+
+    const timestamp = Date.now();
+
+    // Add user message to UI immediately
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        content: userMessage,
+        timestamp,
+      },
+    ]);
+
+    // Add to queue
+    setUserQueue((prev) => ({
+      messages: [...prev.messages, userMessage],
+      lastMessageTime: timestamp,
+    }));
   };
 
   const exportChatHistory = () => {
@@ -170,6 +278,25 @@ export default function ProfessorChatDetailPage({
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const clearChatHistory = () => {
+    if (messages.length === 0) return;
+    
+    // Clear messages state
+    setMessages([]);
+    
+    // Remove chat history from localStorage
+    if (professorId) {
+      const chatHistoryKey = `professor-chat-history-${professorId}`;
+      localStorage.removeItem(chatHistoryKey);
+    }
+    
+    // Display new welcome message
+    if (professor) {
+      const welcomeMessage = `Hi there! I'm Professor ${professor.name} from ${professor.institution}\\Great to meet you\\What would you like to chat about today? My research, academic life, or anything else you're curious about~`;
+      displayAssistantResponse(welcomeMessage);
+    }
   };
 
   const renderModelInfo = () => {
@@ -255,23 +382,35 @@ export default function ProfessorChatDetailPage({
             )}
           </div>
 
-          <Button
-            onClick={exportChatHistory}
-            variant="outline"
-            size="sm"
-            title="Export chat history as CSV"
-            disabled={messages.length === 0}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            Export
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={exportChatHistory}
+              variant="outline"
+              size="sm"
+              title="Export chat history as CSV"
+              disabled={messages.length === 0}
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+            <Button
+              onClick={clearChatHistory}
+              variant="outline"
+              size="sm"
+              title="Clear chat history"
+              disabled={messages.length === 0}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Clear
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-col h-[calc(100vh-16rem)]">
           <WeChatChat
             messages={messages}
             onSendMessage={handleSendMessage}
-            disabled={loading}
+            disabled={false}
             placeholder="Ask the professor anything..."
             modelInfo={renderModelInfo()}
           />
