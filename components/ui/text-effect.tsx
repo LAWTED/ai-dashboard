@@ -114,9 +114,14 @@ const AnimationComponent: React.FC<{
   per: "line" | "word" | "char";
   segmentWrapperClassName?: string;
 }> = React.memo(({ segment, variants, per, segmentWrapperClassName }) => {
-  if (/^\s*$/.test(segment)) {
-    return <span>{segment}</span>;
+  // Handle pure whitespace segments
+  if (/^\s+$/.test(segment)) {
+    return <motion.span variants={variants} className="whitespace-pre">{segment}</motion.span>;
   }
+  
+  // Check if segment contains CJK characters
+  const hasCJK = /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(segment);
+  
   const content =
     per === "line" ? (
       <motion.span variants={variants} className="block">
@@ -126,18 +131,18 @@ const AnimationComponent: React.FC<{
       <motion.span
         aria-hidden="true"
         variants={variants}
-        className={cn("inline-block whitespace-pre")}
+        className={cn("inline-block", !hasCJK && "whitespace-pre")}
       >
         {segment}
       </motion.span>
     ) : (
-      <motion.span className="inline-block whitespace-pre">
+      <motion.span className={cn("inline-block", !hasCJK && "whitespace-pre")}>
         {segment.split("").map((char, charIndex) => (
           <motion.span
             key={`char-${charIndex}`}
             aria-hidden="true"
             variants={variants}
-            className="inline-block whitespace-pre"
+            className={cn("inline-block", !hasCJK && "whitespace-pre")}
           >
             {char}
           </motion.span>
@@ -162,6 +167,57 @@ AnimationComponent.displayName = "AnimationComponent";
 
 const splitText = (text: string, per: PerType) => {
   if (per === "line") return text.split("\n");
+  
+  // Check if text contains CJK characters (Chinese, Japanese, Korean)
+  const hasCJK = /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(text);
+  
+  if (hasCJK) {
+    // For text with CJK characters, split them into smaller chunks for animation
+    const segments: string[] = [];
+    let i = 0;
+    
+    while (i < text.length) {
+      const char = text[i];
+      
+      // Handle spaces
+      if (/\s/.test(char)) {
+        let spaces = char;
+        i++;
+        while (i < text.length && /\s/.test(text[i])) {
+          spaces += text[i];
+          i++;
+        }
+        segments.push(spaces);
+      }
+      // Handle CJK characters - group 2-3 together
+      else if (/[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(char)) {
+        let chunk = char;
+        i++;
+        // Add 1-2 more CJK characters to the chunk (for smoother animation)
+        let chunkSize = 1;
+        while (i < text.length && chunkSize < 2 && /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(text[i])) {
+          chunk += text[i];
+          i++;
+          chunkSize++;
+        }
+        segments.push(chunk);
+      }
+      // Handle non-CJK characters (English, numbers, etc.) - group until space or CJK
+      else {
+        let word = char;
+        i++;
+        while (i < text.length && !/\s/.test(text[i]) && !/[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(text[i])) {
+          word += text[i];
+          i++;
+        }
+        segments.push(word);
+      }
+    }
+    
+    return segments.filter(segment => segment.length > 0);
+  }
+  
+  // For non-CJK text, use original space-based splitting
   return text.split(/(\s+)/);
 };
 

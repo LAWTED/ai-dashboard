@@ -41,20 +41,20 @@ export function ConversationView({
                   title="Value-aware response"
                 />
               )}
-              
+
               {index === conversationHistory.length - 1 ? (
                 <TextEffect
                   key={`ai-${index}`}
                   preset="fade-in-blur"
                   speedReveal={1.1}
                   speedSegment={0.3}
-                  className="text-[#C04635] text-base"
+                  className="text-[#C04635] text-base break-words"
                   onAnimationComplete={onAnimationComplete}
                 >
                   {message.content}
                 </TextEffect>
               ) : (
-                <div className="text-[#C04635] text-base">
+                <div className="text-[#C04635] text-base break-words">
                   {message.content}
                 </div>
               )}
@@ -68,7 +68,7 @@ export function ConversationView({
                     // Generate the same layoutId as in InputSection based on image content
                     const imageHash = btoa(imageUrl.slice(0, 50)).replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
                     const layoutId = `image-${imageHash}-${imgIndex}`;
-                    
+
                     return (
                       <motion.div key={imgIndex} layoutId={layoutId}>
                         <Image
