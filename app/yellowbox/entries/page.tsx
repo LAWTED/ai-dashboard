@@ -231,7 +231,7 @@ export default function EntriesPage() {
                     }}
                     className="px-2 py-1 text-xs rounded-full bg-red-200 text-red-800 hover:bg-red-300"
                   >
-                    Clear All
+{t("clearAll")}
                   </button>
                 )}
               </div>
@@ -240,9 +240,9 @@ export default function EntriesPage() {
             {/* Results count */}
             {(searchQuery || selectedTags.length > 0 || selectedEmotion) && (
               <div className="text-xs text-[#3B3109] opacity-60">
-                {filteredEntries.length === entries.length
-                  ? `Showing all ${entries.length} entries`
-                  : `Showing ${filteredEntries.length} of ${entries.length} entries`}
+{filteredEntries.length === entries.length
+                  ? `${t("showingAll")} ${entries.length} ${entries.length === 1 ? t("entry") : t("entries")}`
+                  : `${t("showingFiltered")} ${filteredEntries.length} of ${entries.length} ${entries.length === 1 ? t("entry") : t("entries")}`}
               </div>
             )}
           </div>
@@ -320,7 +320,7 @@ export default function EntriesPage() {
                   {getPreviewText(
                     entry.entries.conversationHistory,
                     entry.metadata?.aiSummary
-                  ) || "Untitled Entry"}
+                  ) || t("untitledEntry")}
                 </div>
 
                 {/* Enhanced Summary Info */}
@@ -343,7 +343,7 @@ export default function EntriesPage() {
                         {entry.metadata.enhancedSummary.values.length > 3 && (
                           <span className="text-xs text-[#3B3109] opacity-50">
                             +{entry.metadata.enhancedSummary.values.length - 3}{" "}
-                            more
+{t("more")}
                           </span>
                         )}
                       </div>

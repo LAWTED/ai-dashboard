@@ -20,6 +20,7 @@ import {
   useIsToolSelected,
 } from "tldraw";
 import 'tldraw/tldraw.css';
+import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
 
 interface YellowboxEntry {
   id: string;
@@ -157,6 +158,7 @@ export default function TldrawQuoteCanvas({
   const [editor, setEditor] = useState<Editor | null>(null);
   const [hasInitializedContent, setHasInitializedContent] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const { t } = useYellowBoxI18n();
 
 
 
@@ -266,9 +268,9 @@ export default function TldrawQuoteCanvas({
 
     // 1. 添加日记标题（使用 aiSummary 或默认标题）
     const title = entry.metadata?.aiSummary ||
-      (entry.entries.timeOfDay === 'morning' ? 'Morning Reflection' :
-       entry.entries.timeOfDay === 'evening' ? 'Evening Reflection' :
-       'Daily Reflection');
+      (entry.entries.timeOfDay === 'morning' ? t('morningReflection') :
+       entry.entries.timeOfDay === 'evening' ? t('eveningReflection') :
+       t('title'));
 
     if (title) {
       const titleWidth = 450;

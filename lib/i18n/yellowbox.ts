@@ -108,6 +108,11 @@ export interface YellowboxTranslations {
   recordingTooLarge: string;
   microphoneAccessDenied: string;
 
+  // Loading stages
+  reading: string;
+  uploading: string;
+  responding: string;
+
   // Entry management
   confirmDelete: string;
   designQuote: string;
@@ -119,6 +124,11 @@ export interface YellowboxTranslations {
   noMatchingEntries: string;
   clearSearch: string;
   daytime: string;
+  clearAll: string;
+  showingAll: string;
+  showingFiltered: string;
+  more: string;
+  untitledEntry: string;
 }
 
 export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
@@ -230,6 +240,11 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     recordingTooLarge: '录音文件过大，请重新录制较短的音频',
     microphoneAccessDenied: '无法访问麦克风，请检查权限设置',
 
+    // Loading stages
+    reading: '阅读中...',
+    uploading: '上传图片中...',
+    responding: '回应中...',
+
     // Entry management
     confirmDelete: '确定要删除这个条目吗？此操作无法撤销。',
     designQuote: '设计精彩瞬间',
@@ -240,7 +255,12 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     searchEntries: '搜索条目内容...',
     noMatchingEntries: '没有找到符合条件的条目',
     clearSearch: '清除搜索',
-    daytime: '日间'
+    daytime: '日间',
+    clearAll: '清除全部',
+    showingAll: '显示全部',
+    showingFiltered: '显示',
+    more: '更多',
+    untitledEntry: '无标题条目'
   },
 
   en: {
@@ -351,6 +371,11 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     recordingTooLarge: 'Recording too large, please record shorter audio',
     microphoneAccessDenied: 'Cannot access microphone, please check permissions',
 
+    // Loading stages
+    reading: 'Reading...',
+    uploading: 'Uploading images...',
+    responding: 'Responding...',
+
     // Entry management
     confirmDelete: 'Are you sure you want to delete this entry? This action cannot be undone.',
     designQuote: 'Design Quote',
@@ -361,7 +386,12 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     searchEntries: 'Search entries...',
     noMatchingEntries: 'No entries match your search criteria',
     clearSearch: 'Clear Search',
-    daytime: 'Daytime'
+    daytime: 'Daytime',
+    clearAll: 'Clear All',
+    showingAll: 'Showing all',
+    showingFiltered: 'Showing',
+    more: 'more',
+    untitledEntry: 'Untitled Entry'
   }
 };
 

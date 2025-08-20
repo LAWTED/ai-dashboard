@@ -23,15 +23,15 @@ export function EnhancedLoading({
   const getStageText = () => {
     switch (stage) {
       case "reading":
-        return "Reading...";
+        return t("reading");
       case "uploading":
-        return "Uploading images...";
+        return t("uploading");
       case "thinking":
         return t("thinking");
       case "responding":
-        return "Responding...";
+        return t("responding");
       default:
-        return "Processing...";
+        return t("loading");
     }
   };
 

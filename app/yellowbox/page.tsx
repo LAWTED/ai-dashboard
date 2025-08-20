@@ -131,13 +131,13 @@ export default function Component() {
   useEffect(() => {
     // Set question based on time of day from context
     if (timeOfDay === "daytime") {
-      setSelectedQuestion("Write...");
+      setSelectedQuestion(t("placeholder") as string);
     } else if (questions.length > 0) {
       const randomQuestion =
         questions[Math.floor(Math.random() * questions.length)];
       setSelectedQuestion(randomQuestion);
     }
-  }, [questions, timeOfDay]);
+  }, [questions, timeOfDay, t]);
 
   const handleAnswerSubmit = async () => {
     if (!userAnswer.trim()) return;
@@ -274,7 +274,7 @@ export default function Component() {
       setConversationCount(0);
 
       if (timeOfDay === "daytime") {
-        setSelectedQuestion("Write...");
+        setSelectedQuestion(t("placeholder") as string);
       } else if (questions.length > 0) {
         const randomQuestion =
           questions[Math.floor(Math.random() * questions.length)];
@@ -384,14 +384,14 @@ export default function Component() {
 
       // Set new random question
       if (timeOfDay === "daytime") {
-        setSelectedQuestion("Write...");
+        setSelectedQuestion(t("placeholder") as string);
       } else if (questions.length > 0) {
         const randomQuestion =
           questions[Math.floor(Math.random() * questions.length)];
         setSelectedQuestion(randomQuestion);
       }
     }
-  }, [timeOfDay, questions]);
+  }, [timeOfDay, questions, t]);
 
   const handleCtrlS = useCallback(() => {
     // Save draft manually and show toast

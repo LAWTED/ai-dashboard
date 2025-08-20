@@ -21,7 +21,7 @@ export default function EntryDetailPage() {
   const searchParams = useSearchParams();
   const entryId = params.id as string;
   const isDebugMode = searchParams.get('debug') === 'true';
-  const { lang, t } = useYellowBoxI18n();
+  const { lang, t, translations } = useYellowBoxI18n();
 
   // Use React Query for data fetching
   const { data: entry, isLoading, error } = useYellowboxEntry(entryId);
@@ -80,15 +80,9 @@ export default function EntryDetailPage() {
                   {entry.metadata.aiSummary}
                 </span>
               ) : entry.entries.timeOfDay === "morning" ? (
-                <>
-                  <span className="italic font-semibold">Morning</span>{" "}
-                  Reflection
-                </>
+                t("morningReflection")
               ) : entry.entries.timeOfDay === "evening" ? (
-                <>
-                  <span className="italic font-semibold">Evening</span>{" "}
-                  Reflection
-                </>
+                t("eveningReflection")
               ) : (
                 <>
                   {t("titlePart1")}
@@ -129,7 +123,9 @@ export default function EntryDetailPage() {
           {/* Conversation and Content Container */}
           <div className="flex-1 min-h-0 overflow-y-auto space-y-3">
             {/* Selected Question */}
-            {entry.entries.selectedQuestion && entry.entries.selectedQuestion !== "Write..." && (
+            {entry.entries.selectedQuestion && 
+             entry.entries.selectedQuestion !== translations.placeholder && 
+             entry.entries.selectedQuestion !== "Write..." && (
               <div className="text-[#C04635] text-lg font-medium mb-3">
                 {entry.entries.selectedQuestion}
               </div>
