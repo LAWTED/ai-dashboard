@@ -40,12 +40,11 @@ export default function NewUIPage() {
 
   const handlePaperClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // 阻止事件冒泡
-    setIsPaperDown(!isPaperDown);
-  };
-
-  const handleStanfordTitleClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 阻止事件冒泡
-    setIsZoomed(!isZoomed);
+    if (!isPaperDown) {
+      setIsPaperDown(!isPaperDown);
+    } else {
+      setIsZoomed(!isZoomed);
+    }
   };
 
   // 对角线翻转参数 (AD axis, swapOrientation=false)
@@ -71,7 +70,7 @@ export default function NewUIPage() {
         animate={{
           y: isZoomed ? 600 : 0,
         }}
-        transition={{ duration: 0.8, ease: [0.25, 0.8, 0.25, 1] }}
+        transition={{ duration: 0.8, type: "spring", bounce: 0 }}
       >
         {/* 初始动画：信封飞入 */}
         <motion.div
@@ -98,7 +97,7 @@ export default function NewUIPage() {
                 height: 500,
               }}
               initial={{ y: 0 }}
-              animate={{ y: (isUnlocked ? 150 : 0) + (isPaperDown ? 700 : 0) }}
+              animate={{ y: (isUnlocked ? 150 : 0) + (isPaperDown ? 850 : 0) }}
               transition={{ y: { duration: 1.0, ease: [0.33, 1, 0.68, 1] } }}
             >
               {/* 预旋转：把A-D对角线对齐到X轴 */}
@@ -220,7 +219,7 @@ export default function NewUIPage() {
                         animate={{
                           x:
                             (isEnvelopeOpen ? -100 : 700) +
-                            (isPaperDown ? -700 : 0),
+                            (isPaperDown ? -850 : 0),
                           // y: isPaperDown ? -600 : 0, // 抵消信封的向下移动
                           opacity: isEnvelopeOpen ? 1 : 0,
                           scale: isZoomed ? 2 : 1,
@@ -237,6 +236,11 @@ export default function NewUIPage() {
                             duration: 0.5,
                             delay: isEnvelopeOpen ? 0.3 : 0,
                             ease: [0.25, 0.8, 0.25, 1],
+                          },
+                          scale: {
+                            duration: 0.8,
+                            type: "spring",
+                            bounce: 0,
                           },
                         }}
                         onClick={handlePaperClick}
@@ -276,7 +280,6 @@ export default function NewUIPage() {
                                   color: "#8C1515",
                                   margin: "0 0 5px 0",
                                 }}
-                                onClick={handleStanfordTitleClick}
                               >
                                 STANFORD UNIVERSITY
                               </h1>
