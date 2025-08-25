@@ -10,7 +10,10 @@ import Image from "next/image";
 import { OptimizedAnalyticsDebug } from "@/components/optimized-yellowbox-analytics-debug";
 import { MinimalYellowBoxAnalytics } from "@/types/yellowbox-analytics";
 import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
-import { useYellowboxEntry, useDeleteEntry } from "@/hooks/use-yellowbox-queries";
+import {
+  useYellowboxEntry,
+  useDeleteEntry,
+} from "@/hooks/use-yellowbox-queries";
 import QuoteDesignCanvas from "@/components/yellowbox/quote-design-canvas";
 import { LoadingWithPuppy } from "@/components/ui/loading-with-puppy";
 
@@ -20,7 +23,7 @@ export default function EntryDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const entryId = params.id as string;
-  const isDebugMode = searchParams.get('debug') === 'true';
+  const isDebugMode = searchParams.get("debug") === "true";
   const { lang, t, translations } = useYellowBoxI18n();
 
   // Use React Query for data fetching
@@ -68,9 +71,7 @@ export default function EntryDetailPage() {
           <LoadingWithPuppy className="text-[#3B3109]" />
         </div>
       ) : error ? (
-        <div className="text-center py-8 text-[#C04635]">
-          {String(error)}
-        </div>
+        <div className="text-center py-8 text-[#C04635]">{String(error)}</div>
       ) : entry ? (
         <div className="flex flex-col h-full">
           <div className="text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden flex-shrink-0">
@@ -99,19 +100,22 @@ export default function EntryDetailPage() {
           {entry.metadata?.enhancedSummary && (
             <div className="mb-3 space-y-2 flex-shrink-0">
               {/* Values - only show if values field exists */}
-              {entry.metadata.enhancedSummary.values && entry.metadata.enhancedSummary.values.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {entry.metadata.enhancedSummary.values.map((value, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-200 text-[#3B3109] border border-[#E4BE10]"
-                    >
-                      <span className="w-1.5 h-1.5 bg-[#C04635] rounded-full mr-1.5"></span>
-                      {value}
-                    </span>
-                  ))}
-                </div>
-              )}
+              {entry.metadata.enhancedSummary.values &&
+                entry.metadata.enhancedSummary.values.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {entry.metadata.enhancedSummary.values.map(
+                      (value, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-200 text-[#3B3109] border border-[#E4BE10]"
+                        >
+                          <span className="w-1.5 h-1.5 bg-[#C04635] rounded-full mr-1.5"></span>
+                          {value}
+                        </span>
+                      )
+                    )}
+                  </div>
+                )}
 
               {/* Emotion - hidden for now */}
             </div>
@@ -121,15 +125,15 @@ export default function EntryDetailPage() {
           <div className="w-full h-px bg-[#E4BE10] mb-2 flex-shrink-0"></div>
 
           {/* Conversation and Content Container */}
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-3">
+          <div className="h-[550px] overflow-y-auto space-y-3">
             {/* Selected Question */}
-            {entry.entries.selectedQuestion && 
-             entry.entries.selectedQuestion !== translations.placeholder && 
-             entry.entries.selectedQuestion !== "Write..." && (
-              <div className="text-[#C04635] text-lg font-medium mb-3">
-                {entry.entries.selectedQuestion}
-              </div>
-            )}
+            {entry.entries.selectedQuestion &&
+              entry.entries.selectedQuestion !== translations.placeholder &&
+              entry.entries.selectedQuestion !== "Write..." && (
+                <div className="text-[#C04635] text-lg font-medium mb-3">
+                  {entry.entries.selectedQuestion}
+                </div>
+              )}
 
             {/* Conversation History */}
             {entry.entries.conversationHistory.length > 0 && (
@@ -147,7 +151,9 @@ export default function EntryDetailPage() {
                           <div className="flex flex-wrap gap-2 mb-2">
                             {message.images.map((imageUrl, imgIndex) => {
                               // Generate the same layoutId as in InputSection based on image content
-                              const imageHash = btoa(imageUrl.slice(0, 50)).replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+                              const imageHash = btoa(imageUrl.slice(0, 50))
+                                .replace(/[^a-zA-Z0-9]/g, "")
+                                .slice(0, 10);
                               const layoutId = `image-${imageHash}-${imgIndex}`;
 
                               return (
@@ -204,7 +210,7 @@ export default function EntryDetailPage() {
               transition={{
                 delay: 0.4, // Start when height animation is nearly finished
                 duration: 0.4,
-                ease: "easeOut"
+                ease: "easeOut",
               }}
               layout
             >
@@ -225,10 +231,7 @@ export default function EntryDetailPage() {
                 title={t("deleteEntry") as string}
               >
                 <Trash2 className="w-4 h-4" />
-                {deleteEntryMutation.isPending
-                  ? t("deleting")
-                  : t("delete")
-                }
+                {deleteEntryMutation.isPending ? t("deleting") : t("delete")}
               </Button>
             </motion.div>
           </div>
@@ -239,7 +242,10 @@ export default function EntryDetailPage() {
       {isDebugMode && entry && (
         <div className="absolute right-4 top-[0px] w-[640px]">
           <OptimizedAnalyticsDebug
-            analytics={(entry as { analytics?: MinimalYellowBoxAnalytics }).analytics || null}
+            analytics={
+              (entry as { analytics?: MinimalYellowBoxAnalytics }).analytics ||
+              null
+            }
             language={lang}
           />
         </div>
