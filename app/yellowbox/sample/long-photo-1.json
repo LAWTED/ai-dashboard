@@ -1,0 +1,1308 @@
+{
+  "data": {
+    "document": {
+      "store": {
+        "asset:2070213874": {
+          "id": "asset:2070213874",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "32.png",
+            "src": "asset:2070213874",
+            "w": 256,
+            "h": 256,
+            "fileSize": 8307,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:680039258": {
+          "id": "asset:680039258",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "15.png",
+            "src": "asset:680039258",
+            "w": 1086,
+            "h": 1075,
+            "fileSize": 2287669,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:FW8HhrhMRuQ9TVANQh3IT": {
+          "x": -1323.103448275862,
+          "y": 2439.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:FW8HhrhMRuQ9TVANQh3IT",
+          "type": "image",
+          "props": {
+            "w": 256,
+            "h": 256,
+            "assetId": "asset:2070213874",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aX5Ip",
+          "typeName": "shape"
+        },
+        "shape:KAanNRqRu7SIWEDHbCwYS": {
+          "x": -893.1034482758621,
+          "y": 99.65517241379314,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:KAanNRqRu7SIWEDHbCwYS",
+          "type": "image",
+          "props": {
+            "w": 370,
+            "h": 366.2523020257827,
+            "assetId": "asset:680039258",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aP3pr",
+          "typeName": "shape"
+        },
+        "shape:qBjibJL0yEMyD-oSL4Q0F": {
+          "x": -1483.103448275862,
+          "y": -770.3448275862069,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:qBjibJL0yEMyD-oSL4Q0F",
+          "type": "image",
+          "props": {
+            "w": 990,
+            "h": 1348.875,
+            "assetId": "asset:1925765957",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aK4UC",
+          "typeName": "shape"
+        },
+        "shape:kaALV2-zCdx8ghIxrb6dw": {
+          "x": -1853.103448275862,
+          "y": 1269.655172413793,
+          "rotation": 6.1086523819801535,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:kaALV2-zCdx8ghIxrb6dw",
+          "type": "image",
+          "props": {
+            "w": 300,
+            "h": 457,
+            "assetId": "asset:-220074182",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aVAhv",
+          "typeName": "shape"
+        },
+        "asset:482052375": {
+          "id": "asset:482052375",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "15.png",
+            "src": "asset:482052375",
+            "w": 228,
+            "h": 163,
+            "fileSize": 683704,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:HDQpJCXP-LpZTNsvvLDSX": {
+          "x": -1453.103448275862,
+          "y": 2659.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:HDQpJCXP-LpZTNsvvLDSX",
+          "type": "image",
+          "props": {
+            "w": 400,
+            "h": 400,
+            "assetId": "asset:1230323975",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aa3aX",
+          "typeName": "shape"
+        },
+        "shape:rVscLEwP8PXXE27EL-xor": {
+          "x": -923.1034482758621,
+          "y": 2459.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:rVscLEwP8PXXE27EL-xor",
+          "type": "image",
+          "props": {
+            "w": 390,
+            "h": 368.5975609756098,
+            "assetId": "asset:-1621123722",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aQByy",
+          "typeName": "shape"
+        },
+        "shape:0vC5dlmwklXQUqWGrQmq4": {
+          "x": -1033.103448275862,
+          "y": 549.6551724137931,
+          "rotation": 0.03490658503988659,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:0vC5dlmwklXQUqWGrQmq4",
+          "type": "text",
+          "props": {
+            "color": "yellow",
+            "size": "m",
+            "w": 390,
+            "font": "draw",
+            "textAlign": "start",
+            "autoSize": false,
+            "scale": 1,
+            "richText": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "dir": "auto"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "here is sample text 2 昨天和几个大学同学,老朋友聚了一下 有一个同学刚从丹麦那边回国 有一个从英国回来 有一个在国内读的研究生 然后我们就一起吃了汉堡,鸡翅,喝了一点啤酒 在三里屯那边,就是在那个国贸的楼下 位置非常好, 我们就坐在室外非常的 chill 然后我们聊了一下原来发生的一些事情 还有我们未来要做什么,以及这两年大家都在干嘛"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "parentId": "page:page",
+          "index": "acCLa",
+          "typeName": "shape"
+        },
+        "shape:by-faUvm2XA3OpV5wiK5Q": {
+          "x": -1403.103448275862,
+          "y": 839.6551724137931,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:by-faUvm2XA3OpV5wiK5Q",
+          "type": "image",
+          "props": {
+            "w": 360,
+            "h": 188.4,
+            "assetId": "asset:-873902830",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aW5uU",
+          "typeName": "shape"
+        },
+        "shape:iKFS672w-k5gwT9_5oXhU": {
+          "x": -1183.103448275862,
+          "y": 2319.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:iKFS672w-k5gwT9_5oXhU",
+          "type": "image",
+          "props": {
+            "w": 180,
+            "h": 180,
+            "assetId": "asset:742208706",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aTByZ",
+          "typeName": "shape"
+        },
+        "shape:WBjD_UEpvF5ihUYasa-7Z": {
+          "x": -1123.103448275862,
+          "y": 2769.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:WBjD_UEpvF5ihUYasa-7Z",
+          "type": "image",
+          "props": {
+            "w": 551,
+            "h": 317,
+            "assetId": "asset:898450004",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aR54l",
+          "typeName": "shape"
+        },
+        "asset:712562020": {
+          "id": "asset:712562020",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "7.png",
+            "src": "asset:712562020",
+            "w": 916,
+            "h": 838,
+            "fileSize": 475499,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:-873902830": {
+          "id": "asset:-873902830",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "36.png",
+            "src": "asset:-873902830",
+            "w": 1200,
+            "h": 628,
+            "fileSize": 1631844,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:1230323975": {
+          "id": "asset:1230323975",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "60.png",
+            "src": "asset:1230323975",
+            "w": 400,
+            "h": 400,
+            "fileSize": 5515,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:Fci1hTSPSwBgoMdgPDm-A": {
+          "id": "asset:Fci1hTSPSwBgoMdgPDm-A",
+          "type": "image",
+          "typeName": "asset",
+          "meta": {},
+          "props": {
+            "name": "envelope-4",
+            "src": "/envelope/4.png",
+            "w": 1080,
+            "h": 1443,
+            "mimeType": "image/png",
+            "isAnimated": false
+          }
+        },
+        "asset:-220074182": {
+          "id": "asset:-220074182",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "35.png",
+            "src": "asset:-220074182",
+            "w": 300,
+            "h": 457,
+            "fileSize": 266932,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:qvESWOJAx9NUE6AHJVvW4": {
+          "x": -1563.103448275862,
+          "y": 1269.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:qvESWOJAx9NUE6AHJVvW4",
+          "type": "image",
+          "props": {
+            "w": 940,
+            "h": 1371.6666666666667,
+            "assetId": "asset:2025467329",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "a4BER",
+          "typeName": "shape"
+        },
+        "asset:-1621123722": {
+          "id": "asset:-1621123722",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "18.png",
+            "src": "asset:-1621123722",
+            "w": 656,
+            "h": 620,
+            "fileSize": 226679,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:ryrfEB-ajv-y96-8RgzvC": {
+          "x": -1653.103448275862,
+          "y": 2339.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:ryrfEB-ajv-y96-8RgzvC",
+          "type": "image",
+          "props": {
+            "w": 281.39534883720927,
+            "h": 484,
+            "assetId": "asset:-942341060",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aY3Mg",
+          "typeName": "shape"
+        },
+        "asset:742208706": {
+          "id": "asset:742208706",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "24.png",
+            "src": "asset:742208706",
+            "w": 31,
+            "h": 31,
+            "fileSize": 15874,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:2075193311": {
+          "id": "asset:2075193311",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "55.png",
+            "src": "asset:2075193311",
+            "w": 500,
+            "h": 230,
+            "fileSize": 209998,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:-942341060": {
+          "id": "asset:-942341060",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "53.png",
+            "src": "asset:-942341060",
+            "w": 1200,
+            "h": 2064,
+            "fileSize": 2041196,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:IgCraRDy33CK4ayYi-kwa": {
+          "x": -1773.103448275862,
+          "y": -670.3448275862069,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:IgCraRDy33CK4ayYi-kwa",
+          "type": "image",
+          "props": {
+            "w": 430,
+            "h": 393.3842794759825,
+            "assetId": "asset:712562020",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aOB0N",
+          "typeName": "shape"
+        },
+        "asset:1825364272": {
+          "id": "asset:1825364272",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "横版拍立得.png",
+            "src": "asset:1825364272",
+            "w": 2449,
+            "h": 2449,
+            "fileSize": 1138598,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:1945956755": {
+          "id": "asset:1945956755",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "4.jpg",
+            "src": "asset:1945956755",
+            "w": 425,
+            "h": 600,
+            "fileSize": 15059,
+            "mimeType": "image/jpeg",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:2025467329": {
+          "id": "asset:2025467329",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "35.jpg",
+            "src": "asset:2025467329",
+            "w": 564,
+            "h": 823,
+            "fileSize": 87639,
+            "mimeType": "image/jpeg",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:hEQtExI2azl2vYtp6u14E": {
+          "x": -1293.103448275862,
+          "y": 1059.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:hEQtExI2azl2vYtp6u14E",
+          "type": "image",
+          "props": {
+            "w": 228,
+            "h": 163,
+            "assetId": "asset:482052375",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aH2jC",
+          "typeName": "shape"
+        },
+        "shape:LNL3oLTX9ulsPb4GsR-R_": {
+          "x": -1413.103448275862,
+          "y": 1359.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:LNL3oLTX9ulsPb4GsR-R_",
+          "type": "text",
+          "props": {
+            "color": "yellow",
+            "size": "m",
+            "w": 300,
+            "font": "draw",
+            "textAlign": "start",
+            "autoSize": false,
+            "scale": 1,
+            "richText": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "dir": "auto"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Here is sample text 3 sample words limited 其实就我自己而言的话,我更加感兴趣的是创业,以及是做一些产品的设计吧。 所以说我一直考虑的是读一个研究生,而不是去读博。 但是我也知道,在你读博了以后,你的社会地位还有很多东西其实都会不一样。 但是我觉得研究生是一个比较契合我的一个学术方向的东西吧。 因为你读完研究生以后,你又可以去认识更多的人, 然后可以去有机会去融入到那个圈子里面,那个创业的圈子里面。"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "parentId": "page:page",
+          "index": "aA9kH",
+          "typeName": "shape"
+        },
+        "shape:qrs5Y2lbhVh-hQyfJ8QHJ": {
+          "x": -1603.103448275862,
+          "y": 419.65517241379314,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:qrs5Y2lbhVh-hQyfJ8QHJ",
+          "type": "text",
+          "props": {
+            "color": "orange",
+            "size": "xl",
+            "w": 520,
+            "font": "draw",
+            "textAlign": "start",
+            "autoSize": false,
+            "scale": 1,
+            "richText": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "dir": "auto"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Here is the title, and this is the max char"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "parentId": "page:page",
+          "index": "ad7QZ",
+          "typeName": "shape"
+        },
+        "asset:-774543312": {
+          "id": "asset:-774543312",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "59.png",
+            "src": "asset:-774543312",
+            "w": 555,
+            "h": 749,
+            "fileSize": 28861,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:HcjL1q-2uJliqLlHdJSjS": {
+          "x": -1063.103448275862,
+          "y": 1349.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:HcjL1q-2uJliqLlHdJSjS",
+          "type": "text",
+          "props": {
+            "color": "yellow",
+            "size": "m",
+            "w": 400,
+            "font": "draw",
+            "textAlign": "start",
+            "autoSize": false,
+            "scale": 1,
+            "richText": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "dir": "auto"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Here is sample text 4 sample words limited here. 其实我觉得我自己还是那个想法,就是读博的话确实是一个 它不是一个long-hand flute, you know, 它是需要一定的耐心还有 勇气各种各样的 品质才能去读的 所以我不知道我自己是不是 能够去做这个事情 然后 同时我也觉得 就目前而言我没有什么想研究的东西,其实他们也是这样 然后我给他们建议就是说 你不要随波逐流,不要因为大家都去读博你就去读博,不要因为 你 anyway怎么样就可以 就可以 跟随大家的脚步吧,其实他读博不一定适合每一个人 然后不要把它作为一个避风港 对,这是我对于读博的理解吧 我觉得他们其实也知道 但是呢他们就是 嗯 还没有找到理想中的工作或者是还不想 这么快进入社会所以他们还想继续 去做一下这个事情 但我觉得这个其实在很多层面上是不可取的 我们必须还是要知道自己 为什么 而做这件事情"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "parentId": "page:page",
+          "index": "a82Ly",
+          "typeName": "shape"
+        },
+        "asset:898450004": {
+          "id": "asset:898450004",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "20.png",
+            "src": "asset:898450004",
+            "w": 551,
+            "h": 317,
+            "fileSize": 5445294,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:1652890413": {
+          "id": "asset:1652890413",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "8.png",
+            "src": "asset:1652890413",
+            "w": 592,
+            "h": 622,
+            "fileSize": 447182,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:-799500048": {
+          "id": "asset:-799500048",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "12.png",
+            "src": "asset:-799500048",
+            "w": 1138,
+            "h": 1146,
+            "fileSize": 140735,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:-1830173847": {
+          "id": "asset:-1830173847",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "23.png",
+            "src": "asset:-1830173847",
+            "w": 31,
+            "h": 31,
+            "fileSize": 16144,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:rGFxb3NkcLTE-ovx0iyST": {
+          "x": -1243.103448275862,
+          "y": 1849.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:rGFxb3NkcLTE-ovx0iyST",
+          "type": "image",
+          "props": {
+            "w": 190,
+            "h": 190,
+            "assetId": "asset:-1830173847",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aS6Uf",
+          "typeName": "shape"
+        },
+        "shape:1y3mIS8AlI4tSYECHnTXN": {
+          "x": -1843.103448275862,
+          "y": -700.3448275862069,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 0.75,
+          "meta": {},
+          "id": "shape:1y3mIS8AlI4tSYECHnTXN",
+          "type": "geo",
+          "props": {
+            "w": 1370,
+            "h": 3890,
+            "geo": "rectangle",
+            "dash": "draw",
+            "growY": 0,
+            "url": "",
+            "scale": 1,
+            "color": "yellow",
+            "labelColor": "black",
+            "fill": "pattern",
+            "size": "s",
+            "font": "draw",
+            "align": "middle",
+            "verticalAlign": "middle",
+            "richText": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph"
+                }
+              ]
+            }
+          },
+          "parentId": "page:page",
+          "index": "a387l",
+          "typeName": "shape"
+        },
+        "asset:-399162322": {
+          "id": "asset:-399162322",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "39.png",
+            "src": "asset:-399162322",
+            "w": 736,
+            "h": 1040,
+            "fileSize": 254898,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:-1292166390": {
+          "id": "asset:-1292166390",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "9.png",
+            "src": "asset:-1292166390",
+            "w": 1024,
+            "h": 882,
+            "fileSize": 384557,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:9bWHqMdSUM0pr3ml07-P6": {
+          "x": -1113.103448275862,
+          "y": 379.65517241379314,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:9bWHqMdSUM0pr3ml07-P6",
+          "type": "image",
+          "props": {
+            "w": 560,
+            "h": 588.3783783783783,
+            "assetId": "asset:1652890413",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "abqzA",
+          "typeName": "shape"
+        },
+        "shape:X8D5-ybOtxHN4Qa7lCzDX": {
+          "x": -1583.103448275862,
+          "y": 689.6551724137931,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:X8D5-ybOtxHN4Qa7lCzDX",
+          "type": "image",
+          "props": {
+            "w": 375.41666666666663,
+            "h": 530,
+            "assetId": "asset:1945956755",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aG0IP",
+          "typeName": "shape"
+        },
+        "asset:-855840535": {
+          "id": "asset:-855840535",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "13.png",
+            "src": "asset:-855840535",
+            "w": 474,
+            "h": 852,
+            "fileSize": 3058029,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "asset:-1581813376": {
+          "id": "asset:-1581813376",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "30.png",
+            "src": "asset:-1581813376",
+            "w": 610,
+            "h": 1024,
+            "fileSize": 762414,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:bgdfncf87EQMi1ya8ir-E": {
+          "x": -1683.103448275862,
+          "y": 2859.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:bgdfncf87EQMi1ya8ir-E",
+          "type": "image",
+          "props": {
+            "w": 500,
+            "h": 230,
+            "assetId": "asset:2075193311",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aZ4G2",
+          "typeName": "shape"
+        },
+        "asset:1f9asDXONUWzRQMmer6dk": {
+          "id": "asset:1f9asDXONUWzRQMmer6dk",
+          "type": "image",
+          "typeName": "asset",
+          "meta": {},
+          "props": {
+            "name": "diary-image-1",
+            "src": "https://pabxfssvnndtubeyejhp.supabase.co/storage/v1/object/public/diary-images/diary-images/1756110824131-15mt5wxbpf9.jpeg",
+            "w": 180,
+            "h": 180,
+            "mimeType": "image/jpeg",
+            "isAnimated": false
+          }
+        },
+        "shape:ChOa4BsrwGFgUXOihu3IG": {
+          "x": -1693.103448275862,
+          "y": 129.65517241379303,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:ChOa4BsrwGFgUXOihu3IG",
+          "type": "image",
+          "props": {
+            "w": 690.0000000000001,
+            "h": 690.0000000000001,
+            "assetId": "asset:1825364272",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "acgtf",
+          "typeName": "shape"
+        },
+        "page:page": {
+          "meta": {},
+          "id": "page:page",
+          "name": "Page 1",
+          "index": "a1",
+          "typeName": "page"
+        },
+        "document:document": {
+          "gridSize": 10,
+          "name": "",
+          "meta": {},
+          "id": "document:document",
+          "typeName": "document"
+        },
+        "asset:1925765957": {
+          "id": "asset:1925765957",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "6.png",
+            "src": "asset:1925765957",
+            "w": 1200,
+            "h": 1635,
+            "fileSize": 2004663,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:0CEKxkw1ZU29Cn1_h8rzl": {
+          "x": -1733.103448275862,
+          "y": -320.34482758620686,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:0CEKxkw1ZU29Cn1_h8rzl",
+          "type": "image",
+          "props": {
+            "w": 474,
+            "h": 852,
+            "assetId": "asset:-855840535",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aM4WH",
+          "typeName": "shape"
+        },
+        "asset:kyr9OxudHGUXl7kYJeWAR": {
+          "id": "asset:kyr9OxudHGUXl7kYJeWAR",
+          "type": "image",
+          "typeName": "asset",
+          "meta": {},
+          "props": {
+            "name": "diary-image-0",
+            "src": "https://pabxfssvnndtubeyejhp.supabase.co/storage/v1/object/public/diary-images/diary-images/1756110819835-bh5so6zq9ae.jpeg",
+            "w": 180,
+            "h": 180,
+            "mimeType": "image/jpeg",
+            "isAnimated": false
+          }
+        },
+        "shape:-WDkHNUjfiPFAtb1KW3TH": {
+          "x": -1103.103448275862,
+          "y": 929.6551724137931,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:-WDkHNUjfiPFAtb1KW3TH",
+          "type": "image",
+          "props": {
+            "w": 379.99999999999994,
+            "h": 379.99999999999994,
+            "assetId": "asset:-455752819",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aI4dh",
+          "typeName": "shape"
+        },
+        "shape:Jc08W5yxmnWW0LQDR1FxT": {
+          "x": -643.1034482758621,
+          "y": 799.6551724137931,
+          "rotation": 0.4188790204786397,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:Jc08W5yxmnWW0LQDR1FxT",
+          "type": "image",
+          "props": {
+            "w": 241.56890615344489,
+            "h": 405.5189506575862,
+            "assetId": "asset:-1581813376",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aUBFK",
+          "typeName": "shape"
+        },
+        "asset:-455752819": {
+          "id": "asset:-455752819",
+          "type": "image",
+          "typeName": "asset",
+          "props": {
+            "name": "18.png",
+            "src": "asset:-455752819",
+            "w": 3464,
+            "h": 3464,
+            "fileSize": 6611580,
+            "mimeType": "image/png",
+            "isAnimated": false
+          },
+          "meta": {}
+        },
+        "shape:hPbHcmqBD5DZQCxscA0o1": {
+          "x": -1053.103448275862,
+          "y": 2039.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:hPbHcmqBD5DZQCxscA0o1",
+          "type": "image",
+          "props": {
+            "w": 362.34312416555406,
+            "h": 488.99999999999994,
+            "assetId": "asset:-774543312",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "abAfJ",
+          "typeName": "shape"
+        },
+        "shape:JvA7_tALYAwGVO-6t5SRT": {
+          "x": -923.1034482758621,
+          "y": 1779.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:JvA7_tALYAwGVO-6t5SRT",
+          "type": "image",
+          "props": {
+            "w": 340,
+            "h": 342.390158172232,
+            "assetId": "asset:-799500048",
+            "playing": true,
+            "url": "",
+            "crop": null,
+            "flipX": false,
+            "flipY": false,
+            "altText": ""
+          },
+          "parentId": "page:page",
+          "index": "aNASk",
+          "typeName": "shape"
+        },
+        "shape:4hXEo9Z5qF_xJJB3mjFZN": {
+          "x": -1503.103448275862,
+          "y": 2019.655172413793,
+          "rotation": 0,
+          "isLocked": false,
+          "opacity": 1,
+          "meta": {},
+          "id": "shape:4hXEo9Z5qF_xJJB3mjFZN",
+          "type": "text",
+          "props": {
+            "color": "orange",
+            "size": "m",
+            "w": 400,
+            "font": "draw",
+            "textAlign": "start",
+            "autoSize": false,
+            "scale": 1,
+            "richText": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "attrs": {
+                    "dir": "auto"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "here is sample response 1 听起来你们的聚会真是充满欢乐和美食的盛宴呢！🍔🍗在三里屯这样的地方，边吃汉堡边聊人生，真是让人羡慕不已。无论是从丹麦、英国回来的，还是一直在国内读研的，大家都有各自的故事和未来的梦想，能在一起分享这些真是太棒了！这次聚会有没有聊到一些有趣的计划，比如大家一起去冒险之类的？🌟"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "parentId": "page:page",
+          "index": "a59Il",
+          "typeName": "shape"
+        }
+      },
+      "schema": {
+        "schemaVersion": 2,
+        "sequences": {
+          "com.tldraw.store": 4,
+          "com.tldraw.asset": 1,
+          "com.tldraw.camera": 1,
+          "com.tldraw.document": 2,
+          "com.tldraw.instance": 25,
+          "com.tldraw.instance_page_state": 5,
+          "com.tldraw.page": 1,
+          "com.tldraw.instance_presence": 6,
+          "com.tldraw.pointer": 1,
+          "com.tldraw.shape": 4,
+          "com.tldraw.asset.bookmark": 2,
+          "com.tldraw.asset.image": 5,
+          "com.tldraw.asset.video": 5,
+          "com.tldraw.shape.group": 0,
+          "com.tldraw.shape.text": 3,
+          "com.tldraw.shape.bookmark": 2,
+          "com.tldraw.shape.draw": 2,
+          "com.tldraw.shape.geo": 10,
+          "com.tldraw.shape.note": 9,
+          "com.tldraw.shape.line": 5,
+          "com.tldraw.shape.frame": 1,
+          "com.tldraw.shape.arrow": 6,
+          "com.tldraw.shape.highlight": 1,
+          "com.tldraw.shape.embed": 4,
+          "com.tldraw.shape.image": 5,
+          "com.tldraw.shape.video": 4,
+          "com.tldraw.binding.arrow": 1
+        }
+      }
+    },
+    "session": {
+      "version": 0,
+      "currentPageId": "page:page",
+      "exportBackground": true,
+      "isFocusMode": false,
+      "isDebugMode": false,
+      "isToolLocked": false,
+      "isGridMode": true,
+      "pageStates": [
+        {
+          "pageId": "page:page",
+          "camera": {
+            "x": 3587.6333827220424,
+            "y": 889.0891058570647,
+            "z": 0.2177188045457806
+          },
+          "selectedShapeIds": [
+            "shape:1y3mIS8AlI4tSYECHnTXN",
+            "shape:qvESWOJAx9NUE6AHJVvW4",
+            "shape:4hXEo9Z5qF_xJJB3mjFZN",
+            "shape:HcjL1q-2uJliqLlHdJSjS",
+            "shape:LNL3oLTX9ulsPb4GsR-R_",
+            "shape:X8D5-ybOtxHN4Qa7lCzDX",
+            "shape:hEQtExI2azl2vYtp6u14E",
+            "shape:-WDkHNUjfiPFAtb1KW3TH",
+            "shape:qBjibJL0yEMyD-oSL4Q0F",
+            "shape:0CEKxkw1ZU29Cn1_h8rzl",
+            "shape:JvA7_tALYAwGVO-6t5SRT",
+            "shape:IgCraRDy33CK4ayYi-kwa",
+            "shape:KAanNRqRu7SIWEDHbCwYS",
+            "shape:rVscLEwP8PXXE27EL-xor",
+            "shape:WBjD_UEpvF5ihUYasa-7Z",
+            "shape:rGFxb3NkcLTE-ovx0iyST",
+            "shape:iKFS672w-k5gwT9_5oXhU",
+            "shape:Jc08W5yxmnWW0LQDR1FxT",
+            "shape:kaALV2-zCdx8ghIxrb6dw",
+            "shape:by-faUvm2XA3OpV5wiK5Q",
+            "shape:FW8HhrhMRuQ9TVANQh3IT",
+            "shape:ryrfEB-ajv-y96-8RgzvC",
+            "shape:bgdfncf87EQMi1ya8ir-E",
+            "shape:HDQpJCXP-LpZTNsvvLDSX",
+            "shape:hPbHcmqBD5DZQCxscA0o1",
+            "shape:9bWHqMdSUM0pr3ml07-P6",
+            "shape:0vC5dlmwklXQUqWGrQmq4",
+            "shape:ChOa4BsrwGFgUXOihu3IG",
+            "shape:qrs5Y2lbhVh-hQyfJ8QHJ"
+          ],
+          "focusedGroupId": null
+        }
+      ]
+    }
+  },
+  "timestamp": 1756116760687,
+  "entryId": "27e55064-5896-4bcc-a7fb-4f9f4f9f74c6"
+}

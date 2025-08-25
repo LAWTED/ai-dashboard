@@ -740,8 +740,13 @@ export default function TldrawQuoteCanvas({
                     isGridMode: true,
                   });
 
-                // 添加键盘快捷键
+                // 添加键盘快捷键 - 只处理特殊组合键，让 Tldraw 处理基础删除
                 const handleKeyDown = (e: KeyboardEvent) => {
+                  // 只在画布获得焦点时处理快捷键
+                  if (!document.activeElement?.closest('.tldraw-container')) {
+                    return;
+                  }
+                  
                   // Ctrl/Cmd + Z: 撤销
                   if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
                     e.preventDefault();
@@ -757,13 +762,7 @@ export default function TldrawQuoteCanvas({
                     e.preventDefault();
                     editor.selectAll();
                   }
-                  // Delete/Backspace: 删除选中元素
-                  if ((e.key === 'Delete' || e.key === 'Backspace')) {
-                    const selectedShapes = editor.getSelectedShapes();
-                    if (selectedShapes.length > 0) {
-                      editor.deleteShapes(selectedShapes.map(s => s.id));
-                    }
-                  }
+                  // 移除自定义删除逻辑，让 Tldraw 自己处理
                 };
 
                 document.addEventListener('keydown', handleKeyDown);
