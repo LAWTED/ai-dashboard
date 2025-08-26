@@ -1,4 +1,4 @@
-import { TLShape } from 'tldraw';
+// Template management for YellowBox Tldraw templates
 import fs from 'fs';
 import path from 'path';
 
@@ -15,7 +15,7 @@ export interface TemplateMetadata {
 
 export interface TemplateData {
   metadata: TemplateMetadata;
-  snapshot: any; // Tldraw snapshot data
+  snapshot: Record<string, unknown>; // Tldraw snapshot data
 }
 
 export interface TextShapeInfo {
@@ -47,7 +47,7 @@ export class TemplateManager {
         return this.templates.get(templateId)!;
       }
 
-      let snapshotData: any;
+      let snapshotData: Record<string, unknown>;
 
       if (useFileSystem && typeof window === 'undefined') {
         // Server-side: load directly from file system
@@ -68,7 +68,7 @@ export class TemplateManager {
         snapshotData = await response.json();
       }
       const textShapes = this.extractTextShapes(snapshotData);
-      
+
       const templateData: TemplateData = {
         metadata: {
           id: templateId,
@@ -102,32 +102,35 @@ export class TemplateManager {
   /**
    * Extract text shapes from template snapshot
    */
-  static extractTextShapes(snapshot: any): TextShapeInfo[] {
+  static extractTextShapes(snapshot: Record<string, unknown>): TextShapeInfo[] {
     const textShapes: TextShapeInfo[] = [];
-    
-    if (!snapshot?.data?.document?.store) {
+
+    const data = snapshot.data as Record<string, unknown>;
+    const document = data?.document as Record<string, unknown>;
+    const store = document?.store;
+
+    if (!store) {
       return textShapes;
     }
 
-    const store = snapshot.data.document.store;
-    
-    for (const [key, record] of Object.entries(store)) {
-      const shape = record as any;
-      
+    for (const [, record] of Object.entries(store)) {
+      const shape = record as Record<string, unknown>;
+
       if (shape.typeName === 'shape' && shape.type === 'text') {
-        const textContent = this.extractTextFromRichText(shape.props.richText);
-        
+        const props = shape.props as Record<string, unknown>;
+        const textContent = this.extractTextFromRichText(props.richText as Record<string, unknown>);
+
         textShapes.push({
-          id: shape.id,
+          id: shape.id as string,
           text: textContent,
-          position: { x: shape.x, y: shape.y },
+          position: { x: shape.x as number, y: shape.y as number },
           style: {
-            color: shape.props.color,
-            size: shape.props.size,
-            font: shape.props.font,
-            width: shape.props.w,
+            color: props.color as string,
+            size: props.size as string,
+            font: props.font as string,
+            width: props.w as number,
           },
-          maxLength: this.estimateMaxLength(textContent, shape.props.w),
+          maxLength: this.estimateMaxLength(textContent, props.w as number),
         });
       }
     }
@@ -141,7 +144,7 @@ export class TemplateManager {
   static replaceTextInTemplate(
     template: TemplateData,
     newTexts: { shapeId: string; text: string }[]
-  ): any {
+  ): Record<string, unknown> {
     const modifiedSnapshot = JSON.parse(JSON.stringify(template.snapshot));
     const store = modifiedSnapshot.data.document.store;
 
@@ -158,27 +161,29 @@ export class TemplateManager {
   /**
    * Extract plain text from Tldraw rich text structure
    */
-  private static extractTextFromRichText(richText: any): string {
+  private static extractTextFromRichText(richText: Record<string, unknown>): string {
     if (!richText?.content) return '';
-    
+
     let text = '';
-    for (const paragraph of richText.content) {
-      if (paragraph.content) {
-        for (const textNode of paragraph.content) {
+    const content = richText.content as Record<string, unknown>[];
+    for (const paragraph of content) {
+      const paragraphContent = paragraph.content as Record<string, unknown>[];
+      if (paragraphContent) {
+        for (const textNode of paragraphContent) {
           if (textNode.type === 'text' && textNode.text) {
-            text += textNode.text;
+            text += textNode.text as string;
           }
         }
       }
     }
-    
+
     return text;
   }
 
   /**
    * Create Tldraw rich text structure from plain text
    */
-  private static createRichText(text: string): any {
+  private static createRichText(text: string): Record<string, unknown> {
     return {
       type: 'doc',
       content: [
@@ -199,19 +204,21 @@ export class TemplateManager {
   /**
    * Count image shapes in template
    */
-  private static countImageShapes(snapshot: any): number {
-    if (!snapshot?.data?.document?.store) return 0;
-    
-    const store = snapshot.data.document.store;
+  private static countImageShapes(snapshot: Record<string, unknown>): number {
+    const data = snapshot.data as Record<string, unknown>;
+    const document = data?.document as Record<string, unknown>;
+    const store = document?.store;
+
+    if (!store) return 0;
     let count = 0;
-    
-    for (const [key, record] of Object.entries(store)) {
-      const shape = record as any;
+
+    for (const [, record] of Object.entries(store)) {
+      const shape = record as Record<string, unknown>;
       if (shape.typeName === 'shape' && shape.type === 'image') {
         count++;
       }
     }
-    
+
     return count;
   }
 

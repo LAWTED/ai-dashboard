@@ -40,10 +40,10 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
       whileHover={disabled ? {} : { scale: 1.02 }}
       whileTap={disabled ? {} : { scale: 0.98 }}
     >
-      <Card 
+      <Card
         className={`cursor-pointer transition-all duration-200 ${
-          isSelected 
-            ? 'ring-2 ring-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' 
+          isSelected
+            ? 'ring-2 ring-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
             : 'hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-800/50'
         } ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
@@ -62,7 +62,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                 {template.textShapeCount}
               </Badge>
               <Badge variant="outline" className="text-xs">
-                <Image className="w-3 h-3 mr-1" />
+                <Image className="w-3 h-3 mr-1" aria-hidden="true" />
                 {template.imageCount}
               </Badge>
             </div>
@@ -72,7 +72,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
             {template.description}
           </p>
-          
+
           {/* Template Preview - Placeholder for now */}
           <div className="w-full h-32 bg-gradient-to-br from-yellow-100 via-orange-50 to-red-50 dark:from-yellow-900/30 dark:via-orange-900/20 dark:to-red-900/20 rounded-lg flex items-center justify-center mb-3 border border-yellow-200 dark:border-yellow-800">
             <div className="text-center text-gray-500 dark:text-gray-400">
@@ -85,9 +85,9 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           {template.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {template.tags.map((tag) => (
-                <Badge 
-                  key={tag} 
-                  variant="secondary" 
+                <Badge
+                  key={tag}
+                  variant="secondary"
                   className="text-xs px-2 py-1"
                 >
                   {tag}
@@ -111,7 +111,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { t } = useYellowBoxI18n();
+  const { } = useYellowBoxI18n();
 
   // Load available templates
   useEffect(() => {
@@ -124,12 +124,12 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response = await fetch('/api/yellowbox/templates');
       if (!response.ok) {
         throw new Error('Failed to load templates');
       }
-      
+
       const data = await response.json();
       setTemplates(data.templates || []);
     } catch (error) {
@@ -241,7 +241,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                 <div className="text-sm text-gray-600 dark:text-gray-300">
                   {selectedTemplateId ? '已选择模板，点击应用开始生成' : '请选择一个模板'}
                 </div>
-                
+
                 <div className="flex gap-3">
                   <Button
                     variant="outline"

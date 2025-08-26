@@ -4,10 +4,10 @@ import { join } from 'path';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { templateId: string } }
+  context: { params: Promise<{ templateId: string }> }
 ) {
   try {
-    const { templateId } = params;
+    const { templateId } = await context.params;
 
     // Validate template ID
     if (!templateId || typeof templateId !== 'string') {
@@ -34,7 +34,7 @@ export async function GET(
     return NextResponse.json(parsedTemplate);
   } catch (error) {
     console.error('Error loading template:', error);
-    
+
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return NextResponse.json(
         { error: 'Template not found' },

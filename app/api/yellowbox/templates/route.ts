@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { TemplateManager } from '@/lib/yellowbox/templates/template-manager';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const templates = await TemplateManager.getAvailableTemplates();
-    
+
     return NextResponse.json({
       success: true,
       templates,
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error loading templates:', error);
-    
+
     return NextResponse.json(
       {
         success: false,

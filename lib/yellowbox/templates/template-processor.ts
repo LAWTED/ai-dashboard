@@ -1,4 +1,4 @@
-import { TemplateData, TemplateManager, TextShapeInfo } from './template-manager';
+import { TemplateManager, TextShapeInfo } from './template-manager';
 import { generateTemplateText } from './text-generator';
 
 export interface DiaryContent {
@@ -29,7 +29,7 @@ export interface TemplateApplicationRequest {
 
 export interface TemplateApplicationResult {
   success: boolean;
-  modifiedSnapshot?: any;
+  modifiedSnapshot?: Record<string, unknown>;
   error?: string;
   metadata?: {
     originalTextCount: number;
@@ -133,8 +133,7 @@ export class TemplateProcessor {
         shape,
         diaryContext,
         language,
-        i,
-        textShapes.length
+        i
       );
 
       try {
@@ -166,7 +165,7 @@ export class TemplateProcessor {
     // Add conversation history
     if (diaryContent.conversationHistory?.length > 0) {
       context += '对话内容:\n';
-      diaryContent.conversationHistory.forEach((msg, index) => {
+      diaryContent.conversationHistory.forEach((msg) => {
         const prefix = msg.type === 'user' ? '我:' : 'AI:';
         context += `${prefix} ${msg.content}\n`;
       });
@@ -196,9 +195,8 @@ export class TemplateProcessor {
   private static createTextGenerationPrompt(
     shape: TextShapeInfo,
     diaryContext: string,
-    language: 'zh' | 'en',
-    shapeIndex: number,
-    totalShapes: number
+    _language: 'zh' | 'en',
+    shapeIndex: number
   ): string {
     const isTitle = shapeIndex === 0 || shape.style.size === 'xl';
     const isLargeText = shape.style.size === 'l' || shape.style.size === 'xl';

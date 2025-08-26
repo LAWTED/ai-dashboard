@@ -10,7 +10,7 @@ export interface TextGenerationRequest {
 
 export interface TextGenerationResult {
   text: string;
-  usage?: any;
+  usage?: Record<string, unknown>;
 }
 
 /**

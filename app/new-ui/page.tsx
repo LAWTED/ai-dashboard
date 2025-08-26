@@ -308,7 +308,7 @@ export default function NewUIPage() {
                                   Congratulations!
                                 </strong>{" "}
                                 I am delighted to offer you admission to
-                                Stanford University's Class of 2029.
+                                Stanford University&apos;s Class of 2029.
                               </p>
 
                               <p style={{ marginBottom: "20px" }}>
