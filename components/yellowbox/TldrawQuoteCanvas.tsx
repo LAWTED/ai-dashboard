@@ -3,7 +3,9 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Heart } from "lucide-react";
+import { ArrowLeft, Download, Heart, Sparkles } from "lucide-react";
+import { TemplateSelector } from "./TemplateSelector";
+import { DiaryContent } from "@/lib/yellowbox/templates/template-processor";
 import {
   Tldraw,
   Editor,
@@ -18,6 +20,8 @@ import {
   TldrawUiMenuItem,
   useTools,
   useIsToolSelected,
+  getSnapshot,
+  loadSnapshot,
 } from "tldraw";
 import 'tldraw/tldraw.css';
 import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
@@ -160,6 +164,8 @@ export default function TldrawQuoteCanvas({
   const [editor, setEditor] = useState<Editor | null>(null);
   const [hasInitializedContent, setHasInitializedContent] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
   const { t } = useYellowBoxI18n();
 
 
@@ -248,7 +254,7 @@ export default function TldrawQuoteCanvas({
       try {
         const parsedData = JSON.parse(savedData);
         // 加载保存的画布状态
-        editor.loadSnapshot(parsedData.data);
+        loadSnapshot(editor.store, parsedData.data);
         setHasInitializedContent(true);
         console.log('Loaded saved design from localStorage');
         return;
@@ -505,7 +511,7 @@ export default function TldrawQuoteCanvas({
     if (!editor || !entry) return;
 
     try {
-      const canvasData = editor.getSnapshot();
+      const canvasData = getSnapshot(editor.store);
       const storageKey = `tldraw-quote-${entry.id}`;
 
       // Safe localStorage save with quota handling
@@ -723,6 +729,22 @@ export default function TldrawQuoteCanvas({
               </motion.div>
             </Button>
 
+            {/* 模板选择按钮 */}
+            <Button
+              onClick={() => setShowTemplateSelector(true)}
+              className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity p-0 h-auto bg-transparent border-none mt-2"
+              title={language === 'zh' ? '选择模板' : 'Select Template'}
+              variant="ghost"
+              disabled={isApplyingTemplate}
+            >
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="p-2"
+              >
+                <Sparkles className={`w-4 h-4 md:w-5 md:h-5 ${isApplyingTemplate ? 'animate-spin' : ''}`} />
+              </motion.div>
+            </Button>
 
             {/* 返回按钮 */}
             <Button
@@ -825,7 +847,92 @@ export default function TldrawQuoteCanvas({
           </div>
 
         </div>
+
+        {/* Template Selector Dialog */}
+        <TemplateSelector
+          isOpen={showTemplateSelector}
+          onClose={() => setShowTemplateSelector(false)}
+          onSelectTemplate={handleApplyTemplate}
+          isApplying={isApplyingTemplate}
+        />
       </motion.div>
     </AnimatePresence>
   );
+  
+  // Handle template application
+  async function handleApplyTemplate(templateId: string) {
+    if (!editor || isApplyingTemplate) return;
+
+    setIsApplyingTemplate(true);
+    
+    try {
+      // Prepare diary content from entry
+      const diaryContent: DiaryContent = {
+        conversationHistory: entry.entries.conversationHistory || [],
+        selectedQuestion: undefined, // We don't have this in the current entry structure
+        summary: entry.metadata?.aiSummary,
+        enhancedSummary: undefined, // We don't have this in the current entry structure
+      };
+
+      // Call API to apply template
+      const response = await fetch('/api/yellowbox/apply-template', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          templateId,
+          diaryContent,
+          language: language === 'zh' ? 'zh' : 'en',
+          preserveImages: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to apply template');
+      }
+
+      // Apply the modified snapshot to the editor
+      if (result.modifiedSnapshot) {
+        // Clear current canvas
+        editor.selectAll();
+        editor.deleteShapes(editor.getSelectedShapeIds());
+        
+        // Load the new template with generated content
+        // The modifiedSnapshot contains the full template structure, we need the data part
+        if (result.modifiedSnapshot?.data) {
+          loadSnapshot(editor.store, result.modifiedSnapshot.data);
+        } else {
+          throw new Error('Invalid template snapshot format');
+        }
+        
+        // Zoom to fit the new content
+        setTimeout(() => {
+          editor.zoomToFit();
+        }, 100);
+
+        toast.success(
+          language === 'zh' 
+            ? `模板已应用！生成了 ${result.metadata?.generatedTextCount || 0} 段文字内容` 
+            : `Template applied! Generated ${result.metadata?.generatedTextCount || 0} text sections`
+        );
+      }
+    } catch (error) {
+      console.error('Error applying template:', error);
+      toast.error(
+        language === 'zh' 
+          ? '应用模板失败，请稍后重试' 
+          : 'Failed to apply template, please try again'
+      );
+    } finally {
+      setIsApplyingTemplate(false);
+      setShowTemplateSelector(false);
+    }
+  }
 }
