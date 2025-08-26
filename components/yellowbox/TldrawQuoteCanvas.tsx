@@ -21,6 +21,8 @@ import {
 } from "tldraw";
 import 'tldraw/tldraw.css';
 import { useYellowBoxI18n } from "@/contexts/yellowbox-i18n-context";
+import { supabaseAssetStore, cleanupLocalStorage } from "@/lib/yellowbox/tldraw-asset-store";
+import { toast } from "sonner";
 
 interface YellowboxEntry {
   id: string;
@@ -268,9 +270,9 @@ export default function TldrawQuoteCanvas({
 
     // 1. 添加日记标题（使用 aiSummary 或默认标题）
     const title = entry.metadata?.aiSummary ||
-      (entry.entries.timeOfDay === 'morning' ? t('morningReflection') :
-       entry.entries.timeOfDay === 'evening' ? t('eveningReflection') :
-       t('title'));
+      (entry.entries.timeOfDay === 'morning' ? String(t('morningReflection')) :
+       entry.entries.timeOfDay === 'evening' ? String(t('eveningReflection')) :
+       String(t('title')));
 
     if (title) {
       const titleWidth = 450;
@@ -506,17 +508,60 @@ export default function TldrawQuoteCanvas({
       const canvasData = editor.getSnapshot();
       const storageKey = `tldraw-quote-${entry.id}`;
 
-      localStorage.setItem(storageKey, JSON.stringify({
-        data: canvasData,
-        timestamp: Date.now(),
-        entryId: entry.id
-      }));
+      // Safe localStorage save with quota handling
+      try {
+        localStorage.setItem(storageKey, JSON.stringify({
+          data: canvasData,
+          timestamp: Date.now(),
+          entryId: entry.id
+        }));
+      } catch (quotaError) {
+        if (quotaError instanceof DOMException && quotaError.name === 'QuotaExceededError') {
+          console.warn('localStorage quota exceeded, cleaning up all old data');
+          
+          // More aggressive cleanup - remove ALL tldraw data except current
+          const keys = Object.keys(localStorage).filter(key => 
+            key.startsWith('tldraw-quote-') && key !== storageKey
+          );
+          
+          // Remove ALL old entries
+          keys.forEach(key => localStorage.removeItem(key));
+          
+          // Also try to clean up any other large localStorage items
+          try {
+            cleanupLocalStorage();
+          } catch (cleanupError) {
+            console.warn('Failed to run additional cleanup:', cleanupError);
+          }
+          
+          // Try saving again with minimal data
+          try {
+            // Save with minimal snapshot to reduce size
+            const minimalData = {
+              data: canvasData,
+              timestamp: Date.now(),
+              entryId: entry.id
+            };
+            
+            localStorage.setItem(storageKey, JSON.stringify(minimalData));
+          } catch (retryError) {
+            console.error('Failed to save after aggressive cleanup:', retryError);
+            toast.error(
+              language === 'zh' 
+                ? '存储空间不足，请重新打开页面' 
+                : 'Storage quota exceeded, please refresh the page'
+            );
+          }
+        } else {
+          throw quotaError;
+        }
+      }
 
       console.log('Auto-saved canvas state');
     } catch (error) {
       console.error('Auto-save failed:', error);
     }
-  }, [editor, entry]);
+  }, [editor, entry, language]);
 
   // 监听画布变化并自动保存
   useEffect(() => {
@@ -678,6 +723,7 @@ export default function TldrawQuoteCanvas({
               </motion.div>
             </Button>
 
+
             {/* 返回按钮 */}
             <Button
               onClick={() => onOpenChange(false)}
@@ -732,6 +778,7 @@ export default function TldrawQuoteCanvas({
                 tools={[StickerTool]}
                 overrides={uiOverrides}
                 components={components}
+                assets={supabaseAssetStore}
                 onMount={(editor: Editor) => {
                   setEditor(editor);
                   // 设置画布为透明背景，让下层的信纸背景显示，并启用网格

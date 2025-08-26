@@ -46,6 +46,7 @@ export async function uploadImageToSupabase(
     formData.append('file', file);
     formData.append('path', filePath);
     formData.append('bucket', bucket);
+    formData.append('uploadToSupabase', 'true'); // 确保上传到 Supabase 而不是返回 data URL
 
     // Upload via our API endpoint
     const response = await fetch('/api/storage/upload', {
