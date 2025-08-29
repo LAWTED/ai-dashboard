@@ -296,39 +296,29 @@ export class TemplateEngine {
     context: string,
     language: 'zh' | 'en'
   ): Promise<string> {
-    // TODO: 集成实际的 AI 文本生成 API，使用 context 和 prompt
-    // const prompt = this.createPrompt(replaceableText, context, language);
-    
-    // 暂时返回模拟内容
-    const mockGenerated = await this.mockTextGeneration(replaceableText.type, language);
-    
-    // 确保生成的文本不超过长度限制
-    return this.trimToLength(mockGenerated, replaceableText.maxLength);
-  }
-
-  /**
-   * 模拟文本生成（临时实现）
-   */
-  private static async mockTextGeneration(type: string, language: 'zh' | 'en'): Promise<string> {
-    // 模拟异步延迟
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    if (language === 'zh') {
-      switch (type) {
-        case 'title': return '今日感悟';
-        case 'body': return '这是一段关于今天生活感悟的文字，记录了内心的思考和体会。';
-        case 'caption': return '温暖的午后时光';
-        default: return '生成的内容';
-      }
-    } else {
-      switch (type) {
-        case 'title': return 'Daily Reflection';
-        case 'body': return 'This is a thoughtful reflection on today\'s experiences and insights.';
-        case 'caption': return 'Peaceful afternoon moments';
-        default: return 'Generated content';
-      }
+    try {
+      // 动态导入 AI 文本生成器
+      const { generateTemplateText } = await import('./templates/text-generator');
+      
+      // 创建具体的生成提示
+      const prompt = this.createPrompt(replaceableText, context, language);
+      
+      // 调用真实的 AI 生成
+      const result = await generateTemplateText({
+        prompt,
+        language,
+        maxTokens: Math.min(replaceableText.maxLength * 3, 800), // 给 AI 一些生成空间
+      });
+      
+      // 确保生成的文本不超过长度限制
+      return this.trimToLength(result.text, replaceableText.maxLength);
+    } catch (error) {
+      console.error('AI text generation failed, using fallback:', error);
+      // AI 生成失败时使用回退策略
+      return this.createFallbackText(replaceableText);
     }
   }
+
 
   /**
    * 创建生成提示词
