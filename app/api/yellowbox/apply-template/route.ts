@@ -1,124 +1,97 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { DiaryContent } from '@/lib/yellowbox/types/template';
 import { TemplateStorage } from '@/lib/yellowbox/template-storage';
 import { TemplateEngine } from '@/lib/yellowbox/template-engine';
+import { ApplyTemplateRequest } from '@/lib/yellowbox/types/template';
 
+/**
+ * POST /api/yellowbox/apply-template
+ * 应用模板到日记内容
+ */
 export async function POST(request: NextRequest) {
   try {
-    // Verify user authentication
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
-    const body = await request.json();
-    const { 
-      templateId, 
-      diaryContent, 
-      language = 'zh',
-      preserveImages = true 
-    }: {
-      templateId: string;
-      diaryContent: DiaryContent;
-      language?: 'zh' | 'en';
-      preserveImages?: boolean;
-    } = body;
+    const body: ApplyTemplateRequest = await request.json();
+    const { templateId, diaryContent, language = 'zh' } = body;
 
-    // Validate required fields
-    if (!templateId || typeof templateId !== 'string') {
+    // 验证请求数据
+    if (!templateId) {
       return NextResponse.json(
-        { error: 'Template ID is required' },
+        { error: '模板ID不能为空' },
         { status: 400 }
       );
     }
 
-    if (!diaryContent || typeof diaryContent !== 'object') {
+    if (!diaryContent) {
       return NextResponse.json(
-        { error: 'Diary content is required' },
+        { error: '日记内容不能为空' },
         { status: 400 }
       );
     }
 
-    // Validate diary content structure
+    // 验证日记内容格式
     if (!diaryContent.conversationHistory || !Array.isArray(diaryContent.conversationHistory)) {
       return NextResponse.json(
-        { error: 'Invalid diary content format' },
+        { error: '无效的日记内容格式' },
         { status: 400 }
       );
     }
 
-    // Check if there's any content to work with
+    // 检查是否有内容可处理
     const hasContent = diaryContent.conversationHistory.length > 0 || 
                       diaryContent.summary || 
                       diaryContent.selectedQuestion;
 
     if (!hasContent) {
       return NextResponse.json(
-        { error: 'No content found in diary to process' },
+        { error: '日记中没有找到可处理的内容' },
         { status: 400 }
       );
     }
 
-    console.log(`Applying template ${templateId} with ${diaryContent.conversationHistory.length} conversation messages`);
+    console.log(`应用模板 ${templateId}，包含 ${diaryContent.conversationHistory.length} 条对话`);
 
-    // Load template from storage
-    const templateResult = await TemplateStorage.getTemplate(templateId, true);
+    // 获取模板
+    const templateResult = await TemplateStorage.getTemplate(templateId);
     if (!templateResult.success || !templateResult.data) {
       return NextResponse.json(
-        { error: templateResult.error || `Template ${templateId} not found` },
+        { error: templateResult.error || '模板不存在' },
         { status: 404 }
       );
     }
 
     const template = templateResult.data;
-    console.log(`Found template: ${template.name}, replaceable shapes: ${template.replaceableShapes.length}`);
+    console.log(`找到模板: ${template.name}`);
 
-    // Apply diary content to template
-    const result = await TemplateEngine.applyContentToTemplate(
+    // 应用模板
+    const applicationResult = await TemplateEngine.applyTemplate(
       template,
       diaryContent,
       language
     );
 
-    if (!result.success) {
+    if (!applicationResult.success) {
       return NextResponse.json(
-        { 
-          error: result.error || 'Failed to apply template',
-          templateId,
-        },
+        { error: applicationResult.error || '应用模板失败' },
         { status: 500 }
       );
     }
 
-    // Return successful result
     return NextResponse.json({
       success: true,
       templateId,
-      modifiedSnapshot: result.modifiedSnapshot,
-      metadata: result.metadata,
+      modifiedSnapshot: applicationResult.modifiedSnapshot,
+      metadata: applicationResult.metadata,
       processingInfo: {
         language,
-        preserveImages,
         contentLength: diaryContent.conversationHistory.reduce(
           (sum, msg) => sum + msg.content.length, 0
         ),
-      },
+      }
     });
 
   } catch (error) {
-    console.error('Error in apply-template API:', error);
-    
+    console.error('Apply template error:', error);
     return NextResponse.json(
-      {
-        error: 'Internal server error while applying template',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: '应用模板时发生错误' },
       { status: 500 }
     );
   }

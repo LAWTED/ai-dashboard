@@ -1,33 +1,27 @@
 /**
- * 统一的模板系统类型定义
- * MVP 版本 - 简化但完整的类型系统
+ * 统一的模板系统类型定义 - MVP 版本
+ * 使用标准 Tldraw 格式，不再兼容旧版本
  */
 
-// ====================== Tldraw 相关类型 ======================
+// ====================== Tldraw 标准格式 ======================
 
 /**
- * Tldraw Snapshot 结构
- * 基于 tldraw 官方格式，简化为实用版本
+ * 标准 Tldraw Snapshot 结构
+ * 直接对应 Tldraw 的导出格式
  */
 export interface TldrawSnapshot {
-  /** 文档数据 - 包含所有 shapes */
-  document: TldrawDocument;
-  /** 元数据（可选） */
-  meta?: SnapshotMeta;
+  /** Tldraw store - 包含所有 shapes 和记录 */
+  store: Record<string, TldrawRecord>;
+  /** Schema 版本信息 */
+  schema: {
+    schemaVersion: number;
+    storeVersion: number;
+    recordVersions: Record<string, { version: number }>;
+  };
 }
 
 /**
- * Tldraw Document 结构
- * 注意：实际 Tldraw snapshot 结构比这复杂，这里使用 any 来兼容
- */
-export interface TldrawDocument {
-  /** 完整的 Tldraw snapshot 数据，包含 schema 等信息 */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
-
-/**
- * Tldraw 记录的基本结构
+ * Tldraw 记录的基础结构
  */
 export interface TldrawRecord {
   id: string;
@@ -36,7 +30,7 @@ export interface TldrawRecord {
 }
 
 /**
- * Text Shape 的结构（用于文本替换）
+ * Text Shape 结构 - 用于文本识别和替换
  */
 export interface TldrawTextShape extends TldrawRecord {
   typeName: 'shape';
@@ -48,56 +42,44 @@ export interface TldrawTextShape extends TldrawRecord {
     size: 'xs' | 's' | 'm' | 'l' | 'xl';
     font: 'draw' | 'sans' | 'serif' | 'mono';
     w: number;
+    h: number;
     autoSize: boolean;
-    richText: TldrawRichText;
+    text: string; // 纯文本
   };
 }
 
 /**
- * Tldraw RichText 结构
+ * 其他常见 Shape 类型
  */
-export interface TldrawRichText {
-  type: 'doc';
-  content: Array<{
-    type: 'paragraph';
-    attrs?: { dir?: 'auto' | 'ltr' | 'rtl' };
-    content?: Array<{
-      type: 'text';
-      text: string;
-      marks?: Array<{ type: string; attrs?: unknown }>;
-    }>;
-  }>;
+export interface TldrawImageShape extends TldrawRecord {
+  typeName: 'shape';
+  type: 'image';
+  x: number;
+  y: number;
+  props: {
+    w: number;
+    h: number;
+    assetId: string;
+    url?: string;
+  };
 }
 
-/**
- * Snapshot 元数据
- */
-export interface SnapshotMeta {
-  id: string;
-  createdAt: number;
-  version: string;
-}
-
-// ====================== 模板系统类型 ======================
+// ====================== 模板系统核心类型 ======================
 
 /**
- * 模板定义
+ * 简化的模板定义 - MVP 版本
  */
 export interface Template {
-  /** 模板唯一标识 */
+  /** 唯一标识 */
   id: string;
   /** 模板名称 */
   name: string;
-  /** 模板描述 */
+  /** 描述 */
   description: string;
-  /** Tldraw 快照数据 */
+  /** 标准 Tldraw snapshot */
   snapshot: TldrawSnapshot;
-  /** 可替换的文本 Shape ID 列表 */
-  replaceableShapes: string[];
-  /** 预览图 URL（可选） */
-  previewUrl?: string;
-  /** 创建者 ID */
-  userId?: string;
+  /** 创建者 ID（null 表示系统内置） */
+  userId?: string | null;
   /** 是否公开 */
   isPublic: boolean;
   /** 创建时间 */
@@ -105,65 +87,30 @@ export interface Template {
 }
 
 /**
- * 可替换文本的配置 - 简化版本
+ * 可替换文本配置 - 自动分析生成
  */
 export interface ReplaceableText {
   /** Shape ID */
   shapeId: string;
-  /** 文本类型 - MVP只区分标题和正文 */
-  type: 'title' | 'body';
-  /** 当前文本内容 */
+  /** 文本类型 */
+  type: 'title' | 'body' | 'caption';
+  /** 原始文本 */
   originalText: string;
-  /** 最大长度限制 */
+  /** 推荐最大长度 */
   maxLength: number;
-  /** 文本样式 */
+  /** 位置权重（用于排序） */
+  priority: number;
+  /** 样式信息 */
   style: {
     color: string;
     size: string;
     font: string;
     width: number;
   };
-  /** 位置信息 */
-  position: {
-    x: number;
-    y: number;
-  };
 }
 
 /**
- * 模板应用请求
- */
-export interface TemplateApplicationRequest {
-  /** 模板 ID */
-  templateId: string;
-  /** 日记内容 */
-  diaryContent: DiaryContent;
-  /** 语言 */
-  language: 'zh' | 'en';
-  /** 是否保留图片 */
-  preserveImages?: boolean;
-}
-
-/**
- * 模板应用结果
- */
-export interface TemplateApplicationResult {
-  /** 是否成功 */
-  success: boolean;
-  /** 修改后的快照 */
-  modifiedSnapshot?: TldrawSnapshot;
-  /** 错误信息 */
-  error?: string;
-  /** 处理元数据 */
-  metadata?: {
-    originalTextCount: number;
-    generatedTextCount: number;
-    processingTime: number;
-  };
-}
-
-/**
- * 日记内容（来自现有系统）
+ * 日记内容接口
  */
 export interface DiaryContent {
   conversationHistory: Array<{
@@ -184,10 +131,61 @@ export interface DiaryContent {
   };
 }
 
-// ====================== 通用结果类型 ======================
+/**
+ * 模板应用结果
+ */
+export interface TemplateApplicationResult {
+  success: boolean;
+  modifiedSnapshot?: TldrawSnapshot;
+  error?: string;
+  metadata?: {
+    replacedTextCount: number;
+    processingTimeMs: number;
+    generatedWords: number;
+  };
+}
+
+// ====================== API 接口类型 ======================
 
 /**
- * 统一的结果类型，用于错误处理
+ * 创建模板请求
+ */
+export interface CreateTemplateRequest {
+  name: string;
+  description: string;
+  snapshot: TldrawSnapshot;
+  isPublic?: boolean;
+}
+
+/**
+ * 模板列表项（用于展示）
+ */
+export interface TemplateListItem {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  isBuiltin: boolean;
+  stats: {
+    textShapes: number;
+    imageShapes: number;
+    totalShapes: number;
+  };
+}
+
+/**
+ * 应用模板请求
+ */
+export interface ApplyTemplateRequest {
+  templateId: string;
+  diaryContent: DiaryContent;
+  language: 'zh' | 'en';
+}
+
+// ====================== 工具函数类型 ======================
+
+/**
+ * 统一结果类型
  */
 export interface Result<T> {
   success: boolean;
@@ -195,56 +193,26 @@ export interface Result<T> {
   error?: string;
 }
 
-// ====================== 辅助类型 ======================
-
 /**
- * 模板创建请求
+ * 文本生成配置
  */
-export interface CreateTemplateRequest {
-  name: string;
-  description: string;
-  snapshot: TldrawSnapshot;
-  replaceableShapes?: string[];
-  isPublic?: boolean;
-}
-
-/**
- * 模板更新请求
- */
-export interface UpdateTemplateRequest {
-  name?: string;
-  description?: string;
-  snapshot?: TldrawSnapshot;
-  replaceableShapes?: string[];
-  isPublic?: boolean;
-}
-
-/**
- * 模板列表查询选项
- */
-export interface TemplateListOptions {
-  /** 只返回公开模板 */
-  publicOnly?: boolean;
-  /** 只返回用户自己的模板 */
-  ownOnly?: boolean;
-  /** 分页大小 */
-  limit?: number;
-  /** 分页偏移 */
-  offset?: number;
-}
-
-/**
- * 模板元数据（用于列表显示）
- */
-export interface TemplateMetadata {
-  id: string;
-  name: string;
-  description: string;
-  textShapeCount: number;
-  imageCount: number;
-  tags: string[];
+export interface TextGenerationOptions {
+  prompt: string;
+  maxTokens: number;
   language: 'zh' | 'en';
 }
+
+/**
+ * 模板统计信息
+ */
+export interface TemplateStats {
+  totalShapes: number;
+  textShapes: number;
+  imageShapes: number;
+  replaceableTexts: number;
+}
+
+// ====================== 数据库类型 ======================
 
 /**
  * 数据库中的模板记录
@@ -253,50 +221,8 @@ export interface TemplateRecord {
   id: string;
   name: string;
   description: string | null;
-  snapshot: TldrawSnapshot; // JSON 数据
-  replaceable_shapes: string[] | null;
-  preview_url: string | null;
+  snapshot: TldrawSnapshot; // 直接使用标准格式
   user_id: string | null;
   is_public: boolean;
   created_at: string;
-}
-
-// ====================== 工具函数类型 ======================
-
-/**
- * 文本生成配置
- */
-export interface TextGenerationConfig {
-  /** 提示词 */
-  prompt: string;
-  /** 语言 */
-  language: 'zh' | 'en';
-  /** 最大长度 */
-  maxLength: number;
-  /** 文本类型（影响生成策略） */
-  textType: 'title' | 'body' | 'decoration';
-}
-
-/**
- * 批量文本生成请求
- */
-export interface BatchTextGenerationRequest {
-  /** 日记内容 */
-  diaryContent: DiaryContent;
-  /** 文本配置列表 */
-  textConfigs: TextGenerationConfig[];
-  /** 语言 */
-  language: 'zh' | 'en';
-}
-
-/**
- * 批量文本生成结果
- */
-export interface BatchTextGenerationResult {
-  /** 生成的文本列表 */
-  texts: string[];
-  /** 是否全部成功 */
-  success: boolean;
-  /** 错误信息 */
-  error?: string;
 }
