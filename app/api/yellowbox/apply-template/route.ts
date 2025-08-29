@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  TemplateProcessor, 
-  TemplateApplicationRequest, 
-  DiaryContent 
-} from '@/lib/yellowbox/templates/template-processor';
+import { createClient } from '@/lib/supabase/server';
+import { DiaryContent } from '@/lib/yellowbox/types/template';
+import { TemplateStorage } from '@/lib/yellowbox/template-storage';
+import { TemplateEngine } from '@/lib/yellowbox/template-engine';
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify user authentication
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
     const body = await request.json();
     const { 
       templateId, 
@@ -55,18 +65,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare application request
-    const applicationRequest: TemplateApplicationRequest = {
-      templateId,
-      diaryContent,
-      language,
-      preserveImages,
-    };
-
     console.log(`Applying template ${templateId} with ${diaryContent.conversationHistory.length} conversation messages`);
 
-    // Apply template
-    const result = await TemplateProcessor.applyDiaryToTemplate(applicationRequest);
+    // Load template from storage
+    const templateResult = await TemplateStorage.getTemplate(templateId, true);
+    if (!templateResult.success || !templateResult.data) {
+      return NextResponse.json(
+        { error: templateResult.error || `Template ${templateId} not found` },
+        { status: 404 }
+      );
+    }
+
+    const template = templateResult.data;
+    console.log(`Found template: ${template.name}, replaceable shapes: ${template.replaceableShapes.length}`);
+
+    // Apply diary content to template
+    const result = await TemplateEngine.applyContentToTemplate(
+      template,
+      diaryContent,
+      language
+    );
 
     if (!result.success) {
       return NextResponse.json(

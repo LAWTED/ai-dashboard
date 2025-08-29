@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Image, Type, Sparkles, X, Check } from 'lucide-react';
-import { TemplateMetadata } from '@/lib/yellowbox/templates/template-manager';
+import { TemplateMetadata } from '@/lib/yellowbox/types/template';
 import { useYellowBoxI18n } from '@/contexts/yellowbox-i18n-context';
+import { createClient } from '@/lib/supabase/client';
 
 interface TemplateSelectorProps {
   isOpen: boolean;
@@ -125,13 +126,37 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('/api/yellowbox/templates');
-      if (!response.ok) {
-        throw new Error('Failed to load templates');
+      const supabase = createClient();
+      
+      // 获取用户自定义模板
+      const { data: customTemplates, error } = await supabase
+        .from('yellowbox_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
-      setTemplates(data.templates || []);
+      // 转换为 TemplateMetadata 格式
+      const templates: TemplateMetadata[] = [];
+      
+      if (customTemplates) {
+        for (const template of customTemplates) {
+          const isBuiltin = template.user_id === null;
+          templates.push({
+            id: template.id,
+            name: template.name,
+            description: template.description || '',
+            textShapeCount: 0, // 简化处理，不统计文本形状数量
+            imageCount: 0, // 简化处理，不统计图片数量
+            tags: isBuiltin ? ['内置'] : ['自定义'],
+            language: 'zh',
+          });
+        }
+      }
+
+      setTemplates(templates);
     } catch (error) {
       console.error('Error loading templates:', error);
       setError('加载模板失败，请稍后重试');
