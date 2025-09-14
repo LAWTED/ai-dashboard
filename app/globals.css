@@ -9,6 +9,8 @@
   --font-sans: "Inter", sans-serif;
   --font-serif: "Georgia", serif;
   --font-mono: "Courier New", monospace;
+  --font-urbanist: var(--font-urbanist);
+  --font-gurajada: var(--font-gurajada);
   --font-londrina: var(--font-londrina-solid);
   --font-shantell: var(--font-shantell-sans);
   --font-comic-neue: var(--font-comic-neue);

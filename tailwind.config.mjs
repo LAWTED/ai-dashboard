@@ -23,6 +23,7 @@ export default {
       fontFamily: {
         'comic-neue': ['var(--font-comic-neue)', 'cursive'],
         'urbanist': ['var(--font-urbanist)', 'sans-serif'],
+        'gurajada': ['var(--font-gurajada)', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",

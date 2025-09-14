@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function LearningGoalsPage() {
   const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
   const prefersReducedMotion = useReducedMotion();
+  const router = useRouter();
 
   const goals = [
     {
@@ -322,8 +324,7 @@ export default function LearningGoalsPage() {
               disabled={!selectedGoal}
               onClick={() => {
                 if (selectedGoal) {
-                  // Navigate to next page logic here
-                  console.log('Selected goal:', selectedGoal);
+                  router.push('/psyquest-new/research-deep-dive');
                 }
               }}
               whileHover={
