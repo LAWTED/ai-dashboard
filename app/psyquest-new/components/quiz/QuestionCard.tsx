@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Question } from "../../stores/quizStore";
-import QuizIllustration from "./QuizIllustration";
 import MultipleChoice from "./MultipleChoice";
 import FillInBlank from "./FillInBlank";
 import ShortAnswer from "./ShortAnswer";

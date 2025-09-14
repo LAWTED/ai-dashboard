@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Heart, Sparkles, Save } from "lucide-react";
 import { TemplateSelector } from "./TemplateSelector";
-import { DiaryContent } from "@/lib/yellowbox/types/template";
+import { DiaryContent, ApplyTemplateRequest } from "@/lib/yellowbox/types/template";
 import {
   Tldraw,
   Editor,
@@ -866,7 +866,8 @@ export default function TldrawQuoteCanvas({
         <TemplateSelector
           isOpen={showTemplateSelector}
           onClose={() => setShowTemplateSelector(false)}
-          onSelectTemplate={handleApplyTemplate}
+          onApplyTemplate={handleApplyTemplate}
+          diaryContent={{ conversationHistory: [] }}
           isApplying={isApplyingTemplate}
         />
       </motion.div>
@@ -874,7 +875,8 @@ export default function TldrawQuoteCanvas({
   );
   
   // Handle template application
-  async function handleApplyTemplate(templateId: string) {
+  async function handleApplyTemplate(request: ApplyTemplateRequest) {
+    const { templateId } = request;
     if (!editor || isApplyingTemplate) return;
 
     setIsApplyingTemplate(true);

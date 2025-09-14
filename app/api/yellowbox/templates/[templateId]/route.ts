@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { templateId } = await params;
     
-    const template = await TemplateStorage.getTemplate(templateId, true);
+    const template = await TemplateStorage.getTemplate(templateId);
     
     if (!template) {
       return NextResponse.json(
@@ -37,7 +37,7 @@ export async function DELETE(
   try {
     const { templateId } = await params;
     
-    const success = await TemplateStorage.deleteTemplate(templateId, true);
+    const success = await TemplateStorage.deleteTemplate(templateId);
     
     if (!success) {
       return NextResponse.json(

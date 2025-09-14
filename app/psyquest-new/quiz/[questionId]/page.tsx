@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { useParams, useRouter, notFound } from "next/navigation";
+import { useParams, notFound } from "next/navigation";
 import { useEffect } from "react";
 import QuizContainer from "../../components/quiz/QuizContainer";
 import { useQuizStore, Question } from "../../stores/quizStore";

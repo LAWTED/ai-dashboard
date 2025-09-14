@@ -103,7 +103,7 @@ export default function CompletionPage() {
               ease: [0.215, 0.61, 0.355, 1],
             }}
           >
-            You've finished your reading.
+            You&apos;ve finished your reading.
           </motion.h1>
 
           {/* Dialogue Bubbles */}
@@ -167,7 +167,7 @@ export default function CompletionPage() {
                 </div>
                 <div className="px-4 py-2">
                   <p className="text-sm font-semibold italic text-black leading-tight">
-                    Good! That means it's working — let's see what stuck!
+                    Good! That means it&apos;s working — let&apos;s see what stuck!
                   </p>
                 </div>
               </div>

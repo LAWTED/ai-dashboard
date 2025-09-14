@@ -9,9 +9,7 @@ interface PlaybackControlsProps {
   className?: string;
 }
 
-export default function PlaybackControls({
-  className = "",
-}: PlaybackControlsProps) {
+export default function PlaybackControls({}: PlaybackControlsProps) {
   const router = useRouter();
   const currentIndex = useDialogueStore((state) => state.currentIndex);
   const totalDialogues = useDialogueStore((state) => state.getTotalSteps());

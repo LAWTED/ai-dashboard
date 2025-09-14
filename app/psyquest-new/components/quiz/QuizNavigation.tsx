@@ -7,8 +7,7 @@ import { useQuizStore } from "../../stores/quizStore";
 export default function QuizNavigation() {
   const router = useRouter();
   const {
-    canGoPrevious,
-    canGoNext,
+    canGoPrevious: canGoPreviousFn,
     getNextQuestionId,
     getPreviousQuestionId,
     getCurrentQuestion,
@@ -19,6 +18,7 @@ export default function QuizNavigation() {
   const currentQuestion = getCurrentQuestion();
   const nextQuestionId = getNextQuestionId();
   const previousQuestionId = getPreviousQuestionId();
+  const canGoPrevious = canGoPreviousFn();
   const hasCurrentAnswer = currentQuestion ? hasAnswered(currentQuestion.id) : false;
 
   const handleNext = () => {

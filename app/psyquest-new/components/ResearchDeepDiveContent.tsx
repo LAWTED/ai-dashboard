@@ -14,8 +14,7 @@ interface ResearchDeepDiveContentProps {
 }
 
 export default function ResearchDeepDiveContent({ 
-  dialogues, 
-  autoPlayInterval = 3500 
+  dialogues
 }: ResearchDeepDiveContentProps) {
   const setDialogues = useDialogueStore(state => state.setDialogues);
   const audioRef = useRef<HTMLAudioElement>(null);

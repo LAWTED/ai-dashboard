@@ -146,15 +146,7 @@ export function TemplateCanvas({
   const handleSnapshot = useCallback(() => {
     if (!editor) return;
     
-    const fullSnapshot = getSnapshot(editor.store);
-    const templateSnapshot: TldrawSnapshot = {
-      document: fullSnapshot, // 保留完整的 snapshot 结构，包括 schema
-      meta: {
-        id: crypto.randomUUID(),
-        createdAt: Date.now(),
-        version: "1.0.0"
-      }
-    };
+    const templateSnapshot = getSnapshot(editor.store) as unknown as TldrawSnapshot;
     
     onSnapshotChange?.(templateSnapshot);
   }, [editor, onSnapshotChange]);
@@ -295,7 +287,7 @@ export function TemplateCanvas({
             overrides={templateUiOverrides}
             components={templateComponents}
             assets={supabaseAssetStore}
-            snapshot={initialSnapshot?.document as TLStoreSnapshot}
+            snapshot={initialSnapshot as unknown as TLStoreSnapshot}
             onMount={(editor: Editor) => {
               setEditor(editor);
               

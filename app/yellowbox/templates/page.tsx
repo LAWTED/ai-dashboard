@@ -67,7 +67,7 @@ export default function TemplatesPage() {
       setIsInitializingTemplates(true);
       const templateIds = await initBuiltinTemplates();
       
-      if (templateIds.length > 0) {
+      if (templateIds && templateIds.length > 0) {
         toast.success(`成功创建 ${templateIds.length} 个内置模板`);
         loadTemplates(); // 重新加载列表
       } else {

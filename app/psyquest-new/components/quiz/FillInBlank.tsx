@@ -37,7 +37,8 @@ export default function FillInBlank({ question }: FillInBlankProps) {
       submitAnswer(question.id, inputValue.trim());
       
       // 检查答案是否正确
-      const correct = question.correctAnswer?.toLowerCase() === inputValue.trim().toLowerCase();
+      const correctAnswer = Array.isArray(question.correctAnswer) ? question.correctAnswer[0] : question.correctAnswer;
+      const correct = correctAnswer?.toLowerCase() === inputValue.trim().toLowerCase();
       setIsCorrect(correct);
       setShowFeedback(true);
       
