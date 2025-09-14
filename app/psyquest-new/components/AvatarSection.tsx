@@ -4,11 +4,11 @@ import { motion } from "framer-motion";
 import { useDialogueStore } from "../stores/dialogueStore";
 
 export default function AvatarSection() {
-  const dialogues = useDialogueStore(state => state.dialogues);
-  const currentIndex = useDialogueStore(state => state.currentIndex);
+  const dialogues = useDialogueStore((state) => state.dialogues);
+  const currentIndex = useDialogueStore((state) => state.currentIndex);
 
   // Get current speaker (default to 'a' if no dialogue exists)
-  const currentSpeaker = dialogues[currentIndex]?.speaker || 'a';
+  const currentSpeaker = dialogues[currentIndex]?.speaker || "a";
 
   return (
     <motion.div
@@ -22,7 +22,7 @@ export default function AvatarSection() {
       }}
     >
       {/* Man Avatar - Speaker A */}
-      <motion.div 
+      <motion.div
         className="w-1/2 flex items-center justify-center relative"
         layoutId="man-avatar"
       >
@@ -32,7 +32,7 @@ export default function AvatarSection() {
           className="w-full h-auto object-contain"
           layoutId="man-image"
           animate={{
-            scale: currentSpeaker === 'a' ? 1.05 : 1,
+            scale: currentSpeaker === "a" ? 1.05 : 1,
           }}
           transition={{
             duration: 0.3,
@@ -42,7 +42,7 @@ export default function AvatarSection() {
       </motion.div>
 
       {/* Woman Avatar - Speaker B */}
-      <motion.div 
+      <motion.div
         className="w-1/2 flex items-center justify-center relative"
         layoutId="woman-avatar"
       >
@@ -52,7 +52,7 @@ export default function AvatarSection() {
           className="w-full h-auto object-contain"
           layoutId="woman-image"
           animate={{
-            scale: currentSpeaker === 'b' ? 1.05 : 1,
+            scale: currentSpeaker === "b" ? 1.05 : 1,
           }}
           transition={{
             duration: 0.3,

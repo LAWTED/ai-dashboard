@@ -6,7 +6,6 @@ import ProgressBar from "./ProgressBar";
 import DialogueSystem from "./DialogueSystem";
 import PlaybackControls from "./PlaybackControls";
 import AvatarSection from "./AvatarSection";
-import CompletionScreen from "./CompletionScreen";
 import { useDialogueStore, DialogueItem } from "../stores/dialogueStore";
 
 interface ResearchDeepDiveContentProps {
@@ -19,7 +18,6 @@ export default function ResearchDeepDiveContent({
   autoPlayInterval = 3500 
 }: ResearchDeepDiveContentProps) {
   const setDialogues = useDialogueStore(state => state.setDialogues);
-  const isCompleted = useDialogueStore(state => state.isCompleted);
 
   // Initialize dialogue data when component mounts
   useEffect(() => {
@@ -35,11 +33,6 @@ export default function ResearchDeepDiveContent({
       stopAutoPlay();
     };
   }, []);
-
-  // Show completion screen if dialogue is completed
-  if (isCompleted) {
-    return <CompletionScreen />;
-  }
 
   return (
     <motion.div

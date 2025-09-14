@@ -16,6 +16,7 @@ interface DialogueStore {
   autoPlayInterval: number;
   autoPlayTimer: NodeJS.Timeout | null;
   isCompleted: boolean;
+  showCompletion: boolean;
 
   // Actions
   setDialogues: (dialogues: DialogueItem[]) => void;
@@ -26,6 +27,7 @@ interface DialogueStore {
   reset: () => void;
   startAutoPlay: () => void;
   stopAutoPlay: () => void;
+  showCompletionScreen: () => void;
 
   // Computed getters
   getTotalSteps: () => number;
@@ -44,6 +46,7 @@ export const useDialogueStore = create<DialogueStore>((set, get) => ({
   autoPlayInterval: 3500,
   autoPlayTimer: null,
   isCompleted: false,
+  showCompletion: false,
 
   // Actions
   setDialogues: (dialogues: DialogueItem[]) => {
@@ -52,7 +55,8 @@ export const useDialogueStore = create<DialogueStore>((set, get) => ({
       currentIndex: 0,
       visibleDialogues: new Set([0]),
       isPlaying: false,
-      isCompleted: false
+      isCompleted: false,
+      showCompletion: false
     });
     get().stopAutoPlay();
   },
@@ -66,6 +70,11 @@ export const useDialogueStore = create<DialogueStore>((set, get) => ({
         currentIndex: newIndex,
         visibleDialogues: newVisibleDialogues
       });
+      
+      // Check if we've reached the end
+      if (newIndex === dialogues.length - 1) {
+        set({ isCompleted: true });
+      }
     }
   },
 
@@ -109,7 +118,8 @@ export const useDialogueStore = create<DialogueStore>((set, get) => ({
       currentIndex: 0,
       isPlaying: false,
       visibleDialogues: new Set([0]),
-      isCompleted: false
+      isCompleted: false,
+      showCompletion: false
     });
   },
 
@@ -136,6 +146,10 @@ export const useDialogueStore = create<DialogueStore>((set, get) => ({
       clearInterval(autoPlayTimer);
       set({ autoPlayTimer: null });
     }
+  },
+
+  showCompletionScreen: () => {
+    set({ showCompletion: true });
   },
 
   // Computed getters

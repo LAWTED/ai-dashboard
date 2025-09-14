@@ -61,7 +61,8 @@ export default function ResearchDeepDivePage() {
         }}
       >
         {/* Background with grayscale filter */}
-        <div
+        <motion.div
+          layoutId="background-room"
           className="absolute inset-0"
           style={{
             backgroundImage: "url('/psyquest-new/background-room.png')",
