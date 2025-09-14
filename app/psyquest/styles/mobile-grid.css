@@ -1,0 +1,164 @@
+/* 移动端专用的 Grid 样式 */
+
+.mobile-grid-container {
+  /* 基础网格容器 */
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.mobile-grid-item {
+  /* 网格项目基础样式 */
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 场景网格 - 16:9 移动端比例 */
+.scene-grid {
+  aspect-ratio: 9 / 16;
+  width: 100vw;
+  max-width: 100%;
+  height: 100vh;
+  max-height: 100%;
+}
+
+/* 按钮网格 */
+.button-grid {
+  width: 100%;
+  padding: 1rem;
+}
+
+.button-grid > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 学习路径网格 - Duolingo 风格 */
+.learning-path-grid {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.learning-step-item {
+  position: relative;
+  z-index: 10;
+}
+
+.learning-step-item.active {
+  /* 当前活跃步骤的样式 */
+  transform: scale(1.1);
+  z-index: 20;
+}
+
+.learning-step-item.completed {
+  /* 已完成步骤的样式 */
+  opacity: 0.8;
+}
+
+.connection-line {
+  /* 步骤间的连接线 */
+  position: absolute;
+  background: linear-gradient(to bottom, #4ade80, #22c55e);
+  border-radius: 1px;
+  transition: all 0.3s ease;
+}
+
+/* 移动端专用的层级系统 */
+.mobile-layer-background { z-index: 1; }
+.mobile-layer-decoration { z-index: 10; }
+.mobile-layer-characters { z-index: 20; }
+.mobile-layer-ui { z-index: 30; }
+.mobile-layer-modal { z-index: 40; }
+
+/* 游戏化元素样式 */
+.game-element {
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.game-element:hover {
+  transform: scale(1.05);
+}
+
+.game-element:active {
+  transform: scale(0.95);
+}
+
+/* 响应式工具类 - 只考虑移动端范围 */
+@media (max-width: 375px) {
+  /* 小屏手机 */
+  .mobile-grid-container {
+    font-size: 0.875rem;
+  }
+  
+  .button-grid {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+}
+
+@media (min-width: 376px) and (max-width: 414px) {
+  /* 标准手机 */
+  .mobile-grid-container {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 415px) {
+  /* 大屏手机 */
+  .mobile-grid-container {
+    font-size: 1.125rem;
+  }
+  
+  .button-grid {
+    padding: 1.25rem;
+  }
+}
+
+/* 动画效果 */
+@keyframes grid-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-grid-item.animate-in {
+  animation: grid-fade-in 0.3s ease-out forwards;
+}
+
+/* 图片适配 */
+.mobile-grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mobile-grid-item .character-img {
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.mobile-grid-item .decoration-img {
+  object-fit: contain;
+}
+
+/* 覆盖层样式 */
+.mobile-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  pointer-events: none;
+}
+
+.mobile-overlay > * {
+  pointer-events: auto;
+}
