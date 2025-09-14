@@ -22,6 +22,7 @@ export default {
     extend: {
       fontFamily: {
         'comic-neue': ['var(--font-comic-neue)', 'cursive'],
+        'urbanist': ['var(--font-urbanist)', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
