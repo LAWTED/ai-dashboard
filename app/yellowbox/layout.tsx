@@ -2,7 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { YellowBoxProviders } from "@/contexts/yellowbox-providers";
 import { useYellowBoxAuth } from "@/contexts/yellowbox-auth-context";
 import { useYellowBoxUI } from "@/contexts/yellowbox-ui-context";
@@ -124,6 +125,23 @@ function SharedSidebar() {
           </motion.div>
         </AnimatePresence>
       </Button>
+
+      {/* Template Center Button */}
+      <Link href="/yellowbox/templates">
+        <Button
+          className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-2 md:mb-3 p-0 h-auto bg-transparent border-none"
+          title="模板中心"
+          variant="ghost"
+        >
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="p-1"
+          >
+            <Sparkles className="!w-4 !h-4 md:!w-5 md:!h-5" />
+          </motion.div>
+        </Button>
+      </Link>
 
       {/* Logout button */}
       <Button

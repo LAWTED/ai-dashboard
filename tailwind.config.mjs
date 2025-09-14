@@ -22,6 +22,9 @@ export default {
     extend: {
       fontFamily: {
         'comic-neue': ['var(--font-comic-neue)', 'cursive'],
+        'urbanist': ['var(--font-urbanist)', 'sans-serif'],
+        'gurajada': ['var(--font-gurajada)', 'serif'],
+        'inspiration': ['var(--font-inspiration)', 'cursive'],
       },
       colors: {
         border: "hsl(var(--border))",

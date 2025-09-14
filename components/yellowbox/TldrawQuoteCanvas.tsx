@@ -3,9 +3,9 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Heart, Sparkles } from "lucide-react";
+import { ArrowLeft, Download, Heart, Sparkles, Save } from "lucide-react";
 import { TemplateSelector } from "./TemplateSelector";
-import { DiaryContent } from "@/lib/yellowbox/templates/template-processor";
+import { DiaryContent } from "@/lib/yellowbox/types/template";
 import {
   Tldraw,
   Editor,
@@ -59,7 +59,7 @@ const EMOJI_LIST = [
 ];
 
 
-// Custom Sticker Tool
+// 自定义贴纸工具
 class StickerTool extends StateNode {
   static override id = 'sticker'
   static override initial = 'idle'
@@ -71,7 +71,7 @@ class StickerTool extends StateNode {
   override onPointerDown() {
     const { currentPagePoint } = this.editor.inputs
 
-    // Add a random emoji sticker
+    // 添加随机表情贴纸
     const randomEmoji = EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)]
 
     const shapeId = createShapeId()
@@ -89,7 +89,7 @@ class StickerTool extends StateNode {
       },
     })
 
-    // Return to select tool after placing sticker
+    // 放置贴纸后返回选择工具
     this.editor.setCurrentTool('select')
   }
 
@@ -103,7 +103,7 @@ class StickerTool extends StateNode {
 }
 
 
-// UI Overrides to add sticker tool
+// UI覆盖以添加贴纸工具
 const uiOverrides: TLUiOverrides = {
   tools(editor, tools) {
     tools.sticker = {
@@ -119,7 +119,7 @@ const uiOverrides: TLUiOverrides = {
   },
 }
 
-// Custom Toolbar Component
+// 自定义工具栏组件
 const CustomToolbar = (props: React.ComponentProps<typeof DefaultToolbar>) => {
   const tools = useTools()
   const isStickerSelected = useIsToolSelected(tools['sticker'])
@@ -136,10 +136,10 @@ const CustomToolbar = (props: React.ComponentProps<typeof DefaultToolbar>) => {
   )
 }
 
-// Components override - hide unnecessary UI elements but keep essential ones
+// 组件覆盖 - 隐藏不必要的UI元素但保留必要的
 const components: TLComponents = {
   Toolbar: CustomToolbar,
-  // Hide these UI elements
+  // 隐藏这些UI元素
   ActionsMenu: null,
   MainMenu: null,
   HelperButtons: null,
@@ -151,7 +151,7 @@ const components: TLComponents = {
   ZoomMenu: null,
   HelpMenu: null,
   SharePanel: null,
-  // Keep StylePanel, context menu and QuickActions by not defining them (use default components)
+  // 通过不定义StylePanel、上下文菜单和QuickActions来保留它们（使用默认组件）
 }
 
 
@@ -167,6 +167,7 @@ export default function TldrawQuoteCanvas({
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
   const { t } = useYellowBoxI18n();
+
 
 
 
@@ -506,93 +507,77 @@ export default function TldrawQuoteCanvas({
     setHasInitializedContent(true);
   }, [editor, entry, hasInitializedContent, createSmartLayout]);
 
-  // 自动保存功能
-  const autoSave = useCallback(() => {
+  // 手动保存功能（移除自动保存减少性能压力）
+  const manualSave = useCallback(() => {
     if (!editor || !entry) return;
 
     try {
       const canvasData = getSnapshot(editor.store);
       const storageKey = `tldraw-quote-${entry.id}`;
 
-      // Safe localStorage save with quota handling
-      try {
-        localStorage.setItem(storageKey, JSON.stringify({
-          data: canvasData,
-          timestamp: Date.now(),
-          entryId: entry.id
-        }));
-      } catch (quotaError) {
-        if (quotaError instanceof DOMException && quotaError.name === 'QuotaExceededError') {
-          console.warn('localStorage quota exceeded, cleaning up all old data');
-          
-          // More aggressive cleanup - remove ALL tldraw data except current
-          const keys = Object.keys(localStorage).filter(key => 
-            key.startsWith('tldraw-quote-') && key !== storageKey
-          );
-          
-          // Remove ALL old entries
-          keys.forEach(key => localStorage.removeItem(key));
-          
-          // Also try to clean up any other large localStorage items
-          try {
-            cleanupLocalStorage();
-          } catch (cleanupError) {
-            console.warn('Failed to run additional cleanup:', cleanupError);
-          }
-          
-          // Try saving again with minimal data
-          try {
-            // Save with minimal snapshot to reduce size
-            const minimalData = {
-              data: canvasData,
-              timestamp: Date.now(),
-              entryId: entry.id
-            };
-            
-            localStorage.setItem(storageKey, JSON.stringify(minimalData));
-          } catch (retryError) {
-            console.error('Failed to save after aggressive cleanup:', retryError);
-            toast.error(
-              language === 'zh' 
-                ? '存储空间不足，请重新打开页面' 
-                : 'Storage quota exceeded, please refresh the page'
-            );
-          }
-        } else {
-          throw quotaError;
-        }
-      }
-
-      console.log('Auto-saved canvas state');
+      // 简化的保存逻辑
+      const saveData = {
+        data: canvasData,
+        timestamp: Date.now(),
+        entryId: entry.id
+      };
+      
+      localStorage.setItem(storageKey, JSON.stringify(saveData));
+      console.log('Manually saved canvas state');
     } catch (error) {
-      console.error('Auto-save failed:', error);
+      console.error('Manual save failed:', error);
+      // 清理并重试一次
+      try {
+        cleanupLocalStorage();
+        const canvasData = getSnapshot(editor.store);
+        const storageKey = `tldraw-quote-${entry.id}`;
+        localStorage.setItem(storageKey, JSON.stringify({ data: canvasData, timestamp: Date.now(), entryId: entry.id }));
+      } catch {
+        toast.error(language === 'zh' ? '保存失败，请重试' : 'Save failed, please retry');
+      }
     }
   }, [editor, entry, language]);
 
-  // 监听画布变化并自动保存
+  /**
+   * 性能优化：移除自动保存监听，改为手动保存
+   * 
+   * 原因：
+   * 1. 自动保存会在每次 Tldraw store 变化时触发，频率过高
+   * 2. localStorage.setItem 是同步操作，会阻塞主线程
+   * 3. JSON.stringify(大型canvas数据) 消耗大量CPU资源
+   * 4. 频繁的存储操作可能触发浏览器配额限制
+   * 
+   * 现在的方案：
+   * - 监听变化仅用于显示"未保存"状态提示
+   * - 用户主动保存：Ctrl+S 快捷键或点击保存按钮
+   * - 减少不必要的性能开销，提升用户体验
+   */
+  
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // 监听变化以显示未保存状态
   useEffect(() => {
     if (!editor || !hasInitializedContent) return;
 
-    let saveTimeout: NodeJS.Timeout;
+    let debounceTimeout: NodeJS.Timeout;
 
     const handleChange = () => {
-      clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(() => {
-        autoSave();
-      }, 2000);
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        setHasUnsavedChanges(true);
+      }, 1000); // 防抖 1 秒
     };
 
-    // 监听历史变化事件
     const cleanup = editor.store.listen(handleChange, {
       source: 'user',
       scope: 'document'
     });
 
     return () => {
-      clearTimeout(saveTimeout);
+      clearTimeout(debounceTimeout);
       cleanup();
     };
-  }, [editor, hasInitializedContent, autoSave]);
+  }, [editor, hasInitializedContent]);
 
   // 当 Design Quote 画布打开且编辑器准备好时，自动加载内容
   useEffect(() => {
@@ -640,6 +625,29 @@ export default function TldrawQuoteCanvas({
         <div className="relative h-screen">
           {/* 右下角控制面板 - 模仿 yellowbox layout 样式 */}
           <div className="absolute right-0 bottom-12 w-10 md:w-12 bg-yellow-400 rounded-l-lg flex flex-col items-center py-2 md:py-4 z-20">
+            {/* 手动保存按钮 */}
+            <Button
+              onClick={() => {
+                manualSave();
+                setHasUnsavedChanges(false);
+              }}
+              className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-2 md:mb-3 p-0 h-auto bg-transparent border-none"
+              title={language === 'zh' ? (
+                hasUnsavedChanges ? '有未保存更改 - 点击保存 (Ctrl+S)' : '已保存'
+              ) : (
+                hasUnsavedChanges ? 'Unsaved changes - Click to save (Ctrl+S)' : 'Saved'
+              )}
+              variant="ghost"
+            >
+              <motion.div
+                whileTap={{ scale: 1.2 }}
+                transition={{ duration: 0.1 }}
+                className={hasUnsavedChanges ? 'animate-pulse' : ''}
+              >
+                <Save className={`w-4 h-4 md:w-5 md:h-5 ${hasUnsavedChanges ? 'text-yellow-600' : 'text-green-600'}`} />
+              </motion.div>
+            </Button>
+
             {/* 导出按钮 */}
             <Button
               onClick={async () => {
@@ -816,6 +824,12 @@ export default function TldrawQuoteCanvas({
                     return;
                   }
                   
+                  // Ctrl/Cmd + S: 保存
+                  if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+                    e.preventDefault();
+                    manualSave();
+                    setHasUnsavedChanges(false);
+                  }
                   // Ctrl/Cmd + Z: 撤销
                   if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
                     e.preventDefault();
@@ -834,11 +848,11 @@ export default function TldrawQuoteCanvas({
                   // 移除自定义删除逻辑，让 Tldraw 自己处理
                 };
 
-                document.addEventListener('keydown', handleKeyDown);
+                document.addEventListener('keydown', handleKeyDown, false);
 
                 // 清理事件监听器
                 return () => {
-                  document.removeEventListener('keydown', handleKeyDown);
+                  document.removeEventListener('keydown', handleKeyDown, false);
                 };
               }}
               persistenceKey={`quote-canvas-${entry.id}`}
@@ -905,12 +919,7 @@ export default function TldrawQuoteCanvas({
         editor.deleteShapes(editor.getSelectedShapeIds());
         
         // Load the new template with generated content
-        // The modifiedSnapshot contains the full template structure, we need the data part
-        if (result.modifiedSnapshot?.data) {
-          loadSnapshot(editor.store, result.modifiedSnapshot.data);
-        } else {
-          throw new Error('Invalid template snapshot format');
-        }
+        loadSnapshot(editor.store, result.modifiedSnapshot);
         
         // Zoom to fit the new content
         setTimeout(() => {
