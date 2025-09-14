@@ -1,5 +1,5 @@
 import "./globals.css";
-import { Urbanist, Gurajada } from "next/font/google";
+import { Urbanist, Gurajada, Inspiration } from "next/font/google";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -13,13 +13,19 @@ const gurajada = Gurajada({
   variable: "--font-gurajada",
 });
 
+const inspiration = Inspiration({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-inspiration",
+});
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`bg-background ${urbanist.variable} ${gurajada.variable}`}>
+    <html lang="en" className={`bg-background ${urbanist.variable} ${gurajada.variable} ${inspiration.variable}`}>
       <body
         className="bg-background"
         style={{ fontFamily: urbanist.style.fontFamily }}

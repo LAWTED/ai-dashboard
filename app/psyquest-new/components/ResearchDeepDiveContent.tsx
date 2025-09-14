@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import ProgressBar from "./ProgressBar";
 import DialogueSystem from "./DialogueSystem";
@@ -18,6 +18,7 @@ export default function ResearchDeepDiveContent({
   autoPlayInterval = 3500 
 }: ResearchDeepDiveContentProps) {
   const setDialogues = useDialogueStore(state => state.setDialogues);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Initialize dialogue data when component mounts
   useEffect(() => {
@@ -25,6 +26,21 @@ export default function ResearchDeepDiveContent({
       setDialogues(dialogues);
     }
   }, [dialogues, setDialogues]);
+
+  // Control audio playback based on play state
+  const { isPlaying } = useDialogueStore();
+  
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch((error) => {
+          console.log("Audio play failed:", error);
+        });
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -89,6 +105,15 @@ export default function ResearchDeepDiveContent({
 
       {/* Playback Controls */}
       <PlaybackControls />
+
+      {/* Hidden audio element for background narration */}
+      <audio
+        ref={audioRef}
+        src="/psyquest-new/short-clip.wav"
+        loop
+        preload="auto"
+        style={{ display: 'none' }}
+      />
     </motion.div>
   );
 }

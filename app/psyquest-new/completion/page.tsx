@@ -1,9 +1,15 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function CompletionPage() {
   const prefersReducedMotion = useReducedMotion();
+  const router = useRouter();
+
+  const handleNextStep = () => {
+    router.push('/psyquest-new/quiz/q1'); // 跳转到第一个问题
+  };
 
   return (
     <>
@@ -170,6 +176,7 @@ export default function CompletionPage() {
 
           {/* Next Step Button */}
           <motion.button
+            onClick={handleNextStep}
             className="flex items-center justify-center"
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
