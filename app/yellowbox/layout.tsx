@@ -170,7 +170,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <motion.div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('/room.png')",
+          backgroundImage: "url('/new-yellowbox-bg.jpg')",
         }}
         initial={false} // Prevent re-animation on navigation
         animate={{ opacity: 1 }}
