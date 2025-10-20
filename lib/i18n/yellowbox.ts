@@ -415,12 +415,11 @@ export function getYellowboxLanguage(): Language {
 
   const savedLang = localStorage.getItem('yellowbox-language') as Language;
 
-  // If user hasn't manually set language before, use browser language preference
+  // If user hasn't manually set language before, default to English
   if (!savedLang) {
-    const browserLang = getBrowserLanguage();
-    // Auto-save detected language preference
-    localStorage.setItem('yellowbox-language', browserLang);
-    return browserLang;
+    // Set default language to English
+    localStorage.setItem('yellowbox-language', 'en');
+    return 'en';
   }
 
   return savedLang;
