@@ -923,18 +923,20 @@ export default function TldrawQuoteCanvas({
           }
 
           // Create shapes from the modified snapshot
-          const shapesToCreate = [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const shapesToCreate: any[] = [];
           for (const record of Object.values(result.modifiedSnapshot.store)) {
             // Skip non-shape records
             if (!record || typeof record !== 'object') continue;
-            if (record.typeName !== 'shape') continue;
+            if ('typeName' in record && record.typeName !== 'shape') continue;
 
             shapesToCreate.push(record);
           }
 
           // Create all shapes
           if (shapesToCreate.length > 0) {
-            editor.createShapes(shapesToCreate);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            editor.createShapes(shapesToCreate as any);
           }
 
           // Zoom to fit the new content

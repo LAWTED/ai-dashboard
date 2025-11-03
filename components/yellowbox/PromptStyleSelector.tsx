@@ -99,7 +99,7 @@ export function PromptStyleSelector({
 
   // Get current prompt text for pre-filling custom dialog
   const getCurrentPromptText = () => {
-    let promptId = lastUsedPromptId || settings.defaultDiaryPromptId;
+    const promptId = lastUsedPromptId || settings.defaultDiaryPromptId;
     const prompt = getPromptById(promptId);
 
     if (!prompt?.diaryPrompt) return '';

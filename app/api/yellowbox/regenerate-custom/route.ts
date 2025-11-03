@@ -10,7 +10,10 @@ type ConversationMessage = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { customPrompt, conversationHistory } = await request.json();
+    const { customPrompt, conversationHistory } = await request.json() as {
+      customPrompt: string;
+      conversationHistory: ConversationMessage[];
+    };
 
     if (!customPrompt) {
       return NextResponse.json(

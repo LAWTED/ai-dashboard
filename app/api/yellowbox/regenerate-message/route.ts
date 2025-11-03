@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
       promptId,
       timeOfDay,
       conversationHistory,
-      selectedQuestion,
       conversationCount = 0,
     } = body;
 

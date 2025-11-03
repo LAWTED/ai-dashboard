@@ -83,6 +83,9 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.83.0
         version: 5.83.0(@tanstack/react-query@5.83.0(react@19.1.0))(react@19.1.0)
+      '@tldraw/tlschema':
+        specifier: ^4.1.2
+        version: 4.1.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
@@ -1720,8 +1723,16 @@ packages:
   '@tldraw/state@3.15.1':
     resolution: {integrity: sha512-+idRW1KmphL6POQCVYFDi0nJ30OU+YwD1eitVWc/vPVWrq1sZAnHPcH2JhB+8eky5fnSOh9Utx4/xOZdK37sWw==}
 
+  '@tldraw/state@4.1.2':
+    resolution: {integrity: sha512-yAJ40GyP/pwTRJdey9GFHP9Of+kF3sajU+k65EwGA4zQq4Wya7W5JhnPLDXFIm7W/MNGKkEw0Pv3KfMbez+w0A==}
+
   '@tldraw/store@3.15.1':
     resolution: {integrity: sha512-EbP0QXMlqZmTOD4j3hdyKo2kofzYPXDTVEXOngW48dSy/krvErDy04sx2DyMCZKxEqv6r/zR1hwzaxXr0ByGqQ==}
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+
+  '@tldraw/store@4.1.2':
+    resolution: {integrity: sha512-hSBN/yR+ueGOVDfTaJ9II1c9rGxZr85YT/+o6Y4+oDVqO12f8fRd8iP9/ozxPPgHKNw1wcEi/YBGwSzZW8Vvww==}
     peerDependencies:
       react: ^18.2.0 || ^19.0.0
 
@@ -1731,11 +1742,23 @@ packages:
       react: ^18.2.0 || ^19.0.0
       react-dom: ^18.2.0 || ^19.0.0
 
+  '@tldraw/tlschema@4.1.2':
+    resolution: {integrity: sha512-Jqxwb8KdavTfHC3BfvKZNPRe/Fx98SvoWQCJ/iIfqbaOB0ifqabaQtpJL0sRlkMPrqzNLeewxlB1Ft2wWZHr/A==}
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+      react-dom: ^18.2.0 || ^19.0.0
+
   '@tldraw/utils@3.15.1':
     resolution: {integrity: sha512-70W70qta3AtYEqzfi3KAUcW+tu55RER1qGCsaNrkBRLRn9LCl98PfWsrklSNjJ/smdm9riFDpMabYYvNRAbyjw==}
 
+  '@tldraw/utils@4.1.2':
+    resolution: {integrity: sha512-9GG9mA0OaVJgNSPkObypWIhRJvCcyH905ynwfZz6g2ott1MCCZC0CWtj5pRIg98lV3eQlem1sQxSX8L8Go0ilg==}
+
   '@tldraw/validate@3.15.1':
     resolution: {integrity: sha512-4r4/E7tHrPQ4T4cF7vQjJecyCI1GDHA+wLdkW+XEtCUd04SX/rbee5iqHFhW4NU6gpvGLAxxaLxeVQh/5rhqfQ==}
+
+  '@tldraw/validate@4.1.2':
+    resolution: {integrity: sha512-SqaCVkm2T2E9WtF9LeYs2/aLVdd0FitL1+4UM9WuzhR524A2eDvM8P4a7PNaApNUAfVmbTJnZ2eJRHDH6QyRAA==}
 
   '@tybys/wasm-util@0.9.0':
     resolution: {integrity: sha512-6+7nlbMVX/PVDCwaIQ8nTOPveOcFLSt8GcXdx8hD0bt39uWxYT88uXzqTd4fTvqta7oeUJqudepapKNt2DYJFw==}
@@ -2629,6 +2652,10 @@ packages:
   fractional-indexing-jittered@1.0.0:
     resolution: {integrity: sha512-0tLU0FOedVY7lrvN4LK0DVj6FTuYM0pWDpN97/8UTZE2lx1+OwX8+2uL7IOWc2PmktYTHQjMT6FvZZ3SGCdZdg==}
 
+  fractional-indexing@3.2.0:
+    resolution: {integrity: sha512-PcOxmqwYCW7O2ovKRU8OoQQj2yqTfEB/yeTYk4gPid6dN5ODRfU1hXd9tTVZzax/0NkO7AxpHykvZnT1aYp/BQ==}
+    engines: {node: ^14.13.1 || >=16.0.0}
+
   framer-motion@12.17.3:
     resolution: {integrity: sha512-+1GMxQvZGUu20clzYdUWQY+iUWGBFc6UmpxvZBJjWu++rPdj7imXcQITzVs+QLKyjOpLoPOOar2KAOeYL88YQg==}
     peerDependencies:
@@ -2925,6 +2952,10 @@ packages:
   jiti@2.4.2:
     resolution: {integrity: sha512-rg9zJN+G4n2nfJl5MW3BMygZX56zKPNVEYYqq7adpmMh4Jn2QNEwhvQlFy6jPVdcod7txZtKHWnyZiA3a0zP7A==}
     hasBin: true
+
+  jittered-fractional-indexing@1.0.0:
+    resolution: {integrity: sha512-sCFp83Upn1UzNgqSpWabWfkFtBwIjH+QyyJxLCGRamsIwOCs0Fx0yYxva9/NYV/iMLlUN3/xZY8/ZdYIwIlJ5g==}
+    engines: {node: '>=18.0.0'}
 
   jose@4.15.9:
     resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
@@ -5756,10 +5787,20 @@ snapshots:
     dependencies:
       '@tldraw/utils': 3.15.1
 
+  '@tldraw/state@4.1.2':
+    dependencies:
+      '@tldraw/utils': 4.1.2
+
   '@tldraw/store@3.15.1(react@19.1.0)':
     dependencies:
       '@tldraw/state': 3.15.1
       '@tldraw/utils': 3.15.1
+      react: 19.1.0
+
+  '@tldraw/store@4.1.2(react@19.1.0)':
+    dependencies:
+      '@tldraw/state': 4.1.2
+      '@tldraw/utils': 4.1.2
       react: 19.1.0
 
   '@tldraw/tlschema@3.15.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
@@ -5771,6 +5812,15 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
+  '@tldraw/tlschema@4.1.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@tldraw/state': 4.1.2
+      '@tldraw/store': 4.1.2(react@19.1.0)
+      '@tldraw/utils': 4.1.2
+      '@tldraw/validate': 4.1.2
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
   '@tldraw/utils@3.15.1':
     dependencies:
       fractional-indexing-jittered: 1.0.0
@@ -5779,9 +5829,21 @@ snapshots:
       lodash.throttle: 4.1.1
       lodash.uniq: 4.5.0
 
+  '@tldraw/utils@4.1.2':
+    dependencies:
+      jittered-fractional-indexing: 1.0.0
+      lodash.isequal: 4.5.0
+      lodash.isequalwith: 4.4.0
+      lodash.throttle: 4.1.1
+      lodash.uniq: 4.5.0
+
   '@tldraw/validate@3.15.1':
     dependencies:
       '@tldraw/utils': 3.15.1
+
+  '@tldraw/validate@4.1.2':
+    dependencies:
+      '@tldraw/utils': 4.1.2
 
   '@tybys/wasm-util@0.9.0':
     dependencies:
@@ -6814,6 +6876,8 @@ snapshots:
 
   fractional-indexing-jittered@1.0.0: {}
 
+  fractional-indexing@3.2.0: {}
+
   framer-motion@12.17.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       motion-dom: 12.17.3
@@ -7130,6 +7194,10 @@ snapshots:
       set-function-name: 2.0.2
 
   jiti@2.4.2: {}
+
+  jittered-fractional-indexing@1.0.0:
+    dependencies:
+      fractional-indexing: 3.2.0
 
   jose@4.15.9: {}
 
