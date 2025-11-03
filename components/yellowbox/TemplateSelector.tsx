@@ -3,21 +3,23 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Loader2, 
-  Image, 
-  Type, 
   Sparkles, 
   X, 
   Check,
-  Star,
-  Clock
+  Star
 } from 'lucide-react';
-import { TemplateListItem, ApplyTemplateRequest, DiaryContent } from '@/lib/yellowbox/types/template';
-import { useYellowBoxI18n } from '@/contexts/yellowbox-i18n-context';
+import { ApplyTemplateRequest, DiaryContent } from '@/lib/yellowbox/template-types';
+
+interface TemplateListItem {
+  id: string;
+  name: string;
+  description: string;
+  previewUrl?: string;
+}
 
 interface TemplateSelectorProps {
   isOpen: boolean;
@@ -62,7 +64,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         `}
         onClick={disabled ? undefined : onSelect}
       >
-        {/* 选中指示器 */}
+        {/* Selection indicator */}
         <AnimatePresence>
           {isSelected && (
             <motion.div
@@ -76,26 +78,24 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           )}
         </AnimatePresence>
 
-        {/* 模板预览区域 */}
+        {/* Template preview area */}
         <div className="w-full h-24 bg-gradient-to-br from-yellow-100 via-orange-50 to-red-50 rounded-lg flex items-center justify-center mb-3 border border-yellow-200/50 overflow-hidden">
           <div className="text-center text-yellow-600/70">
             <Sparkles className="w-6 h-6 mx-auto mb-1" />
-            <span className="text-xs font-medium">模板预览</span>
+            <span className="text-xs font-medium">Template Preview</span>
           </div>
         </div>
 
-        {/* 模板信息 */}
+        {/* Template information */}
         <div className="space-y-2">
           <div className="flex items-start justify-between">
             <h3 className="font-semibold text-gray-800 text-sm line-clamp-1">
               {template.name}
             </h3>
-            {template.isBuiltin && (
-              <Badge variant="secondary" className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 border-yellow-200">
-                <Star className="w-3 h-3 mr-1" />
-                内置
-              </Badge>
-            )}
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 text-yellow-500" />
+              <span className="text-xs text-yellow-600 font-medium">Built-in</span>
+            </div>
           </div>
           
           {template.description && (
@@ -103,22 +103,6 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
               {template.description}
             </p>
           )}
-
-          {/* 统计信息 */}
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <Type className="w-3 h-3" />
-              <span>{template.stats.textShapes}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Image className="w-3 h-3" />
-              <span>{template.stats.imageShapes}</span>
-            </div>
-            <div className="flex items-center gap-1 ml-auto">
-              <Clock className="w-3 h-3" />
-              <span>{new Date(template.createdAt).toLocaleDateString()}</span>
-            </div>
-          </div>
         </div>
       </div>
     </motion.div>
@@ -136,9 +120,8 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { lang } = useYellowBoxI18n();
 
-  // 加载模板列表
+  // Load template list
   useEffect(() => {
     if (isOpen) {
       loadTemplates();
@@ -152,14 +135,14 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
       const response = await fetch('/api/yellowbox/templates');
       if (!response.ok) {
-        throw new Error('加载模板失败');
+        throw new Error('Failed to load templates');
       }
 
       const data = await response.json();
       setTemplates(data.templates || []);
     } catch (err) {
       console.error('Error loading templates:', err);
-      const errorMessage = err instanceof Error ? err.message : '加载模板失败';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load templates';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -177,7 +160,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     const request: ApplyTemplateRequest = {
       templateId: selectedTemplateId,
       diaryContent,
-      language: lang as 'zh' | 'en'
+      language: 'en'
     };
 
     await onApplyTemplate(request);
@@ -193,7 +176,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[85vh] p-0 bg-gradient-to-br from-yellow-50/95 via-orange-50/95 to-red-50/95 backdrop-blur-md border-yellow-200">
-        {/* 顶部标题栏 */}
+        {/* Header */}
         <div className="relative p-6 pb-4 border-b border-yellow-200/50">
           <div className="text-center">
             <motion.div 
@@ -204,10 +187,10 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
               <div className="w-10 h-10 bg-yellow-400/20 rounded-full flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-yellow-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-800">选择模板</h2>
+              <h2 className="text-xl font-bold text-gray-800">Choose a Template</h2>
             </motion.div>
             <p className="text-sm text-gray-600">
-              为您的日记选择一个精美的设计模板
+              Pick a beautiful layout for your journal entry.
             </p>
           </div>
           
@@ -223,7 +206,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           )}
         </div>
 
-        {/* 主要内容区域 */}
+        {/* Main content */}
         <div className="flex-1 p-6 pt-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
@@ -235,7 +218,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                 <div className="w-16 h-16 bg-yellow-100/80 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Loader2 className="w-8 h-8 animate-spin text-yellow-600" />
                 </div>
-                <p className="text-sm text-gray-600">正在加载精美模板...</p>
+                <p className="text-sm text-gray-600">Loading templates...</p>
               </motion.div>
             </div>
           ) : error ? (
@@ -250,7 +233,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                 </div>
                 <p className="text-sm text-red-600 mb-4">{error}</p>
                 <Button onClick={loadTemplates} variant="outline" size="sm" className="border-yellow-300 hover:bg-yellow-50">
-                  重新加载
+                  Try again
                 </Button>
               </motion.div>
             </div>
@@ -264,8 +247,8 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                 <div className="w-16 h-16 bg-yellow-100/80 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Sparkles className="w-8 h-8 text-yellow-600/60" />
                 </div>
-                <p className="text-sm text-gray-600 mb-2">暂无可用模板</p>
-                <p className="text-xs text-gray-500">即将为您提供更多精美模板</p>
+                <p className="text-sm text-gray-600 mb-2">No templates available yet</p>
+                <p className="text-xs text-gray-500">We are preparing more beautiful layouts for you.</p>
               </motion.div>
             </div>
           ) : (
@@ -289,7 +272,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                 </motion.div>
               </ScrollArea>
 
-              {/* 底部操作栏 */}
+              {/* Action bar */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -299,10 +282,10 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   {selectedTemplateId ? (
                     <span className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-green-600" />
-                      已选择模板，点击应用开始生成
+                      Template selected - click Apply to generate.
                     </span>
                   ) : (
-                    '请选择一个模板'
+                    "Please choose a template."
                   )}
                 </div>
 
@@ -313,7 +296,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                     disabled={isApplying}
                     className="border-yellow-300 hover:bg-yellow-50"
                   >
-                    取消
+                    Cancel
                   </Button>
                   <Button
                     onClick={handleApplyTemplate}
@@ -323,12 +306,12 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                     {isApplying ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        正在应用模板...
+                        Applying template...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4 mr-2" />
-                        应用模板
+                        Apply Template
                       </>
                     )}
                   </Button>

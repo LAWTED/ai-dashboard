@@ -23,7 +23,7 @@ import {
 import 'tldraw/tldraw.css';
 import { supabaseAssetStore } from "@/lib/yellowbox/tldraw-asset-store";
 
-import { TldrawSnapshot } from "@/lib/yellowbox/types/template";
+import { TldrawSnapshot } from "@/lib/yellowbox/template-types";
 
 interface TemplateCanvasProps {
   onSnapshotChange?: (snapshot: TldrawSnapshot) => void;
@@ -42,7 +42,7 @@ const EMOJI_LIST = [
   "🎉", "🎊", "🎈", "🎁", "🎀", "🎯", "🎨", "🎭", "🎪", "🎵"
 ];
 
-// 模板专用贴纸工具
+// Template-specific sticker tool
 class TemplateStickerTool extends StateNode {
   static override id = 'template-sticker'
   static override initial = 'idle'
@@ -54,7 +54,7 @@ class TemplateStickerTool extends StateNode {
   override onPointerDown() {
     const { currentPagePoint } = this.editor.inputs
 
-    // 添加随机表情贴纸
+    // Add a random emoji sticker
     const randomEmoji = EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)]
 
     const shapeId = createShapeId()
@@ -72,7 +72,7 @@ class TemplateStickerTool extends StateNode {
       },
     })
 
-    // 放置贴纸后返回选择工具
+    // Return to the select tool once placed
     this.editor.setCurrentTool('select')
   }
 
@@ -85,13 +85,13 @@ class TemplateStickerTool extends StateNode {
   }
 }
 
-// 模板模式的 UI 覆盖
+// UI overrides used in template mode
 const templateUiOverrides: TLUiOverrides = {
   tools(editor, tools) {
     tools['template-sticker'] = {
       id: 'template-sticker',
       icon: 'heart-icon',
-      label: '贴纸',
+      label: 'Stickers',
       kbd: 's',
       onSelect: () => {
         editor.setCurrentTool('template-sticker')
@@ -101,7 +101,7 @@ const templateUiOverrides: TLUiOverrides = {
   },
 }
 
-// 模板专用工具栏
+// Template toolbar
 const TemplateToolbar = (props: React.ComponentProps<typeof DefaultToolbar>) => {
   const tools = useTools()
   const isStickerSelected = useIsToolSelected(tools['template-sticker'])
@@ -118,10 +118,10 @@ const TemplateToolbar = (props: React.ComponentProps<typeof DefaultToolbar>) => 
   )
 }
 
-// 模板模式的组件覆盖
+// Component overrides for template mode
 const templateComponents: TLComponents = {
   Toolbar: TemplateToolbar,
-  // 隐藏不必要的UI元素，提供更清洁的模板设计体验
+  // Hide extraneous UI for a cleaner design surface
   ActionsMenu: null,
   MainMenu: null,
   HelperButtons: null,
@@ -142,7 +142,7 @@ export function TemplateCanvas({
 }: TemplateCanvasProps) {
   const [editor, setEditor] = useState<Editor | null>(null);
 
-  // 监听画布变化并通知父组件
+  // Watch canvas changes and notify the parent component
   const handleSnapshot = useCallback(() => {
     if (!editor) return;
     
@@ -151,14 +151,14 @@ export function TemplateCanvas({
     onSnapshotChange?.(templateSnapshot);
   }, [editor, onSnapshotChange]);
 
-  // 设置编辑器变化监听
+  // Set up listeners for editor changes
   useEffect(() => {
     if (!editor) return;
 
     let debounceTimeout: NodeJS.Timeout;
 
     const handleChange = () => {
-      // 使用防抖来减少频繁调用
+      // Debounce updates to avoid excessive calls
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
       }
@@ -167,7 +167,7 @@ export function TemplateCanvas({
       }, 1000);
     };
 
-    // 监听 store 变化
+    // Subscribe to store changes
     const unsubscribe = editor.store.listen(handleChange);
 
     return () => {
@@ -180,7 +180,7 @@ export function TemplateCanvas({
 
   return (
     <div className="relative w-full h-full bg-black">
-      {/* 背景图片 */}
+      {/* Background image */}
       <motion.div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
@@ -190,7 +190,7 @@ export function TemplateCanvas({
         animate={{ opacity: 1 }}
       />
 
-      {/* 模板设计说明浮层 */}
+      {/* Template guidance panel */}
       <div className="absolute top-4 left-4 z-20">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -198,23 +198,23 @@ export function TemplateCanvas({
           className="bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-yellow-200 max-w-xs"
         >
           <h4 className="font-medium text-gray-900 mb-1">
-            {templateName ? `编辑: ${templateName}` : '模板设计模式'}
+            {templateName ? `Editing: ${templateName}` : 'Template Design Mode'}
           </h4>
           <p className="text-sm text-gray-600 mb-2">
-            在这里设计您的模板布局。添加的文本将在应用模板时被 AI 替换为个性化内容。
+            Design your template layout here. Any text you add will be personalized by AI when applied.
           </p>
         </motion.div>
       </div>
 
-      {/* 右下角控制面板 - 模仿 yellowbox layout 样式 */}
+      {/* Bottom-right control panel styled like YellowBox layout */}
       <div className="absolute right-0 bottom-12 w-10 md:w-12 bg-yellow-400 rounded-l-lg flex flex-col items-center py-2 md:py-4 z-20">
-        {/* 保存按钮 */}
+        {/* Save button */}
         {showSaveButton && onSave && (
           <Button
             onClick={onSave}
             className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-2 md:mb-3 p-0 h-auto bg-transparent border-none"
             disabled={isSaving}
-            title={isSaving ? '保存中...' : '保存模板'}
+            title={isSaving ? 'Saving...' : 'Save template'}
             variant="ghost"
           >
             <motion.div
@@ -230,12 +230,12 @@ export function TemplateCanvas({
           </Button>
         )}
         
-        {/* 返回按钮 */}
+        {/* Back button */}
         {onBack && (
           <Button
             onClick={onBack}
             className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity p-0 h-auto bg-transparent border-none"
-            title="返回模板中心"
+            title="Back to template hub"
             variant="ghost"
           >
             <motion.div
@@ -248,9 +248,9 @@ export function TemplateCanvas({
         )}
       </div>
 
-      {/* tldraw 画布区域 - 全屏 */}
+      {/* Fullscreen tldraw canvas */}
       <div className="absolute inset-0 bg-gray-100 rounded-lg overflow-hidden">
-        {/* 信纸背景层 - 最底层 */}
+        {/* Stationery-style background layer */}
         <div
           className="absolute inset-0 bg-white rounded-lg"
           style={{
@@ -265,7 +265,7 @@ export function TemplateCanvas({
             zIndex: 1,
           }}
         >
-          {/* 信纸装订孔 */}
+          {/* Notebook binding holes */}
           <div className="absolute left-6 top-0 bottom-0 w-px bg-red-300 opacity-60" />
           <div className="absolute left-4 space-y-12 top-8">
             {Array.from({ length: 20 }).map((_, i) => (
@@ -277,7 +277,7 @@ export function TemplateCanvas({
           </div>
         </div>
 
-        {/* tldraw 画布层 - 在背景之上 */}
+        {/* tldraw canvas layer above the background */}
         <div
           className="relative w-full h-full tldraw-container rounded-lg overflow-hidden"
           style={{ zIndex: 2 }}
@@ -291,35 +291,35 @@ export function TemplateCanvas({
             onMount={(editor: Editor) => {
               setEditor(editor);
               
-              // 设置画布为透明背景，启用网格
+              // Configure the canvas with a transparent background and grid
               editor.updateInstanceState({
                 isDebugMode: false,
                 isGridMode: true,
               });
 
-              // 初始化时触发一次快照更新，使用统一格式
+              // Trigger a snapshot update after mount
               setTimeout(() => {
                 handleSnapshot();
               }, 100);
 
-              // 添加键盘快捷键
+              // Keyboard shortcuts
               const handleKeyDown = (e: KeyboardEvent) => {
-                // 只在画布获得焦点时处理快捷键
+                // Only respond when the canvas is focused
                 if (!document.activeElement?.closest('.tldraw-container')) {
                   return;
                 }
                 
-                // Ctrl/Cmd + Z: 撤销
+                // Ctrl/Cmd + Z: Undo
                 if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
                   e.preventDefault();
                   editor.undo();
                 }
-                // Ctrl/Cmd + Shift + Z: 重做
+                // Ctrl/Cmd + Shift + Z: Redo
                 if ((e.metaKey || e.ctrlKey) && e.key === 'z' && e.shiftKey) {
                   e.preventDefault();
                   editor.redo();
                 }
-                // Ctrl/Cmd + A: 全选
+                // Ctrl/Cmd + A: Select all
                 if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
                   e.preventDefault();
                   editor.selectAll();
@@ -328,7 +328,7 @@ export function TemplateCanvas({
 
               document.addEventListener('keydown', handleKeyDown, false);
 
-              // 清理事件监听器
+              // Clean up listeners on unmount
               return () => {
                 document.removeEventListener('keydown', handleKeyDown, false);
               };

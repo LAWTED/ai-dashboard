@@ -130,7 +130,7 @@ function SharedSidebar() {
       <Link href="/yellowbox/templates">
         <Button
           className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-2 md:mb-3 p-0 h-auto bg-transparent border-none"
-          title="模板中心"
+          title="Template Hub"
           variant="ghost"
         >
           <motion.div

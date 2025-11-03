@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TemplateStorage } from '@/lib/yellowbox/template-storage';
 import { TemplateEngine } from '@/lib/yellowbox/template-engine';
-import { ApplyTemplateRequest } from '@/lib/yellowbox/types/template';
+import { getTemplateById } from '@/lib/yellowbox/templates';
+import { ApplyTemplateRequest } from '@/lib/yellowbox/template-types';
 
 /**
  * POST /api/yellowbox/apply-template
@@ -12,56 +12,50 @@ export async function POST(request: NextRequest) {
     const body: ApplyTemplateRequest = await request.json();
     const { templateId, diaryContent, language = 'zh' } = body;
 
-    // 验证请求数据
     if (!templateId) {
       return NextResponse.json(
-        { error: '模板ID不能为空' },
+        { error: 'Template ID is required' },
         { status: 400 }
       );
     }
 
     if (!diaryContent) {
       return NextResponse.json(
-        { error: '日记内容不能为空' },
+        { error: 'Diary content is required' },
         { status: 400 }
       );
     }
 
-    // 验证日记内容格式
     if (!diaryContent.conversationHistory || !Array.isArray(diaryContent.conversationHistory)) {
       return NextResponse.json(
-        { error: '无效的日记内容格式' },
+        { error: 'Invalid diary content format' },
         { status: 400 }
       );
     }
 
-    // 检查是否有内容可处理
     const hasContent = diaryContent.conversationHistory.length > 0 || 
                       diaryContent.summary || 
                       diaryContent.selectedQuestion;
 
     if (!hasContent) {
       return NextResponse.json(
-        { error: '日记中没有找到可处理的内容' },
+        { error: 'No processable diary content found' },
         { status: 400 }
       );
     }
 
-    console.log(`应用模板 ${templateId}，包含 ${diaryContent.conversationHistory.length} 条对话`);
+    console.log(`Applying template ${templateId} with ${diaryContent.conversationHistory.length} conversation entries.`);
 
-    // 获取模板
-    const templateResult = await TemplateStorage.getTemplate(templateId);
-    if (!templateResult.success || !templateResult.data) {
+    const template = getTemplateById(templateId);
+    if (!template) {
       return NextResponse.json(
-        { error: templateResult.error || '模板不存在' },
+        { error: 'Template not found' },
         { status: 404 }
       );
     }
 
-    const template = templateResult.data;
-    console.log(`找到模板: ${template.name}`);
+    console.log(`Found template: ${template.name}`);
 
-    // 应用模板
     const applicationResult = await TemplateEngine.applyTemplate(
       template,
       diaryContent,
@@ -70,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     if (!applicationResult.success) {
       return NextResponse.json(
-        { error: applicationResult.error || '应用模板失败' },
+        { error: applicationResult.error || 'Failed to apply template' },
         { status: 500 }
       );
     }
@@ -78,8 +72,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       templateId,
+      templateName: template.name,
       modifiedSnapshot: applicationResult.modifiedSnapshot,
-      metadata: applicationResult.metadata,
+      replacedCount: applicationResult.replacedCount,
       processingInfo: {
         language,
         contentLength: diaryContent.conversationHistory.reduce(
@@ -91,7 +86,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Apply template error:', error);
     return NextResponse.json(
-      { error: '应用模板时发生错误' },
+      { error: 'An error occurred while applying the template' },
       { status: 500 }
     );
   }

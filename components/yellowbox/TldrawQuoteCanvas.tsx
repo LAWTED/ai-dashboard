@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Heart, Sparkles, Save } from "lucide-react";
 import { TemplateSelector } from "./TemplateSelector";
-import { DiaryContent, ApplyTemplateRequest } from "@/lib/yellowbox/types/template";
+import { DiaryContent, ApplyTemplateRequest } from "@/lib/yellowbox/template-types";
 import {
   Tldraw,
   Editor,
@@ -533,7 +533,7 @@ export default function TldrawQuoteCanvas({
         const storageKey = `tldraw-quote-${entry.id}`;
         localStorage.setItem(storageKey, JSON.stringify({ data: canvasData, timestamp: Date.now(), entryId: entry.id }));
       } catch {
-        toast.error(language === 'zh' ? '保存失败，请重试' : 'Save failed, please retry');
+        toast.error('Save failed, please retry.');
       }
     }
   }, [editor, entry, language]);
@@ -623,20 +623,16 @@ export default function TldrawQuoteCanvas({
         }}
       >
         <div className="relative h-screen">
-          {/* 右下角控制面板 - 模仿 yellowbox layout 样式 */}
+          {/* Bottom-right control panel styled like YellowBox layout */}
           <div className="absolute right-0 bottom-12 w-10 md:w-12 bg-yellow-400 rounded-l-lg flex flex-col items-center py-2 md:py-4 z-20">
-            {/* 手动保存按钮 */}
+            {/* Manual save button */}
             <Button
               onClick={() => {
                 manualSave();
                 setHasUnsavedChanges(false);
               }}
               className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-2 md:mb-3 p-0 h-auto bg-transparent border-none"
-              title={language === 'zh' ? (
-                hasUnsavedChanges ? '有未保存更改 - 点击保存 (Ctrl+S)' : '已保存'
-              ) : (
-                hasUnsavedChanges ? 'Unsaved changes - Click to save (Ctrl+S)' : 'Saved'
-              )}
+              title={hasUnsavedChanges ? 'Unsaved changes - press Save (Ctrl+S)' : 'Saved'}
               variant="ghost"
             >
               <motion.div
@@ -648,49 +644,49 @@ export default function TldrawQuoteCanvas({
               </motion.div>
             </Button>
 
-            {/* 导出按钮 */}
+            {/* Export button */}
             <Button
               onClick={async () => {
                 if (!editor) return;
 
                 setIsExporting(true);
                 try {
-                  // 导出为 PNG
+                  // Export as PNG
                   const ids = editor.getCurrentPageShapeIds();
                   if (ids.size === 0) {
-                    alert(language === 'zh' ? '画布为空，没有内容可导出' : 'Canvas is empty, nothing to export');
+                    alert('Canvas is empty, nothing to export.');
                     return;
                   }
 
-                  // 获取 SVG 数据
+                  // Retrieve SVG data
                   const svgResult = await editor.getSvgString(Array.from(ids), {
                     background: true,
                     bounds: editor.getSelectionPageBounds() || editor.getCurrentPageBounds(),
                     padding: 16,
-                    scale: 2 // 高质量导出
+                    scale: 2 // High quality export
                   });
 
                   if (svgResult) {
-                    // 使用 data URL 创建 canvas，避免 CORS 问题
+                    // Create canvas via data URL to avoid CORS issues
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     const img = new Image();
 
-                    // 设置 crossOrigin 属性避免污染 canvas
+                    // Ensure crossOrigin keeps the canvas clean
                     img.crossOrigin = 'anonymous';
 
                     img.onload = () => {
                       canvas.width = img.naturalWidth;
                       canvas.height = img.naturalHeight;
 
-                      // 白色背景
+                      // Paint white background
                       if (ctx) {
                         ctx.fillStyle = '#ffffff';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         ctx.drawImage(img, 0, 0);
                       }
 
-                      // 下载 PNG
+                      // Trigger PNG download
                       canvas.toBlob((blob) => {
                         if (blob) {
                           const url = URL.createObjectURL(blob);
@@ -711,7 +707,7 @@ export default function TldrawQuoteCanvas({
                       console.error('Failed to load SVG image');
                     };
 
-                    // 使用 data URL 避免 CORS 问题
+                    // Use data URL to avoid CORS issues
                     const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgResult.svg)}`;
                     img.src = svgDataUrl;
                   } else {
@@ -719,14 +715,14 @@ export default function TldrawQuoteCanvas({
                   }
                 } catch (error) {
                   console.error('Export failed:', error);
-                  alert(language === 'zh' ? '导出失败，请重试' : 'Export failed, please try again');
+                  alert('Export failed, please try again.');
                 } finally {
                   setIsExporting(false);
                 }
               }}
               className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity mb-2 md:mb-3 p-0 h-auto bg-transparent border-none"
               disabled={isExporting}
-              title={language === 'zh' ? (isExporting ? '导出中...' : '导出 PNG') : (isExporting ? 'Exporting...' : 'Export PNG')}
+              title={isExporting ? 'Exporting...' : 'Export PNG'}
               variant="ghost"
             >
               <motion.div
@@ -737,11 +733,11 @@ export default function TldrawQuoteCanvas({
               </motion.div>
             </Button>
 
-            {/* 模板选择按钮 */}
+            {/* Template selection button */}
             <Button
               onClick={() => setShowTemplateSelector(true)}
               className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity p-0 h-auto bg-transparent border-none mt-2"
-              title={language === 'zh' ? '选择模板' : 'Select Template'}
+              title="Select Template"
               variant="ghost"
               disabled={isApplyingTemplate}
             >
@@ -754,11 +750,11 @@ export default function TldrawQuoteCanvas({
               </motion.div>
             </Button>
 
-            {/* 返回按钮 */}
+            {/* Back button */}
             <Button
               onClick={() => onOpenChange(false)}
               className="text-[#3B3109] hover:opacity-70 hover:bg-transparent transition-opacity p-0 h-auto bg-transparent border-none"
-              title={language === 'zh' ? '返回' : 'Back'}
+              title="Back"
               variant="ghost"
             >
               <motion.div
@@ -867,7 +863,10 @@ export default function TldrawQuoteCanvas({
           isOpen={showTemplateSelector}
           onClose={() => setShowTemplateSelector(false)}
           onApplyTemplate={handleApplyTemplate}
-          diaryContent={{ conversationHistory: [] }}
+          diaryContent={{
+            conversationHistory: entry.entries.conversationHistory || [],
+            summary: entry.metadata?.aiSummary,
+          }}
           isApplying={isApplyingTemplate}
         />
       </motion.div>
@@ -916,31 +915,42 @@ export default function TldrawQuoteCanvas({
 
       // Apply the modified snapshot to the editor
       if (result.modifiedSnapshot) {
-        // Clear current canvas
-        editor.selectAll();
-        editor.deleteShapes(editor.getSelectedShapeIds());
-        
-        // Load the new template with generated content
-        loadSnapshot(editor.store, result.modifiedSnapshot);
-        
-        // Zoom to fit the new content
-        setTimeout(() => {
-          editor.zoomToFit();
-        }, 100);
+        try {
+          // Clear current canvas
+          const allShapeIds = editor.getCurrentPageShapeIds();
+          if (allShapeIds.size > 0) {
+            editor.deleteShapes(Array.from(allShapeIds));
+          }
 
-        toast.success(
-          language === 'zh' 
-            ? `模板已应用！生成了 ${result.metadata?.generatedTextCount || 0} 段文字内容` 
-            : `Template applied! Generated ${result.metadata?.generatedTextCount || 0} text sections`
-        );
+          // Create shapes from the modified snapshot
+          const shapesToCreate = [];
+          for (const record of Object.values(result.modifiedSnapshot.store)) {
+            // Skip non-shape records
+            if (!record || typeof record !== 'object') continue;
+            if (record.typeName !== 'shape') continue;
+
+            shapesToCreate.push(record);
+          }
+
+          // Create all shapes
+          if (shapesToCreate.length > 0) {
+            editor.createShapes(shapesToCreate);
+          }
+
+          // Zoom to fit the new content
+          setTimeout(() => {
+            editor.zoomToFit();
+          }, 100);
+
+          toast.success(`Template applied! Replaced ${result.replacedCount || 0} text sections.`);
+        } catch (loadError) {
+          console.error('Error loading template snapshot:', loadError);
+          throw new Error('Failed to load template into canvas');
+        }
       }
     } catch (error) {
       console.error('Error applying template:', error);
-      toast.error(
-        language === 'zh' 
-          ? '应用模板失败，请稍后重试' 
-          : 'Failed to apply template, please try again'
-      );
+      toast.error('Failed to apply template, please try again.');
     } finally {
       setIsApplyingTemplate(false);
       setShowTemplateSelector(false);

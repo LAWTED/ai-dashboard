@@ -1,416 +1,256 @@
 /**
- * 模板引擎 - MVP 统一版本
- * 使用标准 Tldraw 格式，自动识别所有文本进行替换
+ * 简化的模板引擎 - MVP版本
+ * 核心功能：识别所有文本，生成相同长度的替换文本
  */
 
-import { 
+import { toRichText } from '@tldraw/tlschema';
+import {
   Template,
   TldrawSnapshot,
   TldrawTextShape,
-  TldrawRecord,
+  TldrawRichText,
   ReplaceableText,
   DiaryContent,
   TemplateApplicationResult,
-  TemplateStats,
-  Result
-} from './types/template';
+  TextGenerationRequest
+} from './template-types';
 
-/**
- * 核心模板引擎
- */
+type TldrawColor =
+  | 'black'
+  | 'grey'
+  | 'light-violet'
+  | 'violet'
+  | 'blue'
+  | 'light-blue'
+  | 'yellow'
+  | 'orange'
+  | 'green'
+  | 'light-green'
+  | 'light-red'
+  | 'red'
+  | 'white';
+
+const ALLOWED_COLORS: Record<string, TldrawColor> = {
+  black: 'black',
+  grey: 'grey',
+  'light-violet': 'light-violet',
+  violet: 'violet',
+  blue: 'blue',
+  'light-blue': 'light-blue',
+  yellow: 'yellow',
+  orange: 'orange',
+  green: 'green',
+  'light-green': 'light-green',
+  'light-red': 'light-red',
+  red: 'red',
+  white: 'white'
+};
+
 export class TemplateEngine {
   
   /**
-   * 分析 Tldraw snapshot，提取所有可替换的文本
+   * 分析模板，找出所有可替换的文本
    */
-  static analyzeSnapshot(snapshot: TldrawSnapshot): Result<ReplaceableText[]> {
-    try {
-      if (!snapshot?.store || typeof snapshot.store !== 'object') {
-        return {
-          success: false,
-          error: '无效的 snapshot 格式：缺少 store 数据'
-        };
-      }
+  static analyzeTemplate(template: Template): ReplaceableText[] {
+    const replaceableTexts: ReplaceableText[] = [];
+    
+    if (!template.snapshot?.store) {
+      return replaceableTexts;
+    }
 
-      const replaceableTexts: ReplaceableText[] = [];
+    // 遍历所有 shapes，找出文本类型
+    for (const [shapeId, record] of Object.entries(template.snapshot.store)) {
+      if (this.isTextShape(record)) {
+        const textShape = record as TldrawTextShape;
+        const text = this.getPlainTextFromShape(textShape);
 
-      // 遍历所有 shapes，找出文本类型
-      for (const [shapeId, record] of Object.entries(snapshot.store)) {
-        if (this.isTextShape(record)) {
-          const textShape = record as TldrawTextShape;
-          const text = textShape.props.text || '';
-          
-          // MVP: 所有非空文本都可替换
-          if (text.trim()) {
-            const textType = this.determineTextType(text, textShape);
-            const priority = this.calculatePriority(textShape, textType);
-            
-            replaceableTexts.push({
-              shapeId,
-              type: textType,
-              originalText: text,
-              maxLength: this.calculateMaxLength(text, textShape),
-              priority,
-              style: {
-                color: textShape.props.color,
-                size: textShape.props.size,
-                font: textShape.props.font,
-                width: textShape.props.w
-              }
-            });
-          }
+        // 只处理非空文本
+        if (text.trim()) {
+          replaceableTexts.push({
+            shapeId,
+            originalText: text,
+            targetLength: this.calculateTextLength(text)
+          });
         }
       }
-
-      // 按优先级排序（标题优先，然后按位置从上到下，从左到右）
-      replaceableTexts.sort((a, b) => {
-        if (a.type === 'title' && b.type !== 'title') return -1;
-        if (b.type === 'title' && a.type !== 'title') return 1;
-        return b.priority - a.priority;
-      });
-
-      return {
-        success: true,
-        data: replaceableTexts
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : '分析 snapshot 时发生未知错误'
-      };
     }
+
+    // 按位置排序（从上到下，从左到右）
+    replaceableTexts.sort((a, b) => {
+      const shapeA = template.snapshot.store[a.shapeId] as TldrawTextShape;
+      const shapeB = template.snapshot.store[b.shapeId] as TldrawTextShape;
+      
+      // 先按Y轴排序（从上到下）
+      if (Math.abs(shapeA.y - shapeB.y) > 20) {
+        return shapeA.y - shapeB.y;
+      }
+      
+      // 然后按X轴排序（从左到右）
+      return shapeA.x - shapeB.x;
+    });
+
+    return replaceableTexts;
   }
 
   /**
-   * 应用日记内容到模板
+   * 应用模板到日记内容
    */
   static async applyTemplate(
     template: Template,
     diaryContent: DiaryContent,
     language: 'zh' | 'en' = 'zh'
   ): Promise<TemplateApplicationResult> {
-    const startTime = Date.now();
-
     try {
       // 1. 分析模板中的可替换文本
-      const analysisResult = this.analyzeSnapshot(template.snapshot);
-      if (!analysisResult.success || !analysisResult.data) {
-        return {
-          success: false,
-          error: analysisResult.error || '分析模板失败'
-        };
-      }
-
-      const replaceableTexts = analysisResult.data;
+      const replaceableTexts = this.analyzeTemplate(template);
       
       if (replaceableTexts.length === 0) {
         return {
           success: false,
-          error: '模板中没有找到可替换的文本'
+          error: 'No replaceable text found in the template.'
         };
       }
 
-      // 2. 生成新文本内容
-      const newTexts = await this.generateTexts(replaceableTexts, diaryContent, language);
+      // 2. 生成新文本
+      const generatedTexts = await this.generateReplacementTexts(
+        replaceableTexts,
+        diaryContent,
+        language
+      );
 
-      // 3. 应用到 snapshot
+      // 3. 应用到snapshot
       const modifiedSnapshot = this.applyTextsToSnapshot(
         template.snapshot,
         replaceableTexts,
-        newTexts
+        generatedTexts
       );
-
-      const processingTime = Date.now() - startTime;
-      const totalWords = newTexts.join('').length;
 
       return {
         success: true,
         modifiedSnapshot,
-        metadata: {
-          replacedTextCount: replaceableTexts.length,
-          processingTimeMs: processingTime,
-          generatedWords: totalWords
-        }
+        replacedCount: replaceableTexts.length
       };
 
     } catch (error) {
       console.error('Template application error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : '应用模板时发生未知错误'
+        error: error instanceof Error ? error.message : 'An error occurred while applying the template.'
       };
     }
   }
 
-  /**
-   * 获取模板统计信息
-   */
-  static getTemplateStats(snapshot: TldrawSnapshot): TemplateStats {
-    if (!snapshot?.store) {
-      return { totalShapes: 0, textShapes: 0, imageShapes: 0, replaceableTexts: 0 };
-    }
-
-    let totalShapes = 0;
-    let textShapes = 0;
-    let imageShapes = 0;
-    let replaceableTexts = 0;
-
-    for (const record of Object.values(snapshot.store)) {
-      if (this.isShape(record)) {
-        totalShapes++;
-        
-        if (this.isTextShape(record)) {
-          textShapes++;
-          const text = (record as TldrawTextShape).props.text || '';
-          if (text.trim()) {
-            replaceableTexts++;
-          }
-        } else if (this.isImageShape(record)) {
-          imageShapes++;
-        }
-      }
-    }
-
-    return {
-      totalShapes,
-      textShapes,
-      imageShapes,
-      replaceableTexts
-    };
-  }
-
-  // ====================== 私有工具方法 ======================
+  // ====================== 私有方法 ======================
 
   /**
-   * 检查记录是否为 Shape
+   * 检查是否为文本Shape
    */
-  private static isShape(record: unknown): record is TldrawRecord {
+  private static isTextShape(record: unknown): record is TldrawTextShape {
     return (
       record != null &&
       typeof record === 'object' &&
       'typeName' in record &&
-      record.typeName === 'shape'
-    );
-  }
-
-  /**
-   * 检查是否为文本 Shape
-   */
-  private static isTextShape(record: unknown): record is TldrawTextShape {
-    return (
-      this.isShape(record) &&
+      record.typeName === 'shape' &&
       'type' in record &&
       record.type === 'text'
     );
   }
 
   /**
-   * 检查是否为图片 Shape
+   * 计算文本长度（中文字符算1个字符）
    */
-  private static isImageShape(record: unknown): boolean {
-    return (
-      this.isShape(record) &&
-      'type' in record &&
-      record.type === 'image'
-    );
+  private static calculateTextLength(text: string): number {
+    return text.length;
   }
 
   /**
-   * 判断文本类型（标题、正文、说明）
+   * 生成替换文本
    */
-  private static determineTextType(text: string, shape: TldrawTextShape): 'title' | 'body' | 'caption' {
-    // 根据文本长度和字体大小判断
-    const textLength = text.trim().length;
-    const fontSize = shape.props.size;
-
-    if (textLength <= 20 && (fontSize === 'l' || fontSize === 'xl')) {
-      return 'title';
-    }
-    
-    if (textLength <= 30) {
-      return 'caption';
-    }
-    
-    return 'body';
-  }
-
-  /**
-   * 计算位置优先级（越大越优先）
-   */
-  private static calculatePriority(shape: TldrawTextShape, type: 'title' | 'body' | 'caption'): number {
-    // 标题优先级最高
-    if (type === 'title') return 1000;
-    
-    // 位置越靠上越优先，靠左越优先
-    const yPriority = Math.max(0, 1000 - shape.y);
-    const xPriority = Math.max(0, 100 - shape.x * 0.1);
-    
-    return yPriority + xPriority;
-  }
-
-  /**
-   * 计算文本最大长度限制
-   */
-  private static calculateMaxLength(originalText: string, shape: TldrawTextShape): number {
-    const baseLength = originalText.length;
-    const widthFactor = Math.max(1, shape.props.w / 100);
-    
-    // 根据原文长度和宽度估算合适的长度
-    return Math.min(200, Math.max(baseLength, Math.floor(baseLength * widthFactor * 1.5)));
-  }
-
-  /**
-   * 生成替换文本内容
-   */
-  private static async generateTexts(
+  private static async generateReplacementTexts(
     replaceableTexts: ReplaceableText[],
     diaryContent: DiaryContent,
     language: 'zh' | 'en'
   ): Promise<string[]> {
-    const texts: string[] = [];
-    const context = this.prepareDiaryContext(diaryContent);
+    const { generateText } = await import('./ai-generator');
+    const generatedTexts: string[] = [];
 
     for (const replaceableText of replaceableTexts) {
       try {
-        const generatedText = await this.generateSingleText(
-          replaceableText,
-          context,
+        const request: TextGenerationRequest = {
+          originalText: replaceableText.originalText,
+          targetLength: replaceableText.targetLength,
+          diaryContent,
           language
-        );
-        texts.push(generatedText);
+        };
+
+        const result = await generateText(request);
+        
+        if (result.success) {
+          generatedTexts.push(result.text);
+        } else {
+          // 失败时使用回退文本
+          generatedTexts.push(this.createFallbackText(replaceableText));
+        }
       } catch (error) {
-        console.error(`生成文本失败 (${replaceableText.shapeId}):`, error);
-        // 使用回退文本
-        texts.push(this.createFallbackText(replaceableText));
+        console.error(`Failed to generate text (${replaceableText.shapeId}):`, error);
+        generatedTexts.push(this.createFallbackText(replaceableText));
       }
     }
 
-    return texts;
-  }
-
-  /**
-   * 生成单个文本内容
-   */
-  private static async generateSingleText(
-    replaceableText: ReplaceableText,
-    context: string,
-    language: 'zh' | 'en'
-  ): Promise<string> {
-    try {
-      // 动态导入 AI 文本生成器
-      const { generateTemplateText } = await import('./templates/text-generator');
-      
-      // 创建具体的生成提示
-      const prompt = this.createPrompt(replaceableText, context, language);
-      
-      // 调用真实的 AI 生成
-      const result = await generateTemplateText({
-        prompt,
-        language,
-        maxTokens: Math.min(replaceableText.maxLength * 3, 800), // 给 AI 一些生成空间
-      });
-      
-      // 确保生成的文本不超过长度限制
-      return this.trimToLength(result.text, replaceableText.maxLength);
-    } catch (error) {
-      console.error('AI text generation failed, using fallback:', error);
-      // AI 生成失败时使用回退策略
-      return this.createFallbackText(replaceableText);
-    }
-  }
-
-
-  /**
-   * 创建生成提示词
-   */
-  private static createPrompt(
-    replaceableText: ReplaceableText,
-    context: string,
-    language: 'zh' | 'en'
-  ): string {
-    const langPrompts = {
-      zh: {
-        title: '请根据以下日记内容，生成一个简洁有力的标题',
-        body: '请根据以下日记内容，生成一段富有感情的正文',
-        caption: '请根据以下日记内容，生成一句简短的说明文字'
-      },
-      en: {
-        title: 'Generate a concise and powerful title based on the following diary content',
-        body: 'Generate an emotional body text based on the following diary content',
-        caption: 'Generate a brief caption based on the following diary content'
-      }
-    };
-
-    const typePrompt = langPrompts[language][replaceableText.type as keyof typeof langPrompts.zh];
-    return `${typePrompt}，最多 ${replaceableText.maxLength} 个字符：\n\n${context}`;
-  }
-
-  /**
-   * 准备日记上下文
-   */
-  private static prepareDiaryContext(diaryContent: DiaryContent): string {
-    const parts: string[] = [];
-
-    // 添加对话历史
-    if (diaryContent.conversationHistory?.length) {
-      const messages = diaryContent.conversationHistory
-        .slice(-3) // 只取最近3条
-        .map(msg => `${msg.type === 'user' ? '我' : 'AI'}: ${msg.content}`)
-        .join('\n');
-      parts.push(`对话内容:\n${messages}`);
-    }
-
-    // 添加总结
-    if (diaryContent.summary) {
-      parts.push(`总结: ${diaryContent.summary}`);
-    }
-
-    // 添加增强总结
-    if (diaryContent.enhancedSummary) {
-      const { title, emotion, themes } = diaryContent.enhancedSummary;
-      parts.push(`主题: ${title}`);
-      parts.push(`情感: ${emotion.primary} (${emotion.intensity})`);
-      if (themes.length > 0) {
-        parts.push(`关键词: ${themes.join(', ')}`);
-      }
-    }
-
-    return parts.join('\n\n') || '今天是美好的一天';
+    return generatedTexts;
   }
 
   /**
    * 创建回退文本
    */
   private static createFallbackText(replaceableText: ReplaceableText): string {
-    const fallbacks = {
-      title: ['今日记录', '我的想法', '内心独白', '此刻感悟'],
-      body: ['记录今天的美好时光，感受生活中的点点滴滴。', '在这个特殊的时刻，我想记录下内心的声音。'],
-      caption: ['温暖时光', '美好瞬间', '生活点滴', '心情记录']
-    };
+    const fallbacks = [
+      'Today felt wonderful',
+      'Capturing tiny daily moments',
+      'Treasured memories worth keeping',
+      'Warm feelings on the page',
+      'Little joys from everyday life',
+      'A moment I want to remember'
+    ];
     
-    const options = fallbacks[replaceableText.type] || ['生活记录'];
-    const selected = options[Math.floor(Math.random() * options.length)];
-    
-    return this.trimToLength(selected, replaceableText.maxLength);
+    const selected = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    return this.adjustTextLength(selected, replaceableText.targetLength);
   }
 
   /**
-   * 截断文本到指定长度
+   * 调整文本长度到目标长度
    */
-  private static trimToLength(text: string, maxLength: number): string {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength - 1) + '…';
+  private static adjustTextLength(text: string, targetLength: number): string {
+    if (text.length === targetLength) {
+      return text;
+    }
+    
+    if (text.length > targetLength) {
+      // 截断
+      return text.slice(0, targetLength - 1) + '…';
+    } else {
+      // 重复或填充
+      while (text.length < targetLength) {
+        const remaining = targetLength - text.length;
+        if (remaining >= text.length) {
+          text = text + text;
+        } else {
+          text = text + text.slice(0, remaining);
+        }
+      }
+      return text;
+    }
   }
 
   /**
-   * 应用新文本到 snapshot
+   * 应用新文本到snapshot
    */
   private static applyTextsToSnapshot(
     snapshot: TldrawSnapshot,
     replaceableTexts: ReplaceableText[],
     newTexts: string[]
   ): TldrawSnapshot {
-    // 深拷贝 snapshot
+    // 深拷贝snapshot
     const modified = JSON.parse(JSON.stringify(snapshot)) as TldrawSnapshot;
     
     // 应用每个文本替换
@@ -419,10 +259,109 @@ export class TemplateEngine {
       const newText = newTexts[i];
       
       if (modified.store[shapeId] && this.isTextShape(modified.store[shapeId])) {
-        (modified.store[shapeId] as TldrawTextShape).props.text = newText;
+        const shape = modified.store[shapeId] as TldrawTextShape;
+
+        // 更新富文本内容
+        shape.props.richText = toRichText(newText);
+
+        // 规范化颜色以符合TLDraw枚举
+        shape.props.color = this.normalizeColor(shape.props.color);
+
+        // 移除旧版本的 text 字段，避免验证错误
+        if ('text' in shape.props) {
+          delete (shape.props as Record<string, unknown>).text;
+        }
       }
     }
-    
+
     return modified;
+  }
+
+  /**
+   * 提取文本 shape 中的纯文本内容
+   */
+  private static getPlainTextFromShape(shape: TldrawTextShape): string {
+    const props = shape.props;
+
+    if (props.richText) {
+      return this.richTextToPlainText(props.richText);
+    }
+
+    // 兼容旧版本的 text 字段
+    if (typeof (props as Record<string, unknown>).text === 'string') {
+      return (props as Record<string, string>).text;
+    }
+
+    return '';
+  }
+
+  /**
+   * 将 Tldraw 富文本转换为普通字符串
+   */
+  private static richTextToPlainText(richText: TldrawRichText): string {
+    if (!richText || !Array.isArray(richText.content)) {
+      return '';
+    }
+
+    const lines: string[] = [];
+
+    for (const block of richText.content) {
+      if (!block || typeof block !== 'object') {
+        continue;
+      }
+
+      if ('content' in block && Array.isArray((block as { content?: unknown[] }).content)) {
+        const paragraphContent = (block as { content?: unknown[] }).content || [];
+
+        const text = paragraphContent
+          .map((span) => {
+            if (!span || typeof span !== 'object') {
+              return '';
+            }
+
+            if ('text' in span && typeof (span as { text?: unknown }).text === 'string') {
+              return (span as { text: string }).text;
+            }
+
+            return '';
+          })
+          .join('');
+
+        lines.push(text);
+      } else {
+        lines.push('');
+      }
+    }
+
+    return lines.join('\n');
+  }
+
+  private static normalizeColor(color: unknown): TldrawColor {
+    if (typeof color !== 'string') {
+      return 'black';
+    }
+
+    const lower = color.toLowerCase();
+
+    if (lower in ALLOWED_COLORS) {
+      return ALLOWED_COLORS[lower];
+    }
+
+    switch (lower) {
+      case 'purple':
+        return 'violet';
+      case 'light-purple':
+      case 'lavender':
+        return 'light-violet';
+      case 'dark-blue':
+        return 'blue';
+      case 'dark-green':
+        return 'green';
+      case 'dark-grey':
+      case 'gray':
+        return 'grey';
+      default:
+        return 'black';
+    }
   }
 }
