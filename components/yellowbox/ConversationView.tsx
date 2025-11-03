@@ -4,6 +4,7 @@ import React from "react";
 import { TextEffect } from "@/components/ui/text-effect";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { PromptStyleSelector } from "./PromptStyleSelector";
 
 type ConversationMessage = {
   type: "user" | "ai";
@@ -15,15 +16,37 @@ type ConversationMessage = {
 interface ConversationViewProps {
   conversationHistory: ConversationMessage[];
   onAnimationComplete: () => void;
+  onRegenerateLastMessage?: (promptId: string) => Promise<void>;
+  onRegenerateWithCustomPrompt?: (customPrompt: string) => Promise<void>;
+  isRegenerating?: boolean;
+  timeOfDay?: 'morning' | 'daytime' | 'evening';
 }
 
 export function ConversationView({
   conversationHistory,
   onAnimationComplete,
+  onRegenerateLastMessage,
+  onRegenerateWithCustomPrompt,
+  isRegenerating = false,
+  timeOfDay = 'daytime',
 }: ConversationViewProps) {
   if (conversationHistory.length === 0) {
     return null;
   }
+
+  const isLastAIMessage = (index: number) => {
+    // Check if this is the last AI message in the conversation
+    if (conversationHistory[index].type !== "ai") {
+      return false;
+    }
+
+    for (let i = conversationHistory.length - 1; i > index; i--) {
+      if (conversationHistory[i].type === "ai") {
+        return false;
+      }
+    }
+    return true;
+  };
 
   return (
     <div className="space-y-3">
@@ -43,16 +66,35 @@ export function ConversationView({
               )}
 
               {index === conversationHistory.length - 1 ? (
-                <TextEffect
-                  key={`ai-${index}`}
-                  preset="fade-in-blur"
-                  speedReveal={1.1}
-                  speedSegment={0.3}
-                  className="text-[#C04635] text-base break-words"
-                  onAnimationComplete={onAnimationComplete}
-                >
-                  {message.content}
-                </TextEffect>
+                <div>
+                  <TextEffect
+                    key={`ai-${index}`}
+                    preset="fade-in-blur"
+                    speedReveal={1.1}
+                    speedSegment={0.3}
+                    className="text-[#C04635] text-base break-words"
+                    onAnimationComplete={onAnimationComplete}
+                  >
+                    {message.content}
+                  </TextEffect>
+
+                  {/* Prompt Style Selector - show after animation completes */}
+                  {onRegenerateLastMessage && onRegenerateWithCustomPrompt && isLastAIMessage(index) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.5, duration: 0.3 }}
+                      className="mt-3 flex justify-start"
+                    >
+                      <PromptStyleSelector
+                        onRegenerateWithPrompt={onRegenerateLastMessage}
+                        onRegenerateWithCustomPrompt={onRegenerateWithCustomPrompt}
+                        isGenerating={isRegenerating}
+                        timeOfDay={timeOfDay}
+                      />
+                    </motion.div>
+                  )}
+                </div>
               ) : (
                 <div className="text-[#C04635] text-base break-words">
                   {message.content}

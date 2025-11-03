@@ -63,6 +63,7 @@ export default function Component() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const router = useRouter();
   const { userId } = useYellowBoxAuth();
   const { currentFont, isMac, timeOfDay } = useYellowBoxUI();
@@ -231,6 +232,117 @@ export default function Component() {
       setShowInput(false);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Regenerate last AI message with a different prompt
+  const handleRegenerateLastMessage = async (promptId: string) => {
+    // Find the last AI message
+    const lastAIIndex = conversationHistory.findLastIndex((msg) => msg.type === 'ai');
+
+    if (lastAIIndex === -1) {
+      console.error('No AI message to regenerate');
+      return;
+    }
+
+    setIsRegenerating(true);
+
+    try {
+      // Get conversation history up to (but not including) the last AI message
+      const historyBeforeLastAI = conversationHistory.slice(0, lastAIIndex);
+
+      // Call regenerate API
+      const response = await fetch('/api/yellowbox/regenerate-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entryId: 'temp', // Not needed for current session
+          messageIndex: lastAIIndex,
+          promptId,
+          timeOfDay,
+          conversationHistory: historyBeforeLastAI,
+          selectedQuestion,
+          conversationCount: conversationCount - 1, // Subtract 1 because we're regenerating
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate message');
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Replace the last AI message with the regenerated one
+        setConversationHistory((prev) => {
+          const newHistory = [...prev];
+          newHistory[lastAIIndex] = {
+            ...newHistory[lastAIIndex],
+            content: data.regeneratedMessage,
+          };
+          return newHistory;
+        });
+      } else {
+        throw new Error(data.error || 'Failed to regenerate');
+      }
+    } catch (error) {
+      console.error('Error regenerating message:', error);
+      handleError(error as Error);
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  // Regenerate last AI message with a custom prompt
+  const handleRegenerateWithCustomPrompt = async (customPrompt: string) => {
+    // Find the last AI message
+    const lastAIIndex = conversationHistory.findLastIndex((msg) => msg.type === 'ai');
+
+    if (lastAIIndex === -1) {
+      console.error('No AI message to regenerate');
+      return;
+    }
+
+    setIsRegenerating(true);
+
+    try {
+      // Get conversation history up to (but not including) the last AI message
+      const historyBeforeLastAI = conversationHistory.slice(0, lastAIIndex);
+
+      // Call custom prompt API
+      const response = await fetch('/api/yellowbox/regenerate-custom', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customPrompt,
+          conversationHistory: historyBeforeLastAI,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate with custom prompt');
+      }
+
+      const data = await response.json();
+
+      // Replace the last AI message with the regenerated one
+      setConversationHistory((prev) => {
+        const newHistory = [...prev];
+        newHistory[lastAIIndex] = {
+          ...newHistory[lastAIIndex],
+          content: data.response,
+        };
+        return newHistory;
+      });
+    } catch (error) {
+      console.error('Error with custom prompt:', error);
+      handleError(error as Error);
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
@@ -535,6 +647,10 @@ export default function Component() {
           <ConversationView
             conversationHistory={conversationHistory}
             onAnimationComplete={handleAnimationComplete}
+            onRegenerateLastMessage={handleRegenerateLastMessage}
+            onRegenerateWithCustomPrompt={handleRegenerateWithCustomPrompt}
+            isRegenerating={isRegenerating}
+            timeOfDay={timeOfDay}
           />
         </div>
 
