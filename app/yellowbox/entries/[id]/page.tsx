@@ -214,13 +214,17 @@ export default function EntryDetailPage() {
               }}
               layout
             >
-              {/* Design Quote Button */}
+              {/* Design Quote Button - Coming Soon */}
               <Button
-                onClick={() => setIsQuoteDialogOpen(true)}
-                className="bg-yellow-400 hover:bg-yellow-300 text-[#3B3109] border border-[#E4BE10] px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                disabled
+                className="bg-yellow-400/50 text-[#3B3109]/50 border border-[#E4BE10] px-4 py-2 rounded-lg cursor-not-allowed flex items-center gap-2 relative group"
+                title={t("comingSoon") as string}
               >
                 <Sparkles className="w-4 h-4" />
                 {t("designQuote")}
+                <span className="ml-2 text-xs bg-[#C04635] text-white px-2 py-0.5 rounded-full">
+                  {t("comingSoon")}
+                </span>
               </Button>
 
               {/* Delete Button */}

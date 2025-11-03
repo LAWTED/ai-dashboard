@@ -129,6 +129,7 @@ export interface YellowboxTranslations {
   showingFiltered: string;
   more: string;
   untitledEntry: string;
+  comingSoon: string;
 }
 
 export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
@@ -260,7 +261,8 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     showingAll: '显示全部',
     showingFiltered: '显示',
     more: '更多',
-    untitledEntry: '无标题条目'
+    untitledEntry: '无标题条目',
+    comingSoon: '即将推出'
   },
 
   en: {
@@ -391,7 +393,8 @@ export const yellowboxTranslations: Record<Language, YellowboxTranslations> = {
     showingAll: 'Showing all',
     showingFiltered: 'Showing',
     more: 'more',
-    untitledEntry: 'Untitled Entry'
+    untitledEntry: 'Untitled Entry',
+    comingSoon: 'Coming Soon'
   }
 };
 
