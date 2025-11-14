@@ -42,6 +42,12 @@ export interface DiaryRequest {
   conversationCount: number;
   images?: string[]; // Array of image URLs from Supabase
   conversationHistory?: ConversationMessage[]; // Previous conversation history
+  customPrompts?: {
+    morning?: string;
+    daytime?: string;
+    daytime_after_3?: string;
+    evening?: string;
+  }; // Custom system prompts
 }
 
 export interface DiaryResponse {

@@ -23,6 +23,8 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { ConversationView } from "@/components/yellowbox/ConversationView";
 import { InputSection } from "@/components/yellowbox/InputSection";
 import { SummaryDisplay } from "@/components/yellowbox/SummaryDisplay";
+import { SettingsDialog } from "@/components/yellowbox/SettingsDialog";
+import { loadCustomPrompts } from "@/lib/yellowbox/prompts";
 
 type ConversationMessage = {
   type: "user" | "ai";
@@ -198,6 +200,9 @@ export default function Component() {
     setTimeout(() => setLoadingStage("responding"), 1500);
 
     try {
+      // Load custom prompts from localStorage
+      const customPrompts = loadCustomPrompts();
+
       const data = await diaryResponseMutation.mutateAsync({
         selectedQuestion,
         userEntry: userMessage,
@@ -205,6 +210,7 @@ export default function Component() {
         conversationCount,
         images: finalImages,
         conversationHistory,
+        customPrompts: customPrompts || undefined,
       });
 
       // Add AI response to conversation history
@@ -599,32 +605,44 @@ export default function Component() {
       )}
 
       {/* Page Content */}
-      {/* View Entries Link */}
-      <Link href="/yellowbox/entries">
-        <div className="flex items-center gap-2 mb-4 cursor-pointer hover:opacity-70 transition-opacity">
-          <motion.div
-            initial={{
-              opacity: 0,
-              x: -10,
-            }}
-            animate={{
-              opacity: 1,
-              x: 0,
-            }}
-            transition={{
-              delay: 0.3,
-            }}
-          >
-            <ArrowLeft className="w-3 h-3 text-[#3B3109]" />
-          </motion.div>
-          <motion.div
-            layoutId="my-entries-title"
-            className="text-[#3B3109] text-sm font-medium"
-          >
-            {t("myEntries")}
-          </motion.div>
-        </div>
-      </Link>
+      {/* Top Navigation Bar */}
+      <div className="flex items-center justify-between mb-4">
+        {/* View Entries Link */}
+        <Link href="/yellowbox/entries">
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity">
+            <motion.div
+              initial={{
+                opacity: 0,
+                x: -10,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              transition={{
+                delay: 0.3,
+              }}
+            >
+              <ArrowLeft className="w-3 h-3 text-[#3B3109]" />
+            </motion.div>
+            <motion.div
+              layoutId="my-entries-title"
+              className="text-[#3B3109] text-sm font-medium"
+            >
+              {t("myEntries")}
+            </motion.div>
+          </div>
+        </Link>
+
+        {/* Settings Button */}
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <SettingsDialog />
+        </motion.div>
+      </div>
 
       <div className="text-3xl md:text-5xl font-bold px-2 text-[#3B3109] mb-1 leading-tight overflow-hidden">
         <SummaryDisplay
